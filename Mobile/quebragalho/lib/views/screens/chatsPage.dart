@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quebragalho/views/screens/ChatPage.dart';
 import 'package:flutter_quebragalho/views/widgets/chatItem.dart';
 
 /// ChatsPage é um StatefulWidget que representa a tela de conversas.
@@ -71,17 +72,26 @@ class _ChatsPageState extends State<ChatsPage> {
             SizedBox(height: 16), // Espaçamento entre o campo de pesquisa e a lista de chats.
 
             // Lista de chats exibida em um ListView.
-            Expanded( // Expande o widget para ocupar o espaço disponível.
+            Expanded(
               child: ListView(
                 children: [
-                  // ChatItem (*lib/screens/widgets) representa um item individual do chat.
-                  ChatItem(
-                    name: 'Nome do Usuário', // Nome do usuário da conversa.
-                    message: 'Corpo da mensagem', // Texto da última mensagem.
-                    time: '15:36', // Horário da última mensagem.
-                    unreadCount: 2, // Número de mensagens não lidas.
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatPage(),
+                        ),
+                      );
+                    },
+                    child: ChatItem(
+                      name: 'Nome do Usuário',
+                      message: 'Corpo da mensagem',
+                      time: '15:36',
+                      unreadCount: 2,
+                    ),
                   ),
-                  // Outros ChatItems podem ser adicionados aqui.
+                  // Add more ChatItems here if needed
                 ],
               ),
             ),
