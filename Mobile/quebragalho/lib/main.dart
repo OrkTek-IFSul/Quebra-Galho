@@ -17,6 +17,9 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        textTheme: Theme.of(context).textTheme.apply(
+          fontFamily: 'Inter',
+        ),
       ),
       home: PageViewCore(),
     );

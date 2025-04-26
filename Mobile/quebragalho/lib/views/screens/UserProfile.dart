@@ -22,7 +22,8 @@ class _UserProfileState extends State<UserProfile> {
         elevation: 0, // Remove a sombra da AppBar
         title: Padding(
           padding: EdgeInsets.symmetric(
-              horizontal: MediaQuery.of(context).size.width * 0.1),
+            horizontal: MediaQuery.of(context).size.width * 0.1,
+          ),
           child: Text(
             'Perfil',
             style: TextStyle(
@@ -36,7 +37,8 @@ class _UserProfileState extends State<UserProfile> {
         actions: [
           Padding(
             padding: EdgeInsets.symmetric(
-                horizontal: MediaQuery.of(context).size.width * 0.1),
+              horizontal: MediaQuery.of(context).size.width * 0.1,
+            ),
             child: Row(
               children: [
                 Icon(
@@ -62,7 +64,9 @@ class _UserProfileState extends State<UserProfile> {
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center, // Centraliza os conteúdos horizontalmente
+          crossAxisAlignment:
+              CrossAxisAlignment
+                  .center, // Centraliza os conteúdos horizontalmente
           children: [
             SizedBox(height: 16),
 
@@ -86,11 +90,7 @@ class _UserProfileState extends State<UserProfile> {
                   child: CircleAvatar(
                     radius: 12,
                     backgroundColor: Colors.purple,
-                    child: Icon(
-                      Icons.edit,
-                      color: Colors.white,
-                      size: 14,
-                    ),
+                    child: Icon(Icons.edit, color: Colors.white, size: 14),
                   ),
                 ),
               ],
@@ -111,10 +111,7 @@ class _UserProfileState extends State<UserProfile> {
             SizedBox(height: 8),
             Text(
               isPrestador ? 'Prestador de Serviço' : 'Serviços solicitados',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
 
             // Botões para alternar entre as visualizações de Cliente e Prestador
@@ -126,7 +123,8 @@ class _UserProfileState extends State<UserProfile> {
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      isPrestador = false; // Alterna para a visualização de Cliente
+                      isPrestador =
+                          false; // Alterna para a visualização de Cliente
                     });
                   },
                   style: ElevatedButton.styleFrom(
@@ -148,7 +146,8 @@ class _UserProfileState extends State<UserProfile> {
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      isPrestador = true; // Alterna para a visualização de Prestador
+                      isPrestador =
+                          true; // Alterna para a visualização de Prestador
                     });
                   },
                   style: ElevatedButton.styleFrom(
@@ -172,66 +171,144 @@ class _UserProfileState extends State<UserProfile> {
             SizedBox(height: 40),
             // Se o perfil for de Prestador, exibe opções e portfólio
             if (isPrestador)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Seção "OPÇÕES" para o prestador
-                  Text(
-                    'OPÇÕES',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: const Color.fromARGB(255, 51, 6, 59),
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  // Scroll horizontal com botões de ações
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal, // Permite rolagem horizontal
-                    child: Row(
-                      children: [
-                        // Botão para solicitação de serviços com contador de 2
-                        _buildActionItem(Icons.settings, 'Solicitações\nde serviços', 2),
-                        SizedBox(width: 16), // Espaçamento entre os itens
-                        // Botão para histórico de valores
-                        _buildActionItem(Icons.history, 'Histórico\nde valores', 0),
-                        SizedBox(width: 16),
-                        // Botão para visualizar avaliações; ao clicar, navega para ReviewsPage
-                        _buildActionItem(Icons.star, 'Minhas\navaliações', 0, onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => ReviewsPage()),
-                          );
-                        }),
-                        SizedBox(width: 16),
-                        // Botão para acessar dados pessoais
-                        _buildActionItem(Icons.people_alt_outlined, 'Meus\ndados', 0),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 40),
-                  // Seção de portfólio para o prestador
-                  Text(
-                    'MEU PORTFÓLIO (3/5 fotos)',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: const Color.fromARGB(255, 51, 6, 59),
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  // Linha de itens de portfólio, onde o primeiro é o botão de adicionar fotos
-                  Row(
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildPortfolioItem(Icons.add, 'Adicionar fotos', isAddButton: true),
-                      _buildPortfolioItem(null, ''),
-                      _buildPortfolioItem(null, ''),
-                      _buildPortfolioItem(null, ''),
-                      _buildPortfolioItem(null, ''),
-                      _buildPortfolioItem(null, ''),
+                      // Seção "OPÇÕES" para o prestador
+                      Text(
+                        'OPÇÕES',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: const Color.fromARGB(255, 51, 6, 59),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      // Scroll horizontal com botões de ações
+                      SingleChildScrollView(
+                        scrollDirection:
+                            Axis.horizontal, // Permite rolagem horizontal
+                        child: Row(
+                          children: [
+                            _buildActionItem(
+                              Icons.settings,
+                              'Solicitações\nde serviços',
+                              2,
+                            ),
+                            SizedBox(width: 3), // Espaçamento entre os itens
+                            _buildActionItem(
+                              Icons.history,
+                              'Histórico\nde valores',
+                              0,
+                            ),
+                            SizedBox(width: 3),
+                            _buildActionItem(
+                              Icons.star,
+                              'Minhas\navaliações',
+                              0,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ReviewsPage(),
+                                  ),
+                                );
+                              },
+                            ),
+                            SizedBox(width: 3),
+                            _buildActionItem(
+                              Icons.people_alt_outlined,
+                              'Meus\ndados',
+                              0,
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 40),
+                      // Seção de portfólio para o prestador
+                      Text(
+                        'MEU PORTFÓLIO (3/5 fotos)',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: const Color.fromARGB(255, 51, 6, 59),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      // Linha de itens de portfólio
+                      Row(
+                        children: [
+                          // Botão fixo para adicionar fotos
+                          Container(
+                            width: 80, // Largura do botão
+                            height: 200, // Altura do botão
+                            decoration: BoxDecoration(
+                              color: Colors.transparent, // Cor de fundo do botão
+                              borderRadius: BorderRadius.circular(8), // Bordas arredondadas
+                              border: Border.all( // Contorno roxo
+                                color: Colors.purple, 
+                                width: 2, // Espessura do contorno
+                              ),
+                            ),
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.add,
+                                color: Colors.purple, // Cor do ícone
+                              ), // Ícone de "+"
+                              onPressed: () {
+                                // Lógica para adicionar fotos
+                              },
+                            ),
+                          ),
+                          SizedBox(width: 8), // Espaço entre o botão fixo e os itens roláveis
+                          // Itens de portfólio com scroll horizontal
+                          Expanded(
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal, // Permite rolagem horizontal
+                              child: Row(
+                                children: [
+                                  // Adicionando 5 containers cinzas
+                                  Container(
+                                    width: 200,
+                                    height: 200,
+                                    color: Colors.grey[300], // Placeholder cinza
+                                    margin: EdgeInsets.only(right: 8), // Espaço entre os containers
+                                  ),
+                                  Container(
+                                    width: 200,
+                                    height: 200,
+                                    color: Colors.grey[300],
+                                    margin: EdgeInsets.only(right: 8),
+                                  ),
+                                  Container(
+                                    width: 200,
+                                    height: 200,
+                                    color: Colors.grey[300],
+                                    margin: EdgeInsets.only(right: 8),
+                                  ),
+                                  Container(
+                                    width: 200,
+                                    height: 200,
+                                    color: Colors.grey[300],
+                                    margin: EdgeInsets.only(right: 8),
+                                  ),
+                                  Container(
+                                    width: 200,
+                                    height: 200,
+                                    color: Colors.grey[300],
+                                    margin: EdgeInsets.only(right: 8),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
+                ),
               )
             else
               // Se o perfil for de Cliente, exibe apenas as informações de contato
@@ -254,11 +331,10 @@ class _UserProfileState extends State<UserProfile> {
                       Expanded(
                         child: Text(
                           'fabriciomachado2002@uol.com.br',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.black,
-                          ),
-                          overflow: TextOverflow.ellipsis, // Trunca o texto se for muito longo
+                          style: TextStyle(fontSize: 14, color: Colors.black),
+                          overflow:
+                              TextOverflow
+                                  .ellipsis, // Trunca o texto se for muito longo
                         ),
                       ),
                       IconButton(
@@ -278,26 +354,29 @@ class _UserProfileState extends State<UserProfile> {
   }
 
   /// Método para construir um item de ação com ícone, rótulo e contador opcional.
-  Widget _buildActionItem(IconData icon, String label, int count, {VoidCallback? onTap}) {
+  Widget _buildActionItem(
+    IconData icon,
+    String label,
+    int count, {
+    VoidCallback? onTap,
+  }) {
     return GestureDetector(
-      onTap: onTap, // Executa a ação definida no parâmetro onTap ao clicar
+      onTap: onTap,
       child: Stack(
-        clipBehavior: Clip.none,
         children: [
-          // Container do item de ação
           Container(
-            width: 120, // Largura definida para o item
-            height: 120, // Altura definida para o item
+            width: 100,
+            height: 100,
+            margin: EdgeInsets.all(5), // Adiciona margem para evitar corte do contador
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300), // Borda leve
-              borderRadius: BorderRadius.circular(16), // Bordas arredondadas
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start, // Alinha o conteúdo à esquerda
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Container para exibir o ícone com fundo
                 Container(
                   width: 40,
                   height: 40,
@@ -308,7 +387,6 @@ class _UserProfileState extends State<UserProfile> {
                   child: Icon(icon, color: Colors.purple, size: 24),
                 ),
                 SizedBox(height: 8),
-                // Rótulo do item de ação
                 Text(
                   label,
                   textAlign: TextAlign.left,
@@ -321,11 +399,10 @@ class _UserProfileState extends State<UserProfile> {
               ],
             ),
           ),
-          // Se count for maior que 0, exibe um contador de notificações
           if (count > 0)
             Positioned(
-              top: -5,
-              right: -5,
+              top: 0, // Ajustado para considerar a margem
+              right: 0, // Ajustado para considerar a margem
               child: CircleAvatar(
                 radius: 12,
                 backgroundColor: Colors.purple,
@@ -346,20 +423,4 @@ class _UserProfileState extends State<UserProfile> {
 
   /// Método para construir um item do portfólio.
   /// Se isAddButton for verdadeiro, exibe uma área para adicionar fotos.
-  Widget _buildPortfolioItem(IconData? icon, String label, {bool isAddButton = false}) {
-    return Expanded(
-      child: Container(
-        height: 100,
-        margin: EdgeInsets.only(right: 8),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade300), // Borda leve
-          borderRadius: BorderRadius.circular(8),
-          color: isAddButton ? Colors.purple.withOpacity(0.1) : Colors.grey.shade200,
-        ),
-        child: icon != null
-            ? Icon(icon, color: Colors.purple)
-            : null, // Se não houver ícone, exibe um container vazio
-      ),
-    );
-  }
 }
