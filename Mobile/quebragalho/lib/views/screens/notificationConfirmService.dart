@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quebragalho/views/screens/pageViewCliente.dart';
 
 /// StatefulWidget que exibe a tela de confirmação de serviço com animações.
 class NotificationConfirmService extends StatefulWidget {
   const NotificationConfirmService({super.key});
 
   @override
-  State<NotificationConfirmService> createState() => _NotificationConfirmServiceState();
+  State<NotificationConfirmService> createState() =>
+      _NotificationConfirmServiceState();
 }
 
 /// Estado associado à tela de confirmação de serviço.
 /// Utiliza o TickerProviderStateMixin para animações.
-class _NotificationConfirmServiceState extends State<NotificationConfirmService> with TickerProviderStateMixin {
+class _NotificationConfirmServiceState extends State<NotificationConfirmService>
+    with TickerProviderStateMixin {
   // Controlador para a animação do fundo roxo (expansão de escala).
   late AnimationController _backgroundController;
   // Controlador para a animação do ícone de "check" (escala do ícone).
@@ -54,14 +57,21 @@ class _NotificationConfirmServiceState extends State<NotificationConfirmService>
       body: Center(
         // Padding para adicionar espaço nas laterais baseado em 10% da largura da tela.
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.1),
+          padding: EdgeInsets.symmetric(
+            horizontal: MediaQuery.of(context).size.width * 0.1,
+          ),
           child: Column(
-            mainAxisSize: MainAxisSize.min, // A coluna ocupa apenas o espaço necessário para seu conteúdo.
-            crossAxisAlignment: CrossAxisAlignment.start, // Alinha os elementos da coluna à esquerda.
+            mainAxisSize:
+                MainAxisSize
+                    .min, // A coluna ocupa apenas o espaço necessário para seu conteúdo.
+            crossAxisAlignment:
+                CrossAxisAlignment
+                    .start, // Alinha os elementos da coluna à esquerda.
             children: [
               // Animação de escala para o fundo roxo com ícone.
               ScaleTransition(
-                scale: _backgroundController, // Controla a escala do fundo roxo.
+                scale:
+                    _backgroundController, // Controla a escala do fundo roxo.
                 child: Container(
                   height: 80,
                   width: 80,
@@ -84,7 +94,6 @@ class _NotificationConfirmServiceState extends State<NotificationConfirmService>
                 ),
               ),
               SizedBox(height: 24), // Espaço vertical após a animação.
-
               // Texto de confirmação do serviço.
               Text(
                 'Serviço \nconfirmado!', // Mensagem de confirmação com quebra de linha.
@@ -96,7 +105,6 @@ class _NotificationConfirmServiceState extends State<NotificationConfirmService>
                 ),
               ),
               SizedBox(height: 16), // Espaçamento vertical.
-
               // Rótulo indicando data agendada.
               Text(
                 'Data agendada:',
@@ -107,7 +115,6 @@ class _NotificationConfirmServiceState extends State<NotificationConfirmService>
                 ),
               ),
               SizedBox(height: 4), // Pequeno espaçamento vertical.
-
               // Exibição da data e hora agendadas.
               Text(
                 '14/08 - 18:00',
@@ -118,24 +125,16 @@ class _NotificationConfirmServiceState extends State<NotificationConfirmService>
                 ),
               ),
               SizedBox(height: 16), // Espaçamento vertical.
-
               // Texto explicativo sobre o agendamento.
               Text(
                 'Seu agendamento foi confirmado. Agora só esperar o prestador executar o serviço no horário combinado.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
               SizedBox(height: 16), // Espaçamento vertical.
-
               // Texto informativo sobre a disponibilidade da avaliação.
               Text(
                 'A avaliação só estará disponível após o horário de execução que foi solicitado pelo app.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
             ],
           ),
@@ -148,7 +147,11 @@ class _NotificationConfirmServiceState extends State<NotificationConfirmService>
         child: ElevatedButton(
           onPressed: () {
             // Ao pressionar, retorna à tela anterior (início).
-            Navigator.pop(context);
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => PageViewCore()),
+              (route) => false,
+            );
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.purple, // Cor de fundo do botão.

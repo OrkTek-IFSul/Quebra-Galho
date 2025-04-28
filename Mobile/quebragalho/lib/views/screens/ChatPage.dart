@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quebragalho/views/widgets/servico_cancelar_modal.dart';
+import 'package:flutter_quebragalho/views/widgets/servico_confirmar_modal.dart';
 
 /// Página de chat que exibe a conversa entre usuários
 class ChatPage extends StatelessWidget {
+  const ChatPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,13 +36,31 @@ class ChatPage extends StatelessWidget {
             children: [
               // Botão Cancelar com fundo cinza
               Container(
-                margin: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                margin: EdgeInsets.symmetric(vertical: 5, horizontal: 4),
                 decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 219, 219, 219),
+                  color: const Color.fromARGB(255, 255, 255, 255),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                      ),
+                      builder: (BuildContext context) {
+                        return FractionallySizedBox(
+                          heightFactor: 0.7, // Define que o modal ocupará 30% da altura da tela
+                          child: ServicoCancelarModal(
+                            onConfirm: () {
+                              Navigator.of(context).pop(); // Fecha o modal
+                              // Aqui você pode adicionar a lógica para cancelar o serviço
+                            },
+                          ),
+                        );
+                      },
+                    );
+                  },
                   child: Text(
                     'Cancelar',
                     style: TextStyle(color: const Color.fromARGB(255, 88, 88, 88), fontSize: 14),
@@ -53,7 +75,25 @@ class ChatPage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                      ),
+                      builder: (BuildContext context) {
+                        return FractionallySizedBox(
+                          heightFactor: 0.7, // Define que o modal ocupará 30% da altura da tela
+                          child: ServicoConfirmarModal(
+                            onConfirm: () {
+                              Navigator.of(context).pop(); // Fecha o modal
+                              // Aqui você pode adicionar a lógica para cancelar o serviço
+                            },
+                          ),
+                        );
+                      },
+                    );
+                  },
                   child: Text(
                     'Confirmar',
                     style: TextStyle(

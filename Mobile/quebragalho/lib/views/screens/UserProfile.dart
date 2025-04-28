@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quebragalho/views/screens/pageViewPrestador.dart';
 import 'package:flutter_quebragalho/views/screens/reviewsPage.dart';
 
 /// Widget que exibe o perfil do usuário, permitindo a alternância entre as
@@ -145,14 +146,15 @@ class _UserProfileState extends State<UserProfile> {
                 // Botão para selecionar perfil Prestador
                 ElevatedButton(
                   onPressed: () {
-                    setState(() {
-                      isPrestador =
-                          true; // Alterna para a visualização de Prestador
-                    });
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PageViewPrestadorCore(), // Direciona para PageViewPrestador
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        isPrestador ? Colors.purple : Colors.grey.shade300,
+                    backgroundColor: isPrestador ? Colors.purple : Colors.grey.shade300,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -321,28 +323,68 @@ class _UserProfileState extends State<UserProfile> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey,
+                      color: Colors.purple,
                     ),
                   ),
                   SizedBox(height: 4),
-                  // Linha com o email do usuário e um botão para editar
+                  // Linha com o email do usuário e o botão de edição
                   Row(
+                
                     children: [
-                      Expanded(
-                        child: Text(
-                          'fabriciomachado2002@uol.com.br',
-                          style: TextStyle(fontSize: 14, color: Colors.black),
-                          overflow:
-                              TextOverflow
-                                  .ellipsis, // Trunca o texto se for muito longo
-                        ),
+                      Text(
+                        'fabriciomachado2002@uol.com.br',
+                        style: TextStyle(fontSize: 14, color: Colors.black),
+                        overflow: TextOverflow.ellipsis, // Trunca o texto se for muito longo
                       ),
                       IconButton(
                         onPressed: () {
-                          // Lógica para editar o email (a ser implementada)
+                          // Lógica para editar o email
                         },
                         icon: Icon(Icons.edit, color: Colors.grey),
                       ),
+                    ],
+                  ),
+                  SizedBox(height: 16),
+
+                  // Exibe o rótulo TELEFONE
+                  Row(
+                    
+                    children: [
+                      Text(
+                        'TELEFONE',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.purple,
+                        ),
+                      ),
+                      SizedBox(width: 150), // Espaço entre o rótulo e o CPF
+                      Text("CPF", style: TextStyle(
+                        fontSize: 12,
+                        color: const Color.fromARGB(255, 87, 0, 102),
+                        fontWeight: FontWeight.w900
+                      ),)
+                    ],
+                  ),
+                  SizedBox(height: 4),
+                  // Linha com o número de telefone e o botão de edição
+                  Row(
+                    
+                    children: [
+                      Text(
+                        '(11) 9 9999-9999',
+                        style: TextStyle(fontSize: 14, color: Colors.black),
+                        overflow: TextOverflow.ellipsis, // Trunca o texto se for muito longo
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          // Lógica para editar o telefone
+                        },
+                        icon: Icon(Icons.edit, color: Colors.grey),
+                      ),
+                      SizedBox(width: 50),
+                      Text("32rm32r34r34") // Espaço entre o telefone e o CPF
+                   
                     ],
                   ),
                 ],
