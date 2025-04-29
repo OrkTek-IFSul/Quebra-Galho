@@ -5,9 +5,9 @@ class ServicoConfirmarModal extends StatelessWidget {
   final VoidCallback onConfirm;
 
   const ServicoConfirmarModal({
-    Key? key,
+    super.key,
     required this.onConfirm,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

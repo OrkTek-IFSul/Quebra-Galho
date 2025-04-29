@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quebragalho/views/screens/SolicitacoesPageCliente.dart';
 import 'package:flutter_quebragalho/views/screens/pageViewPrestador.dart';
 import 'package:flutter_quebragalho/views/screens/reviewsPage.dart';
+import 'package:flutter_quebragalho/views/widgets/PrestadorFormModal.dart';
+import 'package:flutter_quebragalho/views/widgets/editar_email_modal.dart';
+import 'package:flutter_quebragalho/views/widgets/editar_telefone_modal.dart';
 
 /// Widget que exibe o perfil do usuário, permitindo a alternância entre as
 /// visualizações de Cliente e Prestador, além de exibir informações e ações.
@@ -149,12 +153,15 @@ class _UserProfileState extends State<UserProfile> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => PageViewPrestadorCore(), // Direciona para PageViewPrestador
+                        builder:
+                            (context) =>
+                                PageViewPrestadorCore(), // Direciona para PageViewPrestador
                       ),
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isPrestador ? Colors.purple : Colors.grey.shade300,
+                    backgroundColor:
+                        isPrestador ? Colors.purple : Colors.grey.shade300,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -247,10 +254,14 @@ class _UserProfileState extends State<UserProfile> {
                             width: 80, // Largura do botão
                             height: 200, // Altura do botão
                             decoration: BoxDecoration(
-                              color: Colors.transparent, // Cor de fundo do botão
-                              borderRadius: BorderRadius.circular(8), // Bordas arredondadas
-                              border: Border.all( // Contorno roxo
-                                color: Colors.purple, 
+                              color:
+                                  Colors.transparent, // Cor de fundo do botão
+                              borderRadius: BorderRadius.circular(
+                                8,
+                              ), // Bordas arredondadas
+                              border: Border.all(
+                                // Contorno roxo
+                                color: Colors.purple,
                                 width: 2, // Espessura do contorno
                               ),
                             ),
@@ -264,19 +275,25 @@ class _UserProfileState extends State<UserProfile> {
                               },
                             ),
                           ),
-                          SizedBox(width: 8), // Espaço entre o botão fixo e os itens roláveis
+                          SizedBox(
+                            width: 8,
+                          ), // Espaço entre o botão fixo e os itens roláveis
                           // Itens de portfólio com scroll horizontal
                           Expanded(
                             child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal, // Permite rolagem horizontal
+                              scrollDirection:
+                                  Axis.horizontal, // Permite rolagem horizontal
                               child: Row(
                                 children: [
                                   // Adicionando 5 containers cinzas
                                   Container(
                                     width: 200,
                                     height: 200,
-                                    color: Colors.grey[300], // Placeholder cinza
-                                    margin: EdgeInsets.only(right: 8), // Espaço entre os containers
+                                    color:
+                                        Colors.grey[300], // Placeholder cinza
+                                    margin: EdgeInsets.only(
+                                      right: 8,
+                                    ), // Espaço entre os containers
                                   ),
                                   Container(
                                     width: 200,
@@ -329,16 +346,29 @@ class _UserProfileState extends State<UserProfile> {
                   SizedBox(height: 4),
                   // Linha com o email do usuário e o botão de edição
                   Row(
-                
                     children: [
                       Text(
                         'fabriciomachado2002@uol.com.br',
                         style: TextStyle(fontSize: 14, color: Colors.black),
-                        overflow: TextOverflow.ellipsis, // Trunca o texto se for muito longo
+                        overflow:
+                            TextOverflow
+                                .ellipsis, // Trunca o texto se for muito longo
                       ),
                       IconButton(
                         onPressed: () {
                           // Lógica para editar o email
+                          showModalBottomSheet(
+                            context: context,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(16),
+                              ),
+                            ),
+                            isScrollControlled: true,
+                            builder: (BuildContext context) {
+                              return EditarEmailModal();
+                            },
+                          );
                         },
                         icon: Icon(Icons.edit, color: Colors.grey),
                       ),
@@ -348,7 +378,6 @@ class _UserProfileState extends State<UserProfile> {
 
                   // Exibe o rótulo TELEFONE
                   Row(
-                    
                     children: [
                       Text(
                         'TELEFONE',
@@ -359,32 +388,99 @@ class _UserProfileState extends State<UserProfile> {
                         ),
                       ),
                       SizedBox(width: 150), // Espaço entre o rótulo e o CPF
-                      Text("CPF", style: TextStyle(
-                        fontSize: 12,
-                        color: const Color.fromARGB(255, 87, 0, 102),
-                        fontWeight: FontWeight.w900
-                      ),)
+                      Text(
+                        "CPF",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: const Color.fromARGB(255, 87, 0, 102),
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
                     ],
                   ),
                   SizedBox(height: 4),
                   // Linha com o número de telefone e o botão de edição
                   Row(
-                    
                     children: [
                       Text(
                         '(11) 9 9999-9999',
                         style: TextStyle(fontSize: 14, color: Colors.black),
-                        overflow: TextOverflow.ellipsis, // Trunca o texto se for muito longo
+                        overflow:
+                            TextOverflow
+                                .ellipsis, // Trunca o texto se for muito longo
                       ),
                       IconButton(
                         onPressed: () {
                           // Lógica para editar o telefone
+                          // Lógica para editar o email
+                          showModalBottomSheet(
+                            context: context,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(16),
+                              ),
+                            ),
+                            isScrollControlled: true,
+                            builder: (BuildContext context) {
+                              return EditarTelefoneModal();
+                            },
+                          );
                         },
                         icon: Icon(Icons.edit, color: Colors.grey),
                       ),
                       SizedBox(width: 50),
-                      Text("32rm32r34r34") // Espaço entre o telefone e o CPF
-                   
+                      Text("32rm32r34r34"), // Espaço entre o telefone e o CPF
+                    ],
+                  ),
+                  SizedBox(height: 16),
+                  Row(
+                    children: [
+                      _buildActionItem(
+                        Icons.handyman,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SolicitacoesPageCliente(),
+                            ),
+                          );
+                        },
+                        "Minhas Solicitações",
+                        0, //CONTADOR DE NOTIFICAÇÕES / AVALIAÇÕES
+                      ),
+                      _buildActionItem(
+                        Icons.reviews,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ReviewsPage(),
+                            ),
+                          );
+                        },
+                        "Minhas Avaliações",
+                        0, //CONTADOR DE NOTIFICAÇÕES / AVALIAÇÕES
+                      ),
+                      _buildActionItem(
+                        Icons.card_membership_outlined,
+                        onTap: () {
+                          // Lógica para editar o email
+                          showModalBottomSheet(
+                            context: context,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(16),
+                              ),
+                            ),
+                            isScrollControlled: true,
+                            builder: (BuildContext context) {
+                              return PrestadorFormModal();
+                            },
+                          );
+                        },
+                        'Seja um prestador',
+                        0,
+                      ),
                     ],
                   ),
                 ],
@@ -409,7 +505,9 @@ class _UserProfileState extends State<UserProfile> {
           Container(
             width: 100,
             height: 100,
-            margin: EdgeInsets.all(5), // Adiciona margem para evitar corte do contador
+            margin: EdgeInsets.all(
+              5,
+            ), // Adiciona margem para evitar corte do contador
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey.shade300),

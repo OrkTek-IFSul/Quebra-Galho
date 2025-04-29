@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_quebragalho/views/screens/ChatPage.dart';
 import 'package:flutter_quebragalho/views/screens/UserProfile.dart';
 import 'package:flutter_quebragalho/views/screens/chatsPage.dart';
 

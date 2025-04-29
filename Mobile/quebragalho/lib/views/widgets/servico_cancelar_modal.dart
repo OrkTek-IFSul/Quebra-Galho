@@ -4,9 +4,9 @@ class ServicoCancelarModal extends StatelessWidget {
   final VoidCallback onConfirm;
 
   const ServicoCancelarModal({
-    Key? key,
+    super.key,
     required this.onConfirm,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
