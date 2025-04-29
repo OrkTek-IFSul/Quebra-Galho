@@ -5,8 +5,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.orktek.quebragalho.model.Prestador;
 import com.orktek.quebragalho.model.Usuario;
@@ -32,17 +34,17 @@ public class PrestadorService {
      * @param prestador Objeto Prestador com os dados
      * @param usuarioId ID do usuário que será o prestador
      * @return Prestador criado
-     * @throws RuntimeException se usuário não existir ou já for prestador
+     * @throws ResponseStatusException se usuário não existir ou já for prestador
      */
     @Transactional
     public Prestador criarPrestador(Prestador prestador, Long usuarioId) {
         // Verifica se usuário existe
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
         
         // Verifica se usuário já é prestador
         if (prestadorRepository.existsByUsuario(usuario)) {
-            throw new RuntimeException("Este usuário já é um prestador");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Este usuario ja é um prestador");
         }
         
         // Associa o usuário ao prestador
@@ -81,7 +83,7 @@ public class PrestadorService {
      * @param id ID do prestador
      * @param prestadorAtualizado Objeto com os novos dados
      * @return Prestador atualizado
-     * @throws RuntimeException se prestador não for encontrado
+     * @throws ResponseStatusException se prestador não for encontrado
      */
     @Transactional
     public Prestador atualizarPrestador(Long id, Prestador prestadorAtualizado) {
@@ -92,7 +94,7 @@ public class PrestadorService {
                     prestador.setDocumentoPath(prestadorAtualizado.getDocumentoPath());
                     return prestadorRepository.save(prestador);
                 })
-                .orElseThrow(() -> new RuntimeException("Prestador não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prestador nao encontrado"));
     }
 
     /**
@@ -109,12 +111,12 @@ public class PrestadorService {
      * @param prestadorId ID do prestador
      * @param documento Arquivo de imagem a ser salvo
      * @return Nome do arquivo salvo
-     * @throws RuntimeException se usuário não for encontrado ou ocorrer erro no upload
+     * @throws ResponseStatusException se usuário não for encontrado ou ocorrer erro no upload
      */
     @Transactional
     public String enviarImagemDocumento(Long prestadorId, MultipartFile documento) {
         Prestador prestador = prestadorRepository.findById(prestadorId)
-                .orElseThrow(() -> new RuntimeException("Prestador não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prestador nao encontrado"));
         
         try {
             // Remove a imagem antiga se existir
@@ -129,7 +131,7 @@ public class PrestadorService {
             
             return nomeArquivo;
         } catch (IOException e) {
-            throw new RuntimeException("Falha ao enviar imagem do documento", e);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Falha ao enviar imagem de documento", e);
         }
     }
 }

@@ -31,7 +31,7 @@ public class UsuarioService {
      * Cria um novo usuário no sistema
      * @param usuario Objeto Usuario com os dados do novo usuário
      * @return Usuario salvo no banco de dados
-     * @throws RuntimeException se email ou documento já estiverem cadastrados
+     * @throws ResponseStatusException se email ou documento já estiverem cadastrados
      */
     @Transactional
     public Usuario criarUsuario(Usuario usuario) {
@@ -72,7 +72,7 @@ public class UsuarioService {
      * @param id ID do usuário a ser atualizado
      * @param usuarioAtualizado Objeto com os novos dados
      * @return Usuario atualizado
-     * @throws RuntimeException se usuário não for encontrado ou email já estiver em uso
+     * @throws ResponseStatusException se usuário não for encontrado ou email já estiver em uso
      */
     @Transactional
     public Usuario atualizarUsuario(Long id, Usuario usuarioAtualizado) {
@@ -82,7 +82,7 @@ public class UsuarioService {
                     if (!usuario.getEmail().equals(usuarioAtualizado.getEmail())) {
                         // Verifica se novo email já está em uso
                         if (usuarioRepository.existsByEmail(usuarioAtualizado.getEmail())) {
-                            throw new RuntimeException("Email já está em uso");
+                            throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já está em uso");
                         }
                     }
                     
@@ -94,7 +94,7 @@ public class UsuarioService {
                     
                     return usuarioRepository.save(usuario);
                 })
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
     }
 
     /**
@@ -131,12 +131,12 @@ public class UsuarioService {
      * @param usuarioId ID do usuário
      * @param imagemPerfil Arquivo de imagem a ser salvo
      * @return Nome do arquivo salvo
-     * @throws RuntimeException se usuário não for encontrado ou ocorrer erro no upload
+     * @throws ResponseStatusException se usuário não for encontrado ou ocorrer erro no upload
      */
     @Transactional
     public String atualizarImagemPerfil(Long usuarioId, MultipartFile imagemPerfil) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
         
         try {
             // Remove a imagem antiga se existir
@@ -151,19 +151,19 @@ public class UsuarioService {
             
             return nomeArquivo;
         } catch (IOException e) {
-            throw new RuntimeException("Falha ao atualizar imagem de perfil", e);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Erro ao atualizar imagem de perfil", e);
         }
     }
     
     /**
      * Remove a imagem de perfil do usuário
      * @param usuarioId ID do usuário
-     * @throws RuntimeException se usuário não for encontrado ou ocorrer erro ao remover
+     * @throws ResponseStatusException se usuário não for encontrado ou ocorrer erro ao remover
      */
     @Transactional
     public void removerImagemPerfil(Long usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
         
         if (usuario.getImgPerfil() != null) {
             try {
@@ -171,7 +171,7 @@ public class UsuarioService {
                 usuario.setImgPerfil(null);
                 usuarioRepository.save(usuario);
             } catch (IOException e) {
-                throw new RuntimeException("Falha ao remover imagem de perfil", e);
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Erro ao remover imagem de perfil", e);
             }
         }
     }

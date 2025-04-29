@@ -5,7 +5,9 @@ import java.util.Optional;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.orktek.quebragalho.model.Agendamento;
 import com.orktek.quebragalho.model.Servico;
@@ -34,21 +36,21 @@ public class AgendamentoService {
      * @param servicoId ID do serviço a ser agendado
      * @param usuarioId ID do usuário que está agendando
      * @return Agendamento criado
-     * @throws RuntimeException se serviço, usuário não existirem ou houver conflito de horário
+     * @throws ResponseStatusException se serviço, usuário não existirem ou houver conflito de horário
      */
     @Transactional
     public Agendamento criarAgendamento(Agendamento agendamento, Long servicoId, Long usuarioId) {
         // Verifica se serviço existe
         Servico servico = servicoRepository.findById(servicoId)
-                .orElseThrow(() -> new RuntimeException("Serviço não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Servico nao encontrado"));
         
         // Verifica se usuário existe
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
         
         // Verifica conflitos de horário para o mesmo serviço
         if (agendamentoRepository.existsByDataHoraAndServico(agendamento.getDataHora(), servico)) {
-            throw new RuntimeException("Já existe um agendamento para este horário");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ja existe um servico agendado para este horario");
         }
         
         // Configura os relacionamentos
@@ -108,7 +110,7 @@ public class AgendamentoService {
                     agendamento.setStatus(status);
                     return agendamentoRepository.save(agendamento);
                 })
-                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Agendamento nao encontrado"));
     }
 
     /**

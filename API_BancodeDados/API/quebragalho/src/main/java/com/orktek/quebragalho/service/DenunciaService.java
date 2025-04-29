@@ -1,8 +1,11 @@
 package com.orktek.quebragalho.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
 import com.orktek.quebragalho.model.Denuncia;
 import com.orktek.quebragalho.model.Usuario;
 import com.orktek.quebragalho.repository.DenunciaRepository;
@@ -26,15 +29,15 @@ public class DenunciaService {
      * @param denuncianteId ID do usuário que está denunciando
      * @param denunciadoId ID do usuário sendo denunciado
      * @return Denuncia salva
-     * @throws RuntimeException se denunciante ou denunciado não existirem
+     * @throws ResponseStatusException se denunciante ou denunciado não existirem
      */
     @Transactional
     public Denuncia criarDenuncia(Denuncia denuncia, Long denuncianteId, Long denunciadoId) {
         Usuario denunciante = usuarioRepository.findById(denuncianteId)
-                .orElseThrow(() -> new RuntimeException("Denunciante não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Denunciante nao encontrado"));
         
         Usuario denunciado = usuarioRepository.findById(denunciadoId)
-                .orElseThrow(() -> new RuntimeException("Denunciado não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Denunciado nao encontrado"));
         
         denuncia.setDenunciante(denunciante);
         denuncia.setDenunciado(denunciado);
@@ -65,7 +68,7 @@ public class DenunciaService {
      * @param id ID da denúncia
      * @param status Novo status (true = resolvido)
      * @return Denuncia atualizada
-     * @throws RuntimeException se denúncia não for encontrada
+     * @throws ResponseStatusException se denúncia não for encontrada
      */
     @Transactional
     public Denuncia atualizarStatusDenuncia(Long id, Boolean status) {
@@ -74,7 +77,7 @@ public class DenunciaService {
                     denuncia.setStatus(status);
                     return denunciaRepository.save(denuncia);
                 })
-                .orElseThrow(() -> new RuntimeException("Denúncia não encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Denuncia nao encontrado"));
     }
 
     /**
