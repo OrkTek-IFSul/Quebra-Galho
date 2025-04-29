@@ -9,6 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  dotted_border: ^2.1.0
 
 dev_dependencies:
   flutter_test:
@@ -17,3 +18,14 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: fonts/Inter_24pt-Regular.ttf
+          weight: 400
+        - asset: fonts/Inter_24pt-Medium.ttf
+          weight: 500
+        - asset: fonts/Inter_24pt-Bold.ttf
+          weight: 700
+        - asset: fonts/Inter_28pt-ExtraBold.ttf
+          weight: 900

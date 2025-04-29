@@ -3,22 +3,22 @@ import 'package:flutter_quebragalho/views/screens/UserProfile.dart';
 import 'package:flutter_quebragalho/views/screens/chatsPage.dart';
 
 /// Widget principal que gerencia a navegação entre telas através de PageView e BottomNavigationBar.
-class PageViewCore extends StatefulWidget {
-  const PageViewCore({super.key});
+class PageViewPrestadorCore extends StatefulWidget {
+  const PageViewPrestadorCore({super.key});
 
   @override
-  State<PageViewCore> createState() => _PageViewCoreState();
+  State<PageViewPrestadorCore> createState() => _PageViewPrestadorCoreState();
 }
 
-class _PageViewCoreState extends State<PageViewCore> {
+class _PageViewPrestadorCoreState extends State<PageViewPrestadorCore> {
   int _currentIndex = 0; // Armazena o índice da aba selecionada.
   final PageController _pageController = PageController(); // Controlador para a navegação entre páginas.
 
   // Lista de telas que serão exibidas em cada aba.
   final List<Widget> _pages = [
+    UserProfile(), // Tela de perfil do usuário
     HomeScreen(),  // Tela inicial
     ChatsPage(),   // Tela de conversas
-    UserProfile(), // Tela de perfil do usuário
   ];
 
   @override
@@ -66,7 +66,7 @@ class _PageViewCoreState extends State<PageViewCore> {
           ),
           BottomNavigationBarItem(
             icon: Icon(
-              Icons.person_outline,
+              Icons.notifications_none_outlined,
               size: 30, // Remove a cor fixa para permitir o controle automático.
             ),
             label: '',
