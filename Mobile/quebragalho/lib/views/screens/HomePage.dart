@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_quebragalho/views/screens/ChatPage.dart';
-import 'package:flutter_quebragalho/views/widgets/chatItem.dart';
 
 /// HomePage é um StatefulWidget que representa a tela de conversas.
 class HomePage extends StatefulWidget {
