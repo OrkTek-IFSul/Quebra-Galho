@@ -13,7 +13,7 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    // Chave secreta forte (pelo menos 256 bits). Em produção, guarde isso no application.properties
+    // Chave secreta forte (pelo menos 256 bits) pra garantir bom funcionamento.
     private final String jwtSecret = "chaveSuperSecretaJwtQuePrecisaTerPeloMenos32Caracteres";
     private final long jwtExpirationMs = 86400000; // 24 horas
 
