@@ -1,6 +1,6 @@
 class Usuario {
   // Declaração dos atributos da classe Usuario, com alguns opcionais (nullable) e valores padrão.
-  final int id;
+  final int? id;
   final String nome;
   final String email;
   final String? senha;
@@ -13,7 +13,7 @@ class Usuario {
 
   // Construtor da classe, inicializando os atributos. Alguns possuem valores padrão.
   Usuario({
-    required this.id,
+    this.id,
     required this.nome,
     required this.email,
     this.senha,

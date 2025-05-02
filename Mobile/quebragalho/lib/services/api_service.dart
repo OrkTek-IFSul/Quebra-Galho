@@ -4,16 +4,13 @@ import 'package:flutter_quebragalho/utils/api_endpoints.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
-// Classe ApiService fornece métodos genéricos para realizar requisições HTTP (GET, POST, PUT, DELETE) e upload de arquivos.
 class ApiService {
-  static String? _token; // Token JWT para autenticação.
+  static String? _token;
 
-  // Configura o token de autenticação.
   static void setToken(String token) {
     _token = token;
   }
 
-  // Gera os headers padrão para as requisições, incluindo o token JWT se disponível.
   static Map<String, String> _getHeaders({bool isMultipart = false}) {
     final headers = {
       if (!isMultipart) 'Content-Type': 'application/json',
@@ -25,16 +22,15 @@ class ApiService {
     return headers;
   }
 
-  // Métodos genéricos para requisições HTTP (GET, POST, PUT, DELETE).
   static Future<dynamic> get(String endpoint) async {
     try {
       final response = await http.get(
         Uri.parse('${ApiEndpoints.baseUrl}$endpoint'),
         headers: _getHeaders(),
       );
-      return _handleResponse(response); // Trata a resposta.
+      return _handleResponse(response);
     } catch (e) {
-      throw _handleError(e); // Trata erros.
+      throw _handleError(e);
     }
   }
 
@@ -46,7 +42,8 @@ class ApiService {
         body: body != null ? jsonEncode(body) : null,
       );
       return _handleResponse(response);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('Erro no POST: $e\n$stackTrace');
       throw _handleError(e);
     }
   }
@@ -76,7 +73,6 @@ class ApiService {
     }
   }
 
-  // Método para upload de arquivos (ex.: imagens).
   static Future<dynamic> uploadFile(
     String endpoint,
     File file, {
@@ -98,7 +94,7 @@ class ApiService {
       final responseData = await response.stream.bytesToString();
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return jsonDecode(responseData); // Retorna o JSON da resposta.
+        return jsonDecode(responseData);
       } else {
         throw HttpException(
           'Upload failed with status ${response.statusCode}',
@@ -110,8 +106,9 @@ class ApiService {
     }
   }
 
-  // Trata as respostas HTTP, lançando exceções personalizadas para erros.
   static dynamic _handleResponse(http.Response response) {
+    print('Resposta da API [${response.statusCode}]: ${response.body}');
+
     switch (response.statusCode) {
       case 200:
       case 201:
@@ -137,7 +134,6 @@ class ApiService {
     }
   }
 
-  // Trata erros genéricos, retornando exceções específicas para cada tipo de erro.
   static Exception _handleError(dynamic error) {
     if (error is SocketException) {
       return NetworkException('Falha na conexão com o servidor');
@@ -150,7 +146,6 @@ class ApiService {
   }
 }
 
-// Exceções personalizadas para diferentes tipos de erros.
 class NetworkException implements Exception {
   final String message;
   NetworkException(this.message);
