@@ -1,33 +1,47 @@
+import 'package:intl/intl.dart';
+
+// Classe Servicos representa um serviço que contém atributos como id, nome, descrição, preço, 
+// IDs de agendamentos e tags.
 class Servicos {
-  final int id;
+  final int? id;
   final String nome;
   final String descricao;
   final double preco;
   final List<int> agendamentosIds;
   final List<int> tagsIds;
 
+  // Construtor da classe Servicos, inicializando os atributos obrigatórios.
   Servicos({
-    required this.id,
+    this.id,
     required this.nome,
     required this.descricao,
     required this.preco,
     this.agendamentosIds = const [],
     this.tagsIds = const [],
   });
+
+  // Método de fábrica para criar uma instância de Servicos a partir de um JSON.
   factory Servicos.fromJson(Map<String, dynamic> json) {
+    List<int> extrairIds(List? lista) {
+      if (lista == null) return [];
+      return lista.map<int>((item) {
+        if (item is Map && item.containsKey('id')) return item['id'] as int;
+        if (item is int) return item;
+        throw FormatException('Formato inválido no item da lista');
+      }).toList();
+    }
+
     return Servicos(
       id: json['id'] as int,
       nome: json['nome'] as String,
       descricao: json['descricao'] as String,
       preco: (json['preco'] as num).toDouble(),
-      agendamentosIds: (json['agendamentos'] as List?)
-          ?.map((a) => a is Map ? a['id'] as int : a as int)
-          .toList() ?? [],
-      tagsIds: (json['tags'] as List?)
-          ?.map((t) => t is Map ? t['id'] as int : t as int)
-          .toList() ?? [],
+      agendamentosIds: extrairIds(json['agendamentos']),
+      tagsIds: extrairIds(json['tags']),
     );
   }
+
+  // Método para converter uma instância de Servicos para JSON.
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -39,6 +53,7 @@ class Servicos {
     };
   }
 
+  // Método para criar uma cópia de Servicos com modificações nos campos.
   Servicos copyWith({
     String? nome,
     String? descricao,

@@ -1,5 +1,5 @@
 class Agendamento {
-  final int? id;  // Tornando o id opcional (nullable)
+  final int? id; 
   final DateTime dataHora;
   final bool status;
   final List<int> servicoIds;
@@ -7,7 +7,7 @@ class Agendamento {
   final List<int> avaliacaoIds;
 
   Agendamento({
-    this.id,  // O id pode ser passado como nulo
+    this.id,
     required this.dataHora,
     required this.status,
     this.servicoIds = const [],
@@ -39,7 +39,7 @@ class Agendamento {
   return {
     'dataHora': dataHora.toIso8601String(),
     'status': status,
-    'servico': servicoIds,  // Corrigido para 'servico'
+    'servico': servicoIds,
     'usuario': usuarioIds,
     'avaliacao': avaliacaoIds,
   };

@@ -10,9 +10,9 @@ void main() {
       id: 1,
       dataHora: DateTime.parse("2025-05-10T14:30:00"),
       status: true,
-      servicoIds: [105, 106],  // Lista de IDs de serviços
-      usuarioIds: [201, 202],  // Lista de IDs de usuários
-      avaliacaoIds: [],        // Lista de avaliações (pode ser vazia ou com valores)
+      servicoIds: [105, 106],
+      usuarioIds: [201, 202], 
+      avaliacaoIds: [],
     );
 
     // Chamando o método toJson para transformar o objeto em JSON

@@ -1,57 +1,74 @@
-import 'package:flutter_quebragalho/services/api_service.dart';
-import 'package:flutter_quebragalho/utils/api_endpoints.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../models/avaliacao_model.dart';
 
-// Classe AvaliacaoService fornece métodos para gerenciar avaliações, como criar, listar, deletar e responder.
 class AvaliacaoService {
-  // Cria uma nova avaliação para um agendamento, validando a nota e enviando os dados via API.
-  static Future<Avaliacao> criarAvaliacao({
-    required int agendamentoId,
-    required int nota,
-    required String comentario,
-  }) async {
-    if (nota < 1 || nota > 5) {
+  static const String _baseUrl = 'http://localhost:8080/api/avaliacoes';
+
+  // Cria uma nova avaliação a partir de dados e URL fornecidos
+  Future<http.Response> criarAvaliacao(Map<String, dynamic> data, String url) async {
+    if (data['nota'] == null || data['nota'] < 1 || data['nota'] > 5) {
       throw ArgumentError('A nota deve estar entre 1 e 5');
     }
 
-    final response = await ApiService.post(
-      ApiEndpoints.criarAvaliacao(agendamentoId),
-      body: {
-        'nota': nota,
-        'comentario': comentario,
-        'data': DateTime.now().toIso8601String(),
-      },
-    );
-    return Avaliacao.fromJson(response);
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        return response;
+      } else {
+        throw Exception('Erro ao criar avaliação: ${response.statusCode}');
+      }
+    } catch (e) {
+      rethrow;
+    }
   }
 
-  // Obtém uma lista de avaliações associadas a um serviço específico.
+  // Obtém lista de avaliações associadas a um serviço
   static Future<List<Avaliacao>> getAvaliacoesPorServico(int servicoId) async {
-    final response = await ApiService.get(
-      ApiEndpoints.getAvaliacoesServico(servicoId),
-    );
-    return (response as List).map((e) => Avaliacao.fromJson(e)).toList();
+    final url = Uri.parse('$_baseUrl/servico/$servicoId');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      List<dynamic> data = jsonDecode(response.body);
+      return data.map((e) => Avaliacao.fromJson(e)).toList();
+    } else {
+      throw Exception('Falha ao carregar avaliações');
+    }
   }
 
-  // Deleta uma avaliação específica pelo ID.
-  static Future<bool> deletarAvaliacao(int id) async {
-    return await ApiService.delete(
-      ApiEndpoints.deletarAvaliacao(id),
-    );
+  // Deleta uma avaliação por ID
+  static Future<void> deletarAvaliacao(int id) async {
+    final url = Uri.parse('$_baseUrl/$id');
+    final response = await http.delete(url);
+
+    if (response.statusCode != 200) {
+      throw Exception('Erro ao deletar avaliação');
+    }
   }
 
-  // Responde a uma avaliação específica, enviando a resposta via API.
-  static Future<Avaliacao> responderAvaliacao({
-    required int avaliacaoId,
-    required String resposta,
-  }) async {
-    final response = await ApiService.post(
-      '/avaliacoes/$avaliacaoId/resposta',
-      body: {
-        'resposta': resposta,
-        'data': DateTime.now().toIso8601String(),
-      },
-    );
-    return Avaliacao.fromJson(response);
+  // Envia uma resposta para uma avaliação
+  Future<http.Response> responderAvaliacao(Map<String, dynamic> data, int avaliacaoId) async {
+    final url = '$_baseUrl/$avaliacaoId/resposta';
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        return response;
+      } else {
+        throw Exception('Erro ao responder avaliação: ${response.statusCode}');
+      }
+    } catch (e) {
+      rethrow;
+    }
   }
 }

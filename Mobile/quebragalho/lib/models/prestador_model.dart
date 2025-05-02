@@ -1,5 +1,5 @@
 class Prestador {
-  final int id;
+  final int? id;
   final String descricao;
   final String? documentoPath;
   final List<int> usuarioIds;
@@ -9,7 +9,7 @@ class Prestador {
   final List<int> tagsIds;
 
   Prestador({
-    required this.id,
+    this.id,
     required this.descricao,
     this.documentoPath,
     this.usuarioIds = const [],
@@ -20,38 +20,36 @@ class Prestador {
   });
 
   factory Prestador.fromJson(Map<String, dynamic> json) {
+    List<int> extrairIds(List? lista) {
+      if (lista == null) return [];
+      return lista.map<int>((item) {
+        if (item is Map && item.containsKey('id')) return item['id'] as int;
+        if (item is int) return item;
+        throw FormatException('Formato inválido no item da lista');
+      }).toList();
+    }
     return Prestador(
-      id: json['id'] as int,
+      id: json['id'] as int?,
       descricao: json['descricao'] as String,
       documentoPath: json['documentoPath'] as String?,
-      usuarioIds: (json['usuario'] as List)
-          .map((a) => a is Map ? a['id'] as int : a as int)
-          .toList() ?? [],
-      servicosIds: (json['servicos'] as List)
-          .map((a) => a is Map ? a['id'] as int : a as int)
-          .toList() ?? [],
-      portfoliosIds: (json['portfolios'] as List)
-          .map((a) => a is Map ? a['id'] as int : a as int)
-          .toList() ?? [],
-      chatsIds: (json['chats'] as List)
-          .map((a) => a is Map ? a['id'] as int : a as int)
-          .toList() ?? [],
-      tagsIds: (json['tags'] as List)
-          .map((a) => a is Map ? a['id'] as int : a as int)
-          .toList() ?? [],
-    );
+      usuarioIds: extrairIds(json['usuarios']),
+      servicosIds: extrairIds(json['servico']),
+      portfoliosIds: extrairIds(json['portfolios']),
+      chatsIds: extrairIds(json['chats']),
+      tagsIds: extrairIds(json['tags']),
+      );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'descricao': descricao,
+      'servico': servicosIds,
+      'portfolios': portfoliosIds,
+      'chats': chatsIds,
+      'tags': tagsIds,
+      'usuarios': usuarioIds,
       if (documentoPath != null) 'documentoPath': documentoPath,
-      if (usuarioIds.isNotEmpty) 'usuario': usuarioIds,
-      if (servicosIds.isNotEmpty) 'servicos': servicosIds,
-      if (portfoliosIds.isNotEmpty) 'portfolios': portfoliosIds,
-      if (chatsIds.isNotEmpty) 'chats': chatsIds,
-      if (tagsIds.isNotEmpty) 'tags': tagsIds,
     };
   }
 

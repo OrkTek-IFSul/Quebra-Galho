@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter_quebragalho/services/api_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_quebragalho/models/agendamento_model.dart';
 
