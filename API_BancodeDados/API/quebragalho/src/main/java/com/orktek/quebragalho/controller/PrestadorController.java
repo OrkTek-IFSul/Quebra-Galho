@@ -14,6 +14,7 @@ import com.orktek.quebragalho.dto.PrestadorDTO;
 import com.orktek.quebragalho.service.PrestadorService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Controller para operações com prestadores de serviço
@@ -32,11 +33,13 @@ public class PrestadorController {
      */
     @Operation(summary = "Lista todos os prestadores", description = "Retorna uma lista de todos os prestadores cadastrados.")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Lista de prestadores retornada com sucesso")
+            @ApiResponse(responseCode = "200", description = "Lista de prestadores retornada com sucesso")
     })
     @GetMapping
-    public ResponseEntity<List<Prestador>> listarTodos() {
-        List<Prestador> prestadores = prestadorService.listarTodos();
+    public ResponseEntity<List<PrestadorDTO>> listarTodos() {
+        List<PrestadorDTO> prestadores = prestadorService.listarTodos()
+                .stream().map(PrestadorDTO::new)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(prestadores);
     }
 
@@ -47,14 +50,13 @@ public class PrestadorController {
     @GetMapping("/{id}")
     @Operation(summary = "Busca prestador por ID", description = "Retorna os detalhes de um prestador específico pelo ID.")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Prestador encontrado com sucesso"),
-        @ApiResponse(responseCode = "404", description = "Prestador não encontrado")
+            @ApiResponse(responseCode = "200", description = "Prestador encontrado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Prestador não encontrado")
     })
     public ResponseEntity<PrestadorDTO> buscarPorId(
-            @Parameter(description = "ID do prestador a ser buscado", required = true)
-            @PathVariable Long id) {
+            @Parameter(description = "ID do prestador a ser buscado", required = true) @PathVariable Long id) {
         return prestadorService.buscarPorId(id)
-                .map(PrestadorDTO::new) 
+                .map(PrestadorDTO::new)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -65,13 +67,12 @@ public class PrestadorController {
      */
     @Operation(summary = "Cria novo prestador", description = "Cria um novo prestador associado a um usuário.")
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "Prestador criado com sucesso"),
-        @ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos")
+            @ApiResponse(responseCode = "201", description = "Prestador criado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos")
     })
     @PostMapping("/{usuarioId}")
     public ResponseEntity<Prestador> criarPrestador(
-            @Parameter(description = "ID do usuário ao qual o prestador será associado", required = true)
-            @PathVariable Long usuarioId,
+            @Parameter(description = "ID do usuário ao qual o prestador será associado", required = true) @PathVariable Long usuarioId,
             @RequestBody Prestador prestador) {
         Prestador novoPrestador = prestadorService.criarPrestador(prestador, usuarioId);
         return ResponseEntity.status(201).body(novoPrestador);
@@ -83,13 +84,12 @@ public class PrestadorController {
      */
     @Operation(summary = "Atualiza dados do prestador", description = "Atualiza as informações de um prestador existente.")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Prestador atualizado com sucesso"),
-        @ApiResponse(responseCode = "404", description = "Prestador não encontrado")
+            @ApiResponse(responseCode = "200", description = "Prestador atualizado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Prestador não encontrado")
     })
     @PutMapping("/{id}")
     public ResponseEntity<Prestador> atualizarPrestador(
-            @Parameter(description = "ID do prestador a ser atualizado", required = true)
-            @PathVariable Long id,
+            @Parameter(description = "ID do prestador a ser atualizado", required = true) @PathVariable Long id,
             @RequestBody Prestador prestador) {
         Prestador atualizado = prestadorService.atualizarPrestador(id, prestador);
         return ResponseEntity.ok(atualizado);
@@ -101,13 +101,12 @@ public class PrestadorController {
      */
     @Operation(summary = "Remove um prestador", description = "Remove um prestador pelo ID.")
     @ApiResponses({
-        @ApiResponse(responseCode = "204", description = "Prestador removido com sucesso"),
-        @ApiResponse(responseCode = "404", description = "Prestador não encontrado")
+            @ApiResponse(responseCode = "204", description = "Prestador removido com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Prestador não encontrado")
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarPrestador(
-            @Parameter(description = "ID do prestador a ser removido", required = true)
-            @PathVariable Long id) {
+            @Parameter(description = "ID do prestador a ser removido", required = true) @PathVariable Long id) {
         prestadorService.deletarPrestador(id);
         return ResponseEntity.noContent().build();
     }
