@@ -13,6 +13,7 @@ class PrestadorPageUserVision extends StatelessWidget {
           icon: Icon(Icons.arrow_back_ios, color: Colors.purple),
           onPressed: () {
             // Código para Volta para a página anterior
+            Navigator.pop(context);
           },
         ),
         title: Text(
