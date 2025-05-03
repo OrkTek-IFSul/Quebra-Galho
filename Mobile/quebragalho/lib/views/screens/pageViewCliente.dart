@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quebragalho/views/screens/HistoricoValores.dart';
 import 'package:flutter_quebragalho/views/screens/UserProfile.dart';
 import 'package:flutter_quebragalho/views/screens/chatsPage.dart';
 
@@ -16,7 +17,7 @@ class _PageViewCoreState extends State<PageViewCore> {
 
   // Lista de telas que serão exibidas em cada aba.
   final List<Widget> _pages = [
-    HomeScreen(),  // Tela inicial
+    HistoricoValores(), // Tela inicial
     ChatsPage(),   // Tela de conversas
     UserProfile(), // Tela de perfil do usuário
   ];
