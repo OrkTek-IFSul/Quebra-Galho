@@ -36,6 +36,10 @@ public class TagService {
         return tagRepository.findAll();
     }
 
+    public List<Tags> listarTodasAtivas() {
+        return tagRepository.findByStatus("Ativo"); // Assumindo que seu repository tem este método
+    }
+
     /**
      * Busca uma tag pelo ID
      * @param id ID da tag

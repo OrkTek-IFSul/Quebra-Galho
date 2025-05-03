@@ -1,11 +1,13 @@
 package com.orktek.quebragalho.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.orktek.quebragalho.dto.AvaliacaoDTO;
 import com.orktek.quebragalho.model.Avaliacao;
 import com.orktek.quebragalho.service.AvaliacaoService;
 
@@ -64,10 +66,12 @@ public class AvaliacaoController {
         @ApiResponse(responseCode = "200", description = "Lista de avaliações retornada com sucesso"),
         @ApiResponse(responseCode = "404", description = "Serviço não encontrado")
     })
-    public ResponseEntity<List<Avaliacao>> listarPorServico(
+    public ResponseEntity<List<AvaliacaoDTO>> listarPorServico(
             @Parameter(description = "ID do serviço para listar as avaliações", required = true)
             @PathVariable Long servicoId) {
-        List<Avaliacao> avaliacoes = avaliacaoService.listarPorServico(servicoId);
+        List<AvaliacaoDTO> avaliacoes = avaliacaoService.listarPorServico(servicoId)
+                .stream().map(AvaliacaoDTO::new)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(avaliacoes);
     }
 

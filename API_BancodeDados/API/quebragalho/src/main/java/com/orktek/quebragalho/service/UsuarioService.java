@@ -15,23 +15,26 @@ import com.orktek.quebragalho.model.Usuario;
 import com.orktek.quebragalho.repository.UsuarioRepository;
 
 import jakarta.transaction.Transactional;
+
 @Service
 public class UsuarioService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
-    
+
     @Autowired
     private PasswordEncoder passwordEncoder; // Para criptografar senhas
 
     @Autowired
-    private FileStorageService fileStorageService;// Para manipulação de arquivos 
+    private FileStorageService fileStorageService;// Para manipulação de arquivos
 
     /**
      * Cria um novo usuário no sistema
+     * 
      * @param usuario Objeto Usuario com os dados do novo usuário
      * @return Usuario salvo no banco de dados
-     * @throws ResponseStatusException se email ou documento já estiverem cadastrados
+     * @throws ResponseStatusException se email ou documento já estiverem
+     *                                 cadastrados
      */
     @Transactional
     public Usuario criarUsuario(Usuario usuario) {
@@ -39,12 +42,12 @@ public class UsuarioService {
         if (usuarioRepository.existsByEmail(usuario.getEmail())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já existe");
         }
-        
+
         // Verifica se documento já está cadastrado
         if (usuarioRepository.existsByDocumento(usuario.getDocumento())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Documento já existe");
         }
-        
+
         // Criptografa a senha antes de salvar
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         return usuarioRepository.save(usuario);
@@ -52,6 +55,7 @@ public class UsuarioService {
 
     /**
      * Lista todos os usuários cadastrados
+     * 
      * @return Lista de Usuario
      */
     public List<Usuario> listarTodos() {
@@ -60,6 +64,7 @@ public class UsuarioService {
 
     /**
      * Busca um usuário pelo ID
+     * 
      * @param id ID do usuário
      * @return Optional contendo o usuário se encontrado
      */
@@ -67,12 +72,20 @@ public class UsuarioService {
         return usuarioRepository.findById(id);
     }
 
+    
+    public String getNomeUsuario(Long id) {
+        return usuarioRepository.findById(id).map(Usuario::getNome)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+    }
+
     /**
      * Atualiza os dados de um usuário existente
-     * @param id ID do usuário a ser atualizado
+     * 
+     * @param id                ID do usuário a ser atualizado
      * @param usuarioAtualizado Objeto com os novos dados
      * @return Usuario atualizado
-     * @throws ResponseStatusException se usuário não for encontrado ou email já estiver em uso
+     * @throws ResponseStatusException se usuário não for encontrado ou email já
+     *                                 estiver em uso
      */
     @Transactional
     public Usuario atualizarUsuario(Long id, Usuario usuarioAtualizado) {
@@ -85,13 +98,13 @@ public class UsuarioService {
                             throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já está em uso");
                         }
                     }
-                    
+
                     // Atualiza apenas os campos permitidos
                     usuario.setNome(usuarioAtualizado.getNome());
                     usuario.setEmail(usuarioAtualizado.getEmail());
                     usuario.setTelefone(usuarioAtualizado.getTelefone());
                     usuario.setImgPerfil(usuarioAtualizado.getImgPerfil());
-                    
+
                     return usuarioRepository.save(usuario);
                 })
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
@@ -99,6 +112,7 @@ public class UsuarioService {
 
     /**
      * Remove um usuário do sistema
+     * 
      * @param id ID do usuário a ser removido
      */
     @Transactional
@@ -108,15 +122,17 @@ public class UsuarioService {
 
     /**
      * Busca usuário pelo email
+     * 
      * @param email Email do usuário
      * @return Optional contendo o usuário se encontrado
      */
     public Optional<Usuario> buscarPorEmail(String email) {
         return usuarioRepository.findByEmail(email);
     }
-    
+
     /**
      * Adiciona um strike (marca de advertência) ao usuário
+     * 
      * @param usuarioId ID do usuário
      */
     public void adicionarStrike(Long usuarioId) {
@@ -128,43 +144,47 @@ public class UsuarioService {
 
     /**
      * Atualiza a imagem de perfil do usuário
-     * @param usuarioId ID do usuário
+     * 
+     * @param usuarioId    ID do usuário
      * @param imagemPerfil Arquivo de imagem a ser salvo
      * @return Nome do arquivo salvo
-     * @throws ResponseStatusException se usuário não for encontrado ou ocorrer erro no upload
+     * @throws ResponseStatusException se usuário não for encontrado ou ocorrer erro
+     *                                 no upload
      */
     @Transactional
     public String atualizarImagemPerfil(Long usuarioId, MultipartFile imagemPerfil) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
-        
+
         try {
             // Remove a imagem antiga se existir
             if (usuario.getImgPerfil() != null) {
                 fileStorageService.deleteFile(usuario.getImgPerfil());
             }
-            
+
             // Salva a nova imagem
             String nomeArquivo = fileStorageService.storeFile(imagemPerfil);
             usuario.setImgPerfil(nomeArquivo);
             usuarioRepository.save(usuario);
-            
+
             return nomeArquivo;
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Erro ao atualizar imagem de perfil", e);
         }
     }
-    
+
     /**
      * Remove a imagem de perfil do usuário
+     * 
      * @param usuarioId ID do usuário
-     * @throws ResponseStatusException se usuário não for encontrado ou ocorrer erro ao remover
+     * @throws ResponseStatusException se usuário não for encontrado ou ocorrer erro
+     *                                 ao remover
      */
     @Transactional
     public void removerImagemPerfil(Long usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
-        
+
         if (usuario.getImgPerfil() != null) {
             try {
                 fileStorageService.deleteFile(usuario.getImgPerfil());
