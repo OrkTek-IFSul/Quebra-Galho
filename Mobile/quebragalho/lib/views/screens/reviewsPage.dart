@@ -22,8 +22,8 @@ class ReviewsPage extends StatelessWidget {
           'Avaliações', // Título da página.
           style: TextStyle(
             color: Colors.purple, // Cor do texto púrpura.
-            fontSize: 20, // Tamanho da fonte definido.
-            fontWeight: FontWeight.bold, // Texto em negrito.
+            fontSize: 16, // Tamanho da fonte definido.
+            fontWeight: FontWeight.w700, // Texto em negrito.
           ),
         ),
         centerTitle: true, // Centraliza o título na AppBar.

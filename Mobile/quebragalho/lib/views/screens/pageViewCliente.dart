@@ -53,32 +53,29 @@ class _PageViewCoreState extends State<PageViewCore> {
           BottomNavigationBarItem(
             icon: Icon(
               Icons.home_outlined,
-              color: Colors.purple,
-              size: 30,
+              size: 30, // Remove a cor fixa para permitir o controle automático.
             ),
             label: '', // Sem texto para o label.
           ),
           BottomNavigationBarItem(
             icon: Icon(
               Icons.sms_outlined,
-              color: Colors.purple,
-              size: 30,
+              size: 30, // Remove a cor fixa para permitir o controle automático.
             ),
             label: '',
           ),
           BottomNavigationBarItem(
             icon: Icon(
               Icons.person_outline,
-              color: Colors.purple,
-              size: 30,
+              size: 30, // Remove a cor fixa para permitir o controle automático.
             ),
             label: '',
           ),
         ],
-        selectedItemColor: Colors.purple, // Cor para item selecionado.
-        unselectedItemColor: Colors.grey, // Cor para itens não selecionados.
-        showSelectedLabels: false, // Não exibe labels para item selecionado.
-        showUnselectedLabels: false, // Não exibe labels para itens não selecionados.
+        selectedItemColor: Colors.purple, // Cor para o item selecionado.
+        unselectedItemColor: Colors.grey, // Cor para os itens não selecionados.
+        showSelectedLabels: false, // Não exibe labels para o item selecionado.
+        showUnselectedLabels: false, // Não exibe labels para os itens não selecionados.
       ),
     );
   }

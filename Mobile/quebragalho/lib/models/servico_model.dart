@@ -1,7 +1,4 @@
-import 'package:intl/intl.dart';
 
-// Classe Servicos representa um serviço que contém atributos como id, nome, descrição, preço, 
-// IDs de agendamentos e tags.
 class Servicos {
   final int? id;
   final String nome;

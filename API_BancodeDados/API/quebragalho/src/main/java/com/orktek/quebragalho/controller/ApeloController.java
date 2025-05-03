@@ -1,11 +1,13 @@
 package com.orktek.quebragalho.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.orktek.quebragalho.dto.ApeloDTO;
 import com.orktek.quebragalho.model.Apelo;
 import com.orktek.quebragalho.service.ApeloService;
 
@@ -54,8 +56,10 @@ public class ApeloController {
         @ApiResponse(responseCode = "200", description = "Lista de apelos pendentes retornada com sucesso")
     })
     @GetMapping("/pendentes")
-    public ResponseEntity<List<Apelo>> listarPendentes() {
-        List<Apelo> apelos = apeloService.listarPendentes();
+    public ResponseEntity<List<ApeloDTO>> listarPendentes() {
+        List<ApeloDTO> apelos = apeloService.listarPendentes()
+        .stream().map(ApeloDTO::new)
+        .collect(Collectors.toList());
         return ResponseEntity.ok(apelos); // 200 OK
     }
 
@@ -88,10 +92,11 @@ public class ApeloController {
         @ApiResponse(responseCode = "404", description = "Apelo não encontrado")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Apelo> buscarPorId(
+    public ResponseEntity<ApeloDTO> buscarPorId(
             @Parameter(description = "ID do apelo a ser buscado", required = true)
             @PathVariable Long id) {
         return apeloService.buscarPorId(id)
+                .map(ApeloDTO::new) 
                 .map(ResponseEntity::ok) // 200 OK se encontrado
                 .orElse(ResponseEntity.notFound().build()); // 404 Not Found
     }

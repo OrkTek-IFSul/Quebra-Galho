@@ -1,8 +1,10 @@
 package com.orktek.quebragalho.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.orktek.quebragalho.model.Apelo;
 import com.orktek.quebragalho.model.Denuncia;
@@ -26,16 +28,16 @@ public class ApeloService {
      * @param apelo Objeto Apelo com os dados
      * @param denunciaId ID da denúncia sendo apelada
      * @return Apelo salvo
-     * @throws RuntimeException se denúncia não for encontrada
+     * @throws ResponseStatusException se denúncia não for encontrada
      */
     @Transactional
     public Apelo criarApelo(Apelo apelo, Long denunciaId) {
         Denuncia denuncia = denunciaRepository.findById(denunciaId)
-                .orElseThrow(() -> new RuntimeException("Denúncia não encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Denuncia nao encontrado"));
         
         // Verifica se já existe apelo para esta denúncia
         if (apeloRepository.existsByDenuncia(denuncia)) {
-            throw new RuntimeException("Já existe um apelo para esta denúncia");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ja existe um apelo para esta denuncia");
         }
         
         apelo.setDenuncia(denuncia);
@@ -58,7 +60,7 @@ public class ApeloService {
      * @param id ID do apelo
      * @param status Novo status (true = resolvido)
      * @return Apelo atualizado
-     * @throws RuntimeException se apelo não for encontrado
+     * @throws ResponseStatusException se apelo não for encontrado
      */
     @Transactional
     public Apelo atualizarStatusApelo(Long id, Boolean status) {
@@ -67,7 +69,7 @@ public class ApeloService {
                     apelo.setStatus(status);
                     return apeloRepository.save(apelo);
                 })
-                .orElseThrow(() -> new RuntimeException("Apelo não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Apelo nao encontrado"));
     }
 
     /**

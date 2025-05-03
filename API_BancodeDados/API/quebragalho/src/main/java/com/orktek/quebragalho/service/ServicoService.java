@@ -4,7 +4,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.orktek.quebragalho.model.Prestador;
 import com.orktek.quebragalho.model.Servico;
@@ -27,13 +29,13 @@ public class ServicoService {
      * @param servico Objeto Servico com os dados
      * @param prestadorId ID do prestador que oferece o serviço
      * @return Servico criado
-     * @throws RuntimeException se prestador não existir
+     * @throws ResponseStatusException se prestador não existir
      */
     @Transactional
     public Servico criarServico(Servico servico, Long prestadorId) {
         // Verifica se prestador existe
         Prestador prestador = prestadorRepository.findById(prestadorId)
-                .orElseThrow(() -> new RuntimeException("Prestador não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prestador nao encontrado"));
         
         // Associa o prestador ao serviço
         servico.setPrestador(prestador);
@@ -71,7 +73,7 @@ public class ServicoService {
      * @param id ID do serviço
      * @param servicoAtualizado Objeto com os novos dados
      * @return Servico atualizado
-     * @throws RuntimeException se serviço não for encontrado
+     * @throws ResponseStatusException se serviço não for encontrado
      */
     @Transactional
     public Servico atualizarServico(Long id, Servico servicoAtualizado) {
@@ -83,7 +85,7 @@ public class ServicoService {
                     servico.setPreco(servicoAtualizado.getPreco());
                     return servicoRepository.save(servico);
                 })
-                .orElseThrow(() -> new RuntimeException("Serviço não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Servico nao encontrado"));
     }
 
     /**

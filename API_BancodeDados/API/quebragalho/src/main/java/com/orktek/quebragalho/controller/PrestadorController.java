@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.orktek.quebragalho.model.Prestador;
+import com.orktek.quebragalho.dto.PrestadorDTO;
 import com.orktek.quebragalho.service.PrestadorService;
 
 import java.util.List;
@@ -43,16 +44,17 @@ public class PrestadorController {
      * Busca prestador por ID
      * GET /api/prestadores/{id}
      */
+    @GetMapping("/{id}")
     @Operation(summary = "Busca prestador por ID", description = "Retorna os detalhes de um prestador específico pelo ID.")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Prestador encontrado com sucesso"),
         @ApiResponse(responseCode = "404", description = "Prestador não encontrado")
     })
-    @GetMapping("/{id}")
-    public ResponseEntity<Prestador> buscarPorId(
+    public ResponseEntity<PrestadorDTO> buscarPorId(
             @Parameter(description = "ID do prestador a ser buscado", required = true)
             @PathVariable Long id) {
         return prestadorService.buscarPorId(id)
+                .map(PrestadorDTO::new) 
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

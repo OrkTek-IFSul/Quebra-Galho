@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.orktek.quebragalho.dto.UsuarioDTO;
 import com.orktek.quebragalho.model.Usuario;
 import com.orktek.quebragalho.service.UsuarioService;
 
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.Parameter;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Controller para operações relacionadas a usuários
@@ -34,8 +36,10 @@ public class UsuarioController {
     @GetMapping
     @Operation(summary = "Listar todos os usuários", description = "Retorna uma lista de todos os usuários cadastrados")
     @ApiResponse(responseCode = "200", description = "Lista de usuários retornada com sucesso")
-    public ResponseEntity<List<Usuario>> listarTodos() {
-        List<Usuario> usuarios = usuarioService.listarTodos();
+    public ResponseEntity<List<UsuarioDTO>> listarTodos() {
+        List<UsuarioDTO> usuarios = usuarioService.listarTodos()
+                .stream().map(UsuarioDTO::new)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(usuarios); // Retorna 200 OK com a lista
     }
 
@@ -47,9 +51,10 @@ public class UsuarioController {
     @Operation(summary = "Buscar usuário por ID", description = "Retorna um usuário específico pelo ID fornecido")
     @ApiResponse(responseCode = "200", description = "Usuário encontrado com sucesso")
     @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
-    public ResponseEntity<Usuario> buscarPorId(
+    public ResponseEntity<UsuarioDTO> buscarPorId(
             @Parameter(description = "ID do usuário a ser buscado", required = true) @PathVariable Long id) {
         return usuarioService.buscarPorId(id)
+                .map(UsuarioDTO::new) // Converte Usuario para UsuarioResponseDTO
                 .map(ResponseEntity::ok) // Se encontrado, retorna 200 OK
                 .orElse(ResponseEntity.notFound().build()); // Se não, 404 Not Found
     }

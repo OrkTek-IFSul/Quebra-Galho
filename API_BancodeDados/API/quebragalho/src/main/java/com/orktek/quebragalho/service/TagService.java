@@ -1,8 +1,10 @@
 package com.orktek.quebragalho.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.orktek.quebragalho.model.Tags;
 import com.orktek.quebragalho.repository.TagRepository;
@@ -34,6 +36,10 @@ public class TagService {
         return tagRepository.findAll();
     }
 
+    public List<Tags> listarTodasAtivas() {
+        return tagRepository.findByStatus("Ativo"); // Assumindo que seu repository tem este método
+    }
+
     /**
      * Busca uma tag pelo ID
      * @param id ID da tag
@@ -48,7 +54,6 @@ public class TagService {
      * @param id ID da tag a ser atualizada
      * @param tagAtualizada Objeto com os novos dados
      * @return Tag atualizada
-     * @throws RuntimeException se tag não for encontrada
      */
     @Transactional
     public Tags atualizarTag(Long id, Tags tagAtualizada) {
@@ -58,7 +63,7 @@ public class TagService {
                     tag.setStatus(tagAtualizada.getStatus());
                     return tagRepository.save(tag);
                 })
-                .orElseThrow(() -> new RuntimeException("Tag não encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tag nao encontrada"));
     }
 
     /**

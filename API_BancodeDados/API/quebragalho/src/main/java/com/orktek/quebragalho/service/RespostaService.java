@@ -1,8 +1,10 @@
 package com.orktek.quebragalho.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.orktek.quebragalho.model.Avaliacao;
 import com.orktek.quebragalho.model.Resposta;
@@ -27,16 +29,16 @@ public class RespostaService {
      * @param resposta    Objeto Resposta com os dados
      * @param avaliacaoId ID da avaliação sendo respondida
      * @return Resposta salva
-     * @throws RuntimeException se avaliação não for encontrada
+     * @throws ResponseStatusException se avaliação não for encontrada
      */
     @Transactional
     public Resposta criarResposta(Resposta resposta, Long avaliacaoId) {
         Avaliacao avaliacao = avaliacaoRepository.findById(avaliacaoId)
-                .orElseThrow(() -> new RuntimeException("Avaliação não encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Avaliacao nao encontrada"));
 
         // Verifica se já existe resposta para esta avaliação
         if (respostaRepository.existsByAvaliacao(avaliacao)) {
-            throw new RuntimeException("Já existe uma resposta para esta avaliação");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Já existe uma resposta para esta avaliacao");
         }
 
         resposta.setAvaliacao(avaliacao);
@@ -61,7 +63,7 @@ public class RespostaService {
      * @param id             ID da resposta
      * @param novoComentario Novo texto da resposta
      * @return Resposta atualizada
-     * @throws RuntimeException se resposta não for encontrada
+     * @throws ResponseStatusException se resposta não for encontrada
      */
     @Transactional
     public Resposta atualizarResposta(Long id, String novoComentario) {
@@ -70,7 +72,7 @@ public class RespostaService {
                     resposta.setResposta(novoComentario);
                     return respostaRepository.save(resposta);
                 })
-                .orElseThrow(() -> new RuntimeException("Resposta não encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Resposta nao encontrada"));
     }
 
     /**

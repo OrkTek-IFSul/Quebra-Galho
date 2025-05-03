@@ -4,7 +4,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.orktek.quebragalho.model.Chat;
 import com.orktek.quebragalho.model.Prestador;
@@ -33,17 +35,17 @@ public class ChatService {
      * @param usuarioId ID do usuário remetente
      * @param prestadorId ID do prestador destinatário
      * @return Chat salvo
-     * @throws RuntimeException se usuário ou prestador não existirem
+     * @throws ResponseStatusException se usuário ou prestador não existirem
      */
     @Transactional
     public Chat enviarMensagem(Chat chat, Long usuarioId, Long prestadorId) {
         // Verifica se usuário existe
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
         
         // Verifica se prestador existe
         Prestador prestador = prestadorRepository.findById(prestadorId)
-                .orElseThrow(() -> new RuntimeException("Prestador não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prestador nao encontrado"));
         
         // Configura os relacionamentos e data
         chat.setUsuario(usuario);

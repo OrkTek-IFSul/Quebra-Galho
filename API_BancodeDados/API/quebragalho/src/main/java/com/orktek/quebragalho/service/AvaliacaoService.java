@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.orktek.quebragalho.model.Agendamento;
 import com.orktek.quebragalho.model.Avaliacao;
@@ -28,22 +30,22 @@ public class AvaliacaoService {
      * @param avaliacao Objeto Avaliacao com os dados
      * @param agendamentoId ID do agendamento sendo avaliado
      * @return Avaliacao criada
-     * @throws RuntimeException se agendamento não existir, não estiver concluído ou já tiver avaliação
+     * @throws ResponseStatusException se agendamento não existir, não estiver concluído ou já tiver avaliação
      */
     @Transactional
     public Avaliacao criarAvaliacao(Avaliacao avaliacao, Long agendamentoId) {
         // Verifica se agendamento existe
         Agendamento agendamento = agendamentoRepository.findById(agendamentoId)
-                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Agendamento nao encontrado"));
         
         // Verifica se agendamento foi concluído
         if (!agendamento.getStatus()) {
-            throw new RuntimeException("Agendamento não foi concluído");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Agendamento nao foi concluido");
         }
         
         // Verifica se já existe avaliação para este agendamento
         if (avaliacaoRepository.existsByAgendamento(agendamento)) {
-            throw new RuntimeException("Este agendamento já foi avaliado");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Agendamento ja foi avaliado");
         }
         
         // Configura os relacionamentos e data
