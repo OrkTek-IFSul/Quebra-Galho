@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quebragalho/views/screens/notificationsPage.dart';
 
 /// HomePage é um StatefulWidget que representa a tela de conversas.
 class HomePage extends StatefulWidget {
@@ -61,7 +62,14 @@ class _HomePageState extends State<HomePage> {
                   iconSize: 40,
                   icon: const Icon(Icons.notifications_none_outlined),
                   color: Colors.purple,
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => NotificationsPage(),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -142,95 +150,112 @@ class _HomePageState extends State<HomePage> {
             SizedBox(
               height: 140,
               //Lista de Destaques
-              child: ListView(
+              child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                children: [
-                  SizedBox(
-                    width: 220,
-                    child: Card(
-                      clipBehavior: Clip.hardEdge,
-                      child: InkWell(
-                        splashColor: Colors.purple,
-                        onTap: () {
-                          debugPrint('Card tapped.');
-                        },
-                        child: Row(
-                          children: [
-                            const SizedBox(
-                              child: Padding(
-                                padding: EdgeInsets.all(14.0),
-                                child: CircleAvatar(
-                                  radius: 40,
-                                  backgroundImage: NetworkImage(
-                                    "https://gru.ifsp.edu.br/images/phocagallery/galeria2/image03_grd.png",
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                itemCount: 3,
+                itemBuilder: (context, index) {
+                  return Row(
+                    children: [
+                      SizedBox(
+                        width: 220,
+                        child: Card(
+                          clipBehavior: Clip.hardEdge,
+                          child: InkWell(
+                            splashColor: Colors.purple,
+                            onTap: () {
+                              debugPrint('Card tapped.');
+                            },
+                            child: Row(
                               children: [
-                                Text(
-                                  'Nome Template',
-                                  style: TextStyle(
-                                    color:
-                                        Colors
-                                            .black, // Cor do texto definida como púrpura.
-                                    fontSize: 12, // Tamanho da fonte.
+                                const SizedBox(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(14.0),
+                                    child: CircleAvatar(
+                                      radius: 40,
+                                      backgroundImage: NetworkImage(
+                                        "https://gru.ifsp.edu.br/images/phocagallery/galeria2/image03_grd.png",
+                                      ),
+                                    ),
                                   ),
                                 ),
-                                Text(
-                                  'Tag Template',
-                                  style: TextStyle(
-                                    color:
-                                        Colors
-                                            .purple, // Cor do texto definida como púrpura.
-                                    fontSize: 12, // Tamanho da fonte.
-                                    backgroundColor: Colors.purple.shade100,
-                                  ),
-                                ),
-                                Row(
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      "R\$ ",
+                                      'Nome Template',
                                       style: TextStyle(
                                         color:
                                             Colors
-                                                .purple, // Cor do texto definida como púrpura.
+                                                .black, // Cor do texto definida como púrpura.
                                         fontSize: 12, // Tamanho da fonte.
                                       ),
                                     ),
-                                    Text(
-                                      "99",
-                                      style: TextStyle(
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
                                         color:
                                             Colors
-                                                .purple, // Cor do texto definida como púrpura.
-                                        fontSize: 22, // Tamanho da fonte.
-                                        fontWeight: FontWeight.bold,
+                                                .purple
+                                                .shade100, // Cor de fundo
+                                        borderRadius: BorderRadius.circular(
+                                          16,
+                                        ), // Borda arredondada
+                                      ),
+                                      child: const Text(
+                                        'Iniciar chat',
+                                        style: TextStyle(
+                                          color: Colors.purple,
+                                          fontSize: 12,
+                                        ),
                                       ),
                                     ),
-                                    Text(
-                                      "/h ",
-                                      style: TextStyle(
-                                        color:
-                                            Colors
-                                                .purple, // Cor do texto definida como púrpura.
-                                        fontSize: 12, // Tamanho da fonte.
-                                      ),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          "R\$ ",
+                                          style: TextStyle(
+                                            color:
+                                                Colors
+                                                    .purple, // Cor do texto definida como púrpura.
+                                            fontSize: 12, // Tamanho da fonte.
+                                          ),
+                                        ),
+                                        Text(
+                                          "99",
+                                          style: TextStyle(
+                                            color:
+                                                Colors
+                                                    .purple, // Cor do texto definida como púrpura.
+                                            fontSize: 22, // Tamanho da fonte.
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        Text(
+                                          "/h ",
+                                          style: TextStyle(
+                                            color:
+                                                Colors
+                                                    .purple, // Cor do texto definida como púrpura.
+                                            fontSize: 12, // Tamanho da fonte.
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
                               ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  // Add more Cards here if needed
-                ],
+                      // Add more Cards here if needed
+                    ],
+                  );
+                },
               ),
             ),
             //Lista de categorias
@@ -263,98 +288,114 @@ class _HomePageState extends State<HomePage> {
             ),
             //Lista de Profissionais por categoria
             Expanded(
-              child: ListView(
-                children: [
-                  SizedBox(
-                    child: Card(
-                      clipBehavior: Clip.hardEdge,
-                      child: InkWell(
-                        splashColor: Colors.purple,
-                        onTap: () {
-                          debugPrint('Card tapped.');
-                        },
-                        child: Row(
-                          children: [
-                            const SizedBox(
-                              child: Padding(
-                                padding: EdgeInsets.all(14.0),
-                                child: CircleAvatar(
-                                  radius: 30,
-                                  backgroundImage: NetworkImage(
-                                    "https://gru.ifsp.edu.br/images/phocagallery/galeria2/image03_grd.png",
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
+              child: ListView.builder(
+                itemCount: 10,
+                itemBuilder: (context, index) {
+                  return Column(
+                    children: [
+                      SizedBox(
+                        child: Card(
+                          clipBehavior: Clip.hardEdge,
+                          child: InkWell(
+                            splashColor: Colors.purple,
+                            onTap: () {
+                              debugPrint('Card tapped.');
+                            },
+                            child: Row(
                               children: [
-                                Text(
-                                  'Nome Template',
-                                  style: TextStyle(
-                                    color:
-                                        Colors
-                                            .black, // Cor do texto definida como púrpura.
-                                    fontSize: 12, // Tamanho da fonte.
+                                const SizedBox(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(14.0),
+                                    child: CircleAvatar(
+                                      radius: 30,
+                                      backgroundImage: NetworkImage(
+                                        "https://gru.ifsp.edu.br/images/phocagallery/galeria2/image03_grd.png",
+                                      ),
+                                    ),
                                   ),
                                 ),
-                                Text(
-                                  'Tag Template',
-                                  style: TextStyle(
-                                    color:
-                                        Colors
-                                            .purple, // Cor do texto definida como púrpura.
-                                    fontSize: 12, // Tamanho da fonte.
-                                    backgroundColor: Colors.purple.shade100,
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Nome Template',
+                                      style: TextStyle(
+                                        color:
+                                            Colors
+                                                .black, // Cor do texto definida como púrpura.
+                                        fontSize: 12, // Tamanho da fonte.
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            Colors
+                                                .purple
+                                                .shade100, // Cor de fundo
+                                        borderRadius: BorderRadius.circular(
+                                          16,
+                                        ), // Borda arredondada
+                                      ),
+                                      child: const Text(
+                                        'Iniciar chat',
+                                        style: TextStyle(
+                                          color: Colors.purple,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Spacer(),
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 12.0),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        "R\$ ",
+                                        style: TextStyle(
+                                          color:
+                                              Colors
+                                                  .purple, // Cor do texto definida como púrpura.
+                                          fontSize: 12, // Tamanho da fonte.
+                                        ),
+                                      ),
+                                      Text(
+                                        "99",
+                                        style: TextStyle(
+                                          color:
+                                              Colors
+                                                  .purple, // Cor do texto definida como púrpura.
+                                          fontSize: 22, // Tamanho da fonte.
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        "/h ",
+                                        style: TextStyle(
+                                          color:
+                                              Colors
+                                                  .purple, // Cor do texto definida como púrpura.
+                                          fontSize: 12, // Tamanho da fonte.
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
-                            Spacer(),
-                            Padding(
-                              padding: const EdgeInsets.only(right: 12.0),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    "R\$ ",
-                                    style: TextStyle(
-                                      color:
-                                          Colors
-                                              .purple, // Cor do texto definida como púrpura.
-                                      fontSize: 12, // Tamanho da fonte.
-                                    ),
-                                  ),
-                                  Text(
-                                    "99",
-                                    style: TextStyle(
-                                      color:
-                                          Colors
-                                              .purple, // Cor do texto definida como púrpura.
-                                      fontSize: 22, // Tamanho da fonte.
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    "/h ",
-                                    style: TextStyle(
-                                      color:
-                                          Colors
-                                              .purple, // Cor do texto definida como púrpura.
-                                      fontSize: 12, // Tamanho da fonte.
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  Divider(),
-                  // Add more Cards here if needed
-                ],
+                      Divider(),
+                    ],
+                  );
+                },
               ),
             ),
           ],
