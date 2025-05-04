@@ -1,9 +1,11 @@
 package com.orktek.quebragalho.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.orktek.quebragalho.model.Portfolio;
 import com.orktek.quebragalho.model.Prestador;
@@ -36,7 +38,7 @@ public class PortfolioService {
     @Transactional
     public Portfolio adicionarAoPortfolio(MultipartFile imagemPortfolio, Long prestadorId) {
         Prestador prestador = prestadorRepository.findById(prestadorId)
-                .orElseThrow(() -> new RuntimeException("Prestador não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prestador nao encontrado"));
         
         try {
             String nomeArquivo = fileStorageService.storeFile(imagemPortfolio);
@@ -47,7 +49,7 @@ public class PortfolioService {
             
             return portfolioRepository.save(portfolio);
         } catch (IOException e) {
-            throw new RuntimeException("Falha ao adicionar item ao portfólio", e);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Falha ao adicionar item ao portfolio",e);
         }
     }
 
@@ -77,7 +79,7 @@ public class PortfolioService {
     @Transactional
     public void removerDoPortfolio(Long id) {
         Portfolio portfolio = portfolioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Item do portfólio não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Item do portfolio nao encontrado"));
         
         try {
             // Remove o arquivo de imagem
@@ -86,7 +88,7 @@ public class PortfolioService {
             // Remove o item do banco de dados
             portfolioRepository.delete(portfolio);
         } catch (IOException e) {
-            throw new RuntimeException("Falha ao remover item do portfólio", e);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Falha ao remover item do portfolio",e);
         }
     }
 }

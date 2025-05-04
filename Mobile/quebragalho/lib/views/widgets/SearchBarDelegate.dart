@@ -2,7 +2,9 @@
 import 'package:flutter/material.dart';
 
 class SearchBarDelegate extends SliverPersistentHeaderDelegate {
+  @override
   final double minExtent;
+  @override
   final double maxExtent;
   final Widget child;
 

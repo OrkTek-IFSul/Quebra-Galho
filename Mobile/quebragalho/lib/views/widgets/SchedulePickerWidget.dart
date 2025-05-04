@@ -21,7 +21,7 @@ class _SchedulePickerWidgetState extends State<SchedulePickerWidget> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const SizedBox(height: 100),
+        const SizedBox(height: 50),
         const Text(
           'Selecione uma data:',
           style: TextStyle(
@@ -49,35 +49,108 @@ class _SchedulePickerWidgetState extends State<SchedulePickerWidget> {
             color: Colors.purple,
           ),
         ),
-        DropdownButton<TimeOfDay>(
-          value: _selectedTime,
-          hint: const Text('Escolha o horário'),
-          onChanged: (TimeOfDay? newTime) {
-            setState(() {
-              _selectedTime = newTime;
-            });
-          },
-          items:
-              _availableTimes.map((time) {
-                return DropdownMenuItem<TimeOfDay>(
-                  value: time,
-                  child: Text(time.format(context)),
-                );
-              }).toList(),
-        ),
-        const SizedBox(height: 24),
-        Text(
-          'Data: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-          style: const TextStyle(fontSize: 16),
-        ),
         const SizedBox(height: 8),
-        Text(
-          _selectedTime != null
-              ? 'Hora: ${_selectedTime!.format(context)}'
-              : 'Hora não selecionada',
-          style: const TextStyle(fontSize: 16),
+        
+        // Time Slots com rolagem horizontal
+        SizedBox(
+          height: 50,
+          child: TimeSlotPicker(
+            availableTimes: _availableTimes,
+            selectedTime: _selectedTime,
+            onTimeSelected: (time) {
+              setState(() {
+                _selectedTime = time;
+              });
+            },
+          ),
+        ),
+        
+        const SizedBox(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Data:',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Text( '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ],
+            ),
+            const SizedBox(width: 20),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text('Hora:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(
+                  _selectedTime != null
+                      ? '${_selectedTime!.format(context)}'
+                      : 'Não selecionada',
+                  style: TextStyle(fontSize: 18, color: Colors.purple, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ],
         ),
       ],
+    );
+  }
+}
+
+class TimeSlotPicker extends StatelessWidget {
+  final List<TimeOfDay> availableTimes;
+  final TimeOfDay? selectedTime;
+  final Function(TimeOfDay) onTimeSelected;
+
+  const TimeSlotPicker({
+    super.key,
+    required this.availableTimes,
+    required this.selectedTime,
+    required this.onTimeSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      scrollDirection: Axis.horizontal,
+      itemCount: availableTimes.length,
+      itemBuilder: (context, index) {
+        final time = availableTimes[index];
+        final isSelected = selectedTime != null &&
+            selectedTime!.hour == time.hour &&
+            selectedTime!.minute == time.minute;
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: InkWell(
+            onTap: () => onTimeSelected(time),
+            child: Container(
+              width: 100,
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.purple : Colors.purple.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSelected ? Colors.purple : Colors.purple.withOpacity(0.3),
+                  width: 1.5,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  time.format(context),
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : Colors.purple,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

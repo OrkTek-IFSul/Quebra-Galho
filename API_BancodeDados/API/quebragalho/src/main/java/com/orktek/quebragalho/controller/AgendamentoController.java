@@ -4,10 +4,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.orktek.quebragalho.dto.AgendamentoDTO;
 import com.orktek.quebragalho.model.Agendamento;
 import com.orktek.quebragalho.service.AgendamentoService;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -28,15 +31,11 @@ public class AgendamentoController {
      * Cria novo agendamento
      * POST /api/agendamentos
      */
-    @Operation(
-        summary = "Cria um novo agendamento",
-        description = "Cria um novo agendamento para um serviço e usuário específicos",
-        responses = {
+    @Operation(summary = "Cria um novo agendamento", description = "Cria um novo agendamento para um serviço e usuário específicos", responses = {
             @ApiResponse(responseCode = "201", description = "Agendamento criado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos"),
             @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-        }
-    )
+    })
     @PostMapping
     public ResponseEntity<Agendamento> criarAgendamento(
             @Parameter(description = "ID do serviço a ser agendado", required = true) @RequestParam Long servicoId,
@@ -50,19 +49,17 @@ public class AgendamentoController {
      * Lista agendamentos de um usuário
      * GET /api/agendamentos/usuario/{usuarioId}
      */
-    @Operation(
-        summary = "Lista agendamentos de um usuário",
-        description = "Retorna todos os agendamentos associados a um usuário específico",
-        responses = {
+    @Operation(summary = "Lista agendamentos de um usuário", description = "Retorna todos os agendamentos associados a um usuário específico", responses = {
             @ApiResponse(responseCode = "200", description = "Lista de agendamentos retornada com sucesso"),
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado"),
             @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-        }
-    )
+    })
     @GetMapping("/usuario/{usuarioId}")
-    public ResponseEntity<List<Agendamento>> listarPorUsuario(
+    public ResponseEntity<List<AgendamentoDTO>> listarPorUsuario(
             @Parameter(description = "ID do usuário cujos agendamentos serão listados", required = true) @PathVariable Long usuarioId) {
-        List<Agendamento> agendamentos = agendamentoService.listarPorUsuario(usuarioId);
+        List<AgendamentoDTO> agendamentos = agendamentoService.listarPorUsuario(usuarioId)
+                .stream().map(AgendamentoDTO::new)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(agendamentos);
     }
 
@@ -70,19 +67,17 @@ public class AgendamentoController {
      * Lista agendamentos de um prestador
      * GET /api/agendamentos/prestador/{prestadorId}
      */
-    @Operation(
-        summary = "Lista agendamentos de um prestador",
-        description = "Retorna todos os agendamentos associados a um prestador específico",
-        responses = {
+    @Operation(summary = "Lista agendamentos de um prestador", description = "Retorna todos os agendamentos associados a um prestador específico", responses = {
             @ApiResponse(responseCode = "200", description = "Lista de agendamentos retornada com sucesso"),
             @ApiResponse(responseCode = "404", description = "Prestador não encontrado"),
             @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-        }
-    )
+    })
     @GetMapping("/prestador/{prestadorId}")
-    public ResponseEntity<List<Agendamento>> listarPorPrestador(
+    public ResponseEntity<List<AgendamentoDTO>> listarPorPrestador(
             @Parameter(description = "ID do prestador cujos agendamentos serão listados", required = true) @PathVariable Long prestadorId) {
-        List<Agendamento> agendamentos = agendamentoService.listarPorPrestador(prestadorId);
+        List<AgendamentoDTO> agendamentos = agendamentoService.listarPorPrestador(prestadorId)
+                .stream().map(AgendamentoDTO::new)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(agendamentos);
     }
 
@@ -90,15 +85,11 @@ public class AgendamentoController {
      * Cancela um agendamento
      * DELETE /api/agendamentos/{id}
      */
-    @Operation(
-        summary = "Cancela um agendamento",
-        description = "Cancela um agendamento específico pelo ID",
-        responses = {
+    @Operation(summary = "Cancela um agendamento", description = "Cancela um agendamento específico pelo ID", responses = {
             @ApiResponse(responseCode = "204", description = "Agendamento cancelado com sucesso"),
             @ApiResponse(responseCode = "404", description = "Agendamento não encontrado"),
             @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-        }
-    )
+    })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> cancelarAgendamento(
             @Parameter(description = "ID do agendamento a ser cancelado", required = true) @PathVariable Long id) {

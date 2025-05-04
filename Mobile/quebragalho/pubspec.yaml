@@ -10,10 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   dotted_border: ^2.1.0
-  fl_chart: ^0.40.0
- 
-
-
+  http: ^1.3.0
 
 dev_dependencies:
   flutter_test:

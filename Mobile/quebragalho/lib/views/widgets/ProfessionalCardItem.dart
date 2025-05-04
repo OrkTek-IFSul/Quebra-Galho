@@ -84,7 +84,7 @@ class ProfessionalCard extends StatelessWidget {
                           tag,
                           style: const TextStyle(
                             color: Colors.purple,
-                            fontSize: 14,
+                            fontSize: 10,
                           ),
                         ),
                       ),

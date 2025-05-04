@@ -28,7 +28,7 @@ class Schedulepage extends StatelessWidget {
           'Agendar Serviço', // Título da página.
           style: TextStyle(
             color: Colors.purple, // Cor do texto púrpura.
-            fontSize: 22, // Tamanho da fonte definido.
+            fontSize: 16, // Tamanho da fonte definido.
             fontWeight: FontWeight.w700, // Texto em negrito.
           ),
         ),

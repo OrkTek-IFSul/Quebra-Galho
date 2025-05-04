@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.orktek.quebragalho.dto.RespostaDTO;
 import com.orktek.quebragalho.model.Resposta;
 import com.orktek.quebragalho.service.RespostaService;
 
@@ -53,10 +54,11 @@ public class RespostaController {
         @ApiResponse(responseCode = "404", description = "Resposta não encontrada")
     })
     @GetMapping("/avaliacao/{avaliacaoId}")
-    public ResponseEntity<Resposta> buscarPorAvaliacao(
+    public ResponseEntity<RespostaDTO> buscarPorAvaliacao(
             @Parameter(description = "ID da avaliação para buscar a resposta", required = true)
             @PathVariable Long avaliacaoId) {
         return respostaService.buscarPorAvaliacao(avaliacaoId)
+                .map(RespostaDTO::new) 
                 .map(ResponseEntity::ok) // 200 OK se encontrado
                 .orElse(ResponseEntity.notFound().build()); // 404 Not Found
     }

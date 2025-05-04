@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-
 import 'package:flutter_quebragalho/views/screens/SolicitacoesPageCliente.dart';
-import 'package:flutter_quebragalho/views/screens/SolicitacoesPagePrestador.dart';
+import 'package:flutter_quebragalho/views/screens/pageViewPrestador.dart';
 import 'package:flutter_quebragalho/views/screens/reviewsPage.dart';
 import 'package:flutter_quebragalho/views/widgets/PrestadorFormModal.dart';
 import 'package:flutter_quebragalho/views/widgets/editar_email_modal.dart';
@@ -18,10 +17,6 @@ class UserProfile extends StatefulWidget {
 
 class _UserProfileState extends State<UserProfile> {
   bool isPrestador = false; // Controla se o perfil é de Prestador ou Cliente
-  final PageController _pageController =
-      PageController(); // Controlador para a navegação entre páginas.
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -136,8 +131,6 @@ class _UserProfileState extends State<UserProfile> {
                       isPrestador =
                           false; // Alterna para a visualização de Cliente
                     });
-                    
-                    _pageController.jumpToPage(0); // Vai para a página Cliente
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
@@ -157,14 +150,14 @@ class _UserProfileState extends State<UserProfile> {
                 // Botão para selecionar perfil Prestador
                 ElevatedButton(
                   onPressed: () {
-                    setState(() {
-                      isPrestador =
-                          true; // Alterna para a visualização de Cliente
-                    });
-                   
-                    _pageController.jumpToPage(
-                      1,
-                    ); // Vai para a página Prestador
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) =>
+                                PageViewPrestadorCore(), // Direciona para PageViewPrestador
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
@@ -212,14 +205,6 @@ class _UserProfileState extends State<UserProfile> {
                               Icons.settings,
                               'Solicitações\nde serviços',
                               2,
-                               onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => SolicitacoesPagePrestador(),
-                                  ),
-                                );
-                              },
                             ),
                             SizedBox(width: 3), // Espaçamento entre os itens
                             _buildActionItem(

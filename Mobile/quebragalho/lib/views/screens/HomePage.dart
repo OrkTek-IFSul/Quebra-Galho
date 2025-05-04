@@ -118,6 +118,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
+          // Título 'Destaques' na homepage
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
@@ -152,6 +153,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
+          // Destaques na homepage
           SliverToBoxAdapter(
             child: SizedBox(
               height: 180,
@@ -167,14 +169,7 @@ class _HomePageState extends State<HomePage> {
                       name: "Nome Template",
                       tag: "Tag Template",
                       price: 99,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => PrestadorPageUserVision(),
-                          ),
-                        );
-                      },
+                      onTap: () {},
                     ),
                   ),
                   Padding(
@@ -200,7 +195,8 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          // SLIVER FIXO — Categoria com SliverPersistentHeader
+
+          // SliverPersistente para categorias
           SliverPersistentHeader(
             pinned: true,
             delegate: CategoryHeaderDelegate(
@@ -212,7 +208,7 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 45), // 👈 Espaço no topo
+                    SizedBox(height: 45),
                     TextField(
                       decoration: InputDecoration(
                         hintText: 'Pesquise...',
@@ -226,16 +222,6 @@ class _HomePageState extends State<HomePage> {
                           borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide(color: Color(0xFFC4C4C4)),
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Color(0xFFC4C4C4)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Color(0xFFC4C4C4)),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade200,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -267,7 +253,6 @@ class _HomePageState extends State<HomePage> {
                   tag: professional['tag'] as String,
                   price: professional['price'] as double,
                   isVerified: professional['isVerified'] as bool,
-
                   onTap: () {
                     Navigator.push(
                       context,

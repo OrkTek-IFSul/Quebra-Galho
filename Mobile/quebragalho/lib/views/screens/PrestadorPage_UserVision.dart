@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quebragalho/views/screens/SchedulePage.dart';
 import 'package:flutter_quebragalho/views/screens/reviewsPage.dart';
 
 class PrestadorPageUserVision extends StatelessWidget {
@@ -272,7 +273,14 @@ class PrestadorPageUserVision extends StatelessWidget {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(0),
         child: ElevatedButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Schedulepage(), // Navega para ReviewsPage
+              ),
+            );
+          },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.purple,
             padding: EdgeInsets.symmetric(vertical: 16),

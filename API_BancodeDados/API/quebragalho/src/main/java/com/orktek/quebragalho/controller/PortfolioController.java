@@ -10,10 +10,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.orktek.quebragalho.dto.PortfolioDTO;
 import com.orktek.quebragalho.model.Portfolio;
 import com.orktek.quebragalho.service.PortfolioService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Controller para portfólios de prestadores
@@ -33,9 +35,9 @@ public class PortfolioController {
     @PostMapping("/{prestadorId}")
     @Operation(summary = "Adiciona item ao portfólio", description = "Adiciona um novo item ao portfólio de um prestador")
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "Item adicionado com sucesso"),
-        @ApiResponse(responseCode = "400", description = "Erro na requisição"),
-        @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
+            @ApiResponse(responseCode = "201", description = "Item adicionado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Erro na requisição"),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
     public ResponseEntity<Portfolio> adicionarItem(
             @Parameter(description = "ID do prestador", required = true) @PathVariable Long prestadorId,
@@ -51,13 +53,15 @@ public class PortfolioController {
     @GetMapping("/prestador/{prestadorId}")
     @Operation(summary = "Lista itens do portfólio", description = "Lista todos os itens do portfólio de um prestador")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Itens listados com sucesso"),
-        @ApiResponse(responseCode = "404", description = "Prestador não encontrado"),
-        @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
+            @ApiResponse(responseCode = "200", description = "Itens listados com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Prestador não encontrado"),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<List<Portfolio>> listarPorPrestador(
+    public ResponseEntity<List<PortfolioDTO>> listarPorPrestador(
             @Parameter(description = "ID do prestador", required = true) @PathVariable Long prestadorId) {
-        List<Portfolio> itens = portfolioService.listarPorPrestador(prestadorId);
+        List<PortfolioDTO> itens = portfolioService.listarPorPrestador(prestadorId)
+                .stream().map(PortfolioDTO::new)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(itens);
     }
 
@@ -68,9 +72,9 @@ public class PortfolioController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Remove item do portfólio", description = "Remove um item do portfólio pelo ID")
     @ApiResponses({
-        @ApiResponse(responseCode = "204", description = "Item removido com sucesso"),
-        @ApiResponse(responseCode = "404", description = "Item não encontrado"),
-        @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
+            @ApiResponse(responseCode = "204", description = "Item removido com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Item não encontrado"),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
     public ResponseEntity<Void> removerItem(
             @Parameter(description = "ID do item a ser removido", required = true) @PathVariable Long id) {
