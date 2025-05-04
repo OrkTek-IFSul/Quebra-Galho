@@ -1,3 +1,4 @@
+// Modelo que representa uma tag, incluindo atributos como nome, status e IDs relacionados a prestadores e serviços.
 class Tags {
   final int? id; 
   final String nome;
@@ -5,6 +6,7 @@ class Tags {
   final List<int> prestadoresIds;
   final List<int> servicosIds;
 
+  // Construtor para inicializar os atributos obrigatórios e opcionais.
   Tags({
     this.id,
     required this.nome,
@@ -13,6 +15,7 @@ class Tags {
     this.servicosIds = const [],
   });
 
+  // Método de fábrica para criar uma instância de Tags a partir de um JSON.
   factory Tags.fromJson(Map<String, dynamic> json) {
     List<int> extrairIds(List? lista) {
       if (lista == null) return [];
@@ -32,6 +35,7 @@ class Tags {
     );
   }
 
+  // Método para converter uma instância de Tags para JSON.
   Map<String, dynamic> toJson() {
     return {
       'nome': nome,
@@ -41,6 +45,7 @@ class Tags {
     };
   }
 
+  // Método para criar uma cópia de Tags com modificações nos campos.
   Tags copyWith({
     String? nome,
     String? status,

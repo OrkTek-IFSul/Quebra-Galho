@@ -1,16 +1,20 @@
+// Importações necessárias para manipulação de JSON, arquivos e requisições HTTP.
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_quebragalho/utils/api_endpoints.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
+// Classe responsável por gerenciar as requisições à API.
 class ApiService {
-  static String? _token;
+  static String? _token; // Token de autenticação opcional.
 
+  // Define o token de autenticação.
   static void setToken(String token) {
     _token = token;
   }
 
+  // Retorna os cabeçalhos HTTP, incluindo o token de autenticação, se disponível.
   static Map<String, String> _getHeaders({bool isMultipart = false}) {
     final headers = {
       if (!isMultipart) 'Content-Type': 'application/json',
@@ -22,6 +26,7 @@ class ApiService {
     return headers;
   }
 
+  // Realiza uma requisição GET para o endpoint especificado.
   static Future<dynamic> get(String endpoint) async {
     try {
       final response = await http.get(
@@ -34,6 +39,7 @@ class ApiService {
     }
   }
 
+  // Realiza uma requisição POST com um corpo opcional.
   static Future<dynamic> post(String endpoint, {dynamic body}) async {
     try {
       final response = await http.post(
@@ -48,6 +54,7 @@ class ApiService {
     }
   }
 
+  // Realiza uma requisição PUT com um corpo opcional.
   static Future<dynamic> put(String endpoint, {dynamic body}) async {
     try {
       final response = await http.put(
@@ -61,6 +68,7 @@ class ApiService {
     }
   }
 
+  // Realiza uma requisição DELETE e retorna um booleano indicando sucesso.
   static Future<bool> delete(String endpoint) async {
     try {
       final response = await http.delete(
@@ -73,6 +81,7 @@ class ApiService {
     }
   }
 
+  // Realiza o upload de um arquivo para o endpoint especificado.
   static Future<dynamic> uploadFile(
     String endpoint,
     File file, {
@@ -106,6 +115,7 @@ class ApiService {
     }
   }
 
+  // Trata a resposta da API, lançando exceções para status de erro.
   static dynamic _handleResponse(http.Response response) {
     print('Resposta da API [${response.statusCode}]: ${response.body}');
 
@@ -134,6 +144,7 @@ class ApiService {
     }
   }
 
+  // Trata erros genéricos e os converte em exceções específicas.
   static Exception _handleError(dynamic error) {
     if (error is SocketException) {
       return NetworkException('Falha na conexão com o servidor');
@@ -146,6 +157,7 @@ class ApiService {
   }
 }
 
+// Classes de exceção personalizadas para diferentes tipos de erro.
 class NetworkException implements Exception {
   final String message;
   NetworkException(this.message);

@@ -1,4 +1,4 @@
-
+// Modelo que representa um serviço, incluindo atributos como nome, descrição, preço e associações com agendamentos e tags.
 class Servicos {
   final int? id;
   final String nome;

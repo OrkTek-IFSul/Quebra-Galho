@@ -1,3 +1,4 @@
+// Modelo que representa a relação entre uma tag e um prestador, incluindo métodos para serialização e deserialização.
 class TagPrestador {
   final int? id; // id opcional, caso a API retorne
   final int tagId;

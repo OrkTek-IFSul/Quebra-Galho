@@ -1,5 +1,4 @@
-import 'package:intl/intl.dart';
-
+// Modelo que representa uma resposta associada a uma avaliação, com métodos para serialização e deserialização.
 // Classe Resposta representa uma resposta associada a uma avaliação, contendo atributos como id, texto da resposta, data e id da avaliação.
 class Resposta {
   final int? id;

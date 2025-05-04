@@ -1,5 +1,6 @@
 import 'package:flutter_quebragalho/models/resposta_model.dart';
 
+// Modelo que representa uma avaliação, incluindo atributos como nota, comentário, data, id do agendamento e resposta associada.
 class Avaliacao {
   final int? id;
   final int nota;
@@ -9,6 +10,7 @@ class Avaliacao {
   final Resposta? resposta;
 
   Avaliacao({
+    // Construtor para inicializar os atributos obrigatórios.
     this.id,
     required this.nota,
     required this.comentario,
@@ -18,6 +20,7 @@ class Avaliacao {
   });
 
   factory Avaliacao.fromJson(Map<String, dynamic> json) {
+    // Método de fábrica para criar uma instância de Avaliacao a partir de um JSON.
     int extrairId(dynamic valor) {
       if (valor is Map && valor.containsKey('id')) return valor['id'] as int;
       if (valor is int) return valor;
@@ -37,6 +40,7 @@ class Avaliacao {
   }
 
   Map<String, dynamic> toJson() {
+    // Método para converter uma instância de Avaliacao para JSON.
     return {
       'nota': nota,
       'comentario': comentario,
@@ -47,6 +51,7 @@ class Avaliacao {
   }
 
   Avaliacao copyWith({
+    // Método para criar uma cópia de Avaliacao com modificações nos campos.
     int? nota,
     String? comentario,
     DateTime? data,
@@ -64,6 +69,7 @@ class Avaliacao {
   }
 
   static int _validarNota(dynamic valor) {
+    // Método estático para validar a nota, garantindo que esteja entre 1 e 5.
     int nota;
     if (valor is int) {
       nota = valor;

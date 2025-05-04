@@ -1,3 +1,4 @@
+// Modelo que representa um prestador de serviços, incluindo atributos como descrição, documentos e IDs relacionados.
 class Prestador {
   final int? id;
   final String descricao;
@@ -8,6 +9,7 @@ class Prestador {
   final List<int> chatsIds;
   final List<int> tagsIds;
 
+  // Construtor para inicializar os atributos obrigatórios e opcionais.
   Prestador({
     this.id,
     required this.descricao,
@@ -19,6 +21,7 @@ class Prestador {
     this.tagsIds = const [],
   });
 
+  // Método de fábrica para criar uma instância de Prestador a partir de um JSON.
   factory Prestador.fromJson(Map<String, dynamic> json) {
     List<int> extrairIds(List? lista) {
       if (lista == null) return [];
@@ -40,6 +43,7 @@ class Prestador {
       );
   }
 
+  // Método para converter uma instância de Prestador para JSON.
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -53,6 +57,7 @@ class Prestador {
     };
   }
 
+  // Método para criar uma cópia de Prestador com modificações nos campos.
   Prestador copyWith({
     String? descricao,
     String? documentoPath,

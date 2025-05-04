@@ -1,3 +1,4 @@
+// Modelo que representa um agendamento, incluindo atributos como data, status e associações com serviços, usuários e avaliações.
 class Agendamento {
   final int? id; 
   final DateTime dataHora;
