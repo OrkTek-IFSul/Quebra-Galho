@@ -1,0 +1,84 @@
+Este documento descreve o fluxo de autenticação do sistema, detalhando cada uma das classes envolvidas, 
+seu propósito e como se relacionam para garantir a segurança das requisições via JWT.
+
+1. AuthController
+Classe responsável por expor o endpoint de login.
+
+Rota: POST /auth/login
+
+Função: Recebe o email e senha no corpo da requisição e chama o AuthService para autenticar o usuário.
+
+Retorno: Um token JWT válido para ser usado em chamadas autenticadas.
+
+2. AuthService
+Serviço que centraliza a lógica de autenticação.
+
+Função: Utiliza o AuthenticationManager para autenticar o e-mail e a senha do usuário.
+
+Se a autenticação for bem-sucedida, gera um token JWT com a classe JwtUtil.
+
+Retorno: String com o token gerado.
+
+3. JwtUtil
+Classe utilitária para gerar, validar e extrair informações dos tokens JWT.
+
+generateToken(username): Cria um token com validade de 24h para o usuário.
+
+getUsernameFromToken(token): Extrai o e-mail (username) do token.
+
+validateToken(token): Verifica se o token está válido e não expirado.
+
+4. JwtAuthenticationFilter
+Filtro que intercepta todas as requisições antes que cheguem aos controllers.
+
+Função:
+
+Verifica se há um token JWT válido no cabeçalho Authorization.
+
+Caso sim, recupera o usuário com o UserDetailsService e autentica a requisição.
+
+Resultado: Autentica a requisição via SecurityContextHolder, permitindo acesso aos endpoints protegidos.
+
+5. SecurityConfig
+Classe que configura as regras de segurança da aplicação.
+
+Funções principais:
+
+Define quais rotas são públicas (como /auth/login).
+
+Aplica o filtro JWT antes do filtro padrão de autenticação do Spring.
+
+Define que o sistema não usará sessões (JWT é stateless).
+
+Define o PasswordEncoder (BCrypt).
+
+Disponibiliza o AuthenticationManager.
+
+6. UsuarioDetailsService
+Implementa UserDetailsService, que é requisitada pelo Spring Security para obter os dados do usuário.
+
+Função: Busca o usuário com base no e-mail (username) usando UsuarioService.
+
+Retorno: Um objeto UserDetails que contém as informações de login do usuário (usuário, senha, roles).
+
+7. UsuarioService
+Classe de serviço que acessa o repositório de usuários.
+
+Função: Buscar o usuário no banco com base no e-mail.
+
+Retorno: Optional<Usuario>, que pode ser usado pelo UsuarioDetailsService.
+
+Fluxo Completo da Autenticação
+O cliente envia um POST /auth/login com e-mail e senha.
+
+AuthController chama AuthService.
+
+AuthService usa o AuthenticationManager (que usa UsuarioDetailsService) para autenticar.
+
+Se for bem-sucedido, JwtUtil gera um token JWT.
+
+O cliente envia o token em chamadas futuras no header Authorization: Bearer <token>.
+
+O JwtAuthenticationFilter intercepta a requisição, valida o token e autentica a requisição.
+
+A requisição segue para o controller apenas se o token for válido.
