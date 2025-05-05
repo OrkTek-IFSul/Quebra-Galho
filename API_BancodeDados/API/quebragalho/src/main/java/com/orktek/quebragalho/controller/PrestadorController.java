@@ -5,14 +5,23 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.orktek.quebragalho.model.Prestador;
 import com.orktek.quebragalho.dto.PrestadorDTO;
 import com.orktek.quebragalho.service.PrestadorService;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -110,4 +119,33 @@ public class PrestadorController {
         prestadorService.deletarPrestador(id);
         return ResponseEntity.noContent().build();
     }
+
+/**
+ * Obtém o documento de um prestador
+ * GET /api/prestadores/{id}/documento
+ */
+@GetMapping("/{id}/documento")
+@Operation(summary = "Obtém documento do prestador", description = "Retorna o documento de um prestador")
+@ApiResponses({
+                @ApiResponse(responseCode = "200", description = "Documento retornado com sucesso", content = @Content(mediaType = "application/*")),
+                @ApiResponse(responseCode = "404", description = "Prestador não encontrado"),
+                @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
+})
+public ResponseEntity<byte[]> obterDocumento(
+                @Parameter(description = "ID do prestador", required = true) @PathVariable Long id) {
+
+        try {
+                byte[] documentBytes = prestadorService.obterBytesImagem(id);
+                Path documentPath = prestadorService.getFilePath(id);
+                String mimeType = Files.probeContentType(documentPath);
+
+                return ResponseEntity.ok()
+                                .contentType(MediaType.parseMediaType(mimeType))
+                                .body(documentBytes);
+        } catch (FileNotFoundException e) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Documento não encontrado", e);
+        } catch (IOException e) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao ler o documento", e);
+        }
+}
 }

@@ -4,7 +4,9 @@ import java.time.LocalDateTime;
 
 import com.orktek.quebragalho.model.Agendamento;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
 
+@Data
 public class AgendamentoDTO {
     @Schema(description = "Identificador único do agendamento", example = "1")
     private Long id;

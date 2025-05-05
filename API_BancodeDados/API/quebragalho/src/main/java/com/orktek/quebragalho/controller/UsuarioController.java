@@ -2,9 +2,11 @@ package com.orktek.quebragalho.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.orktek.quebragalho.dto.UsuarioDTO;
 import com.orktek.quebragalho.model.Usuario;
@@ -13,8 +15,14 @@ import com.orktek.quebragalho.service.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -123,5 +131,34 @@ public class UsuarioController {
             @Parameter(description = "ID do usuário cuja imagem será removida", required = true) @PathVariable Long id) {
         usuarioService.removerImagemPerfil(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Obtém a imagem de um usuário
+     * GET /api/usuarios/{id}/imagem
+     */
+    @GetMapping("/{id}/imagem")
+    @Operation(summary = "Obtém imagem do usuário", description = "Retorna a imagem de um usuário")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Imagem retornada com sucesso", content = @Content(mediaType = "image/*")),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado"),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
+    })
+    public ResponseEntity<byte[]> obterImagem(
+            @Parameter(description = "ID do usuário", required = true) @PathVariable Long id) {
+
+        try {
+            byte[] imageBytes = usuarioService.obterBytesImagem(id);
+            Path imagePath = usuarioService.getFilePath(id);
+            String mimeType = Files.probeContentType(imagePath);
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(mimeType))
+                    .body(imageBytes);
+        } catch (FileNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Imagem não encontrada", e);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao ler a imagem", e);
+        }
     }
 }
