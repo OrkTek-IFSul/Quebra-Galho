@@ -5,8 +5,11 @@ import '../models/tag_prestador_model.dart';
 class TagPrestadorService {
   static const String _baseUrl = 'http://localhost:8080/api/tag-prestador';
 
-  /// Adiciona uma tag a um prestador
-  Future<TagPrestador> atualizarTagPrestador(Map<String, dynamic> data, String url) async {
+  /// Adiciona ou atualiza uma tag para um prestador
+  Future<TagPrestador> atualizarTagPrestador(
+    Map<String, dynamic> data,
+    String url,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse(url),
@@ -14,10 +17,12 @@ class TagPrestadorService {
         body: jsonEncode(data),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         return TagPrestador.fromJson(jsonDecode(response.body));
       } else {
-        throw Exception('Erro ao adicionar tag: ${response.statusCode}');
+        throw Exception(
+          'Erro ao adicionar/atualizar tag: ${response.statusCode}',
+        );
       }
     } catch (e) {
       rethrow;

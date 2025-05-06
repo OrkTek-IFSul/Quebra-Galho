@@ -46,15 +46,20 @@ class ChatPage extends StatelessWidget {
                     showModalBottomSheet(
                       context: context,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(16),
+                        ),
                       ),
                       builder: (BuildContext context) {
                         return FractionallySizedBox(
-                          heightFactor: 0.7, // Define que o modal ocupará 30% da altura da tela
+                          heightFactor:
+                              0.7, // Define que o modal ocupará 30% da altura da tela
                           child: ServicoCancelarModal(
                             onConfirm: () {
                               Navigator.of(context).pop(); // Fecha o modal
-                              // Aqui você pode adicionar a lógica para cancelar o serviço
+                              _cancelarServico(
+                                context,
+                              ); // Lógica para cancelar o serviço
                             },
                           ),
                         );
@@ -63,7 +68,10 @@ class ChatPage extends StatelessWidget {
                   },
                   child: Text(
                     'Cancelar',
-                    style: TextStyle(color: const Color.fromARGB(255, 88, 88, 88), fontSize: 14),
+                    style: TextStyle(
+                      color: const Color.fromARGB(255, 88, 88, 88),
+                      fontSize: 14,
+                    ),
                   ),
                 ),
               ),
@@ -79,15 +87,20 @@ class ChatPage extends StatelessWidget {
                     showModalBottomSheet(
                       context: context,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(16),
+                        ),
                       ),
                       builder: (BuildContext context) {
                         return FractionallySizedBox(
-                          heightFactor: 0.7, // Define que o modal ocupará 30% da altura da tela
+                          heightFactor:
+                              0.7, // Define que o modal ocupará 30% da altura da tela
                           child: ServicoConfirmarModal(
                             onConfirm: () {
                               Navigator.of(context).pop(); // Fecha o modal
-                              // Aqui você pode adicionar a lógica para cancelar o serviço
+                              _confirmarServico(
+                                context,
+                              ); // Lógica para confirmar o serviço
                             },
                           ),
                         );
@@ -143,6 +156,22 @@ class ChatPage extends StatelessWidget {
     );
   }
 
+  /// Função que será chamada quando o usuário cancelar o serviço
+  void _cancelarServico(BuildContext context) {
+    // Lógica para cancelar o serviço
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Serviço cancelado com sucesso!')));
+  }
+
+  /// Função que será chamada quando o usuário confirmar o serviço
+  void _confirmarServico(BuildContext context) {
+    // Lógica para confirmar o serviço
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Serviço confirmado com sucesso!')));
+  }
+
   /// Constrói uma mensagem individual do chat
   /// [message] é o texto da mensagem
   /// [isReceived] indica se a mensagem foi recebida (true) ou enviada (false)
@@ -156,9 +185,10 @@ class ChatPage extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           // Cor diferente para mensagens recebidas e enviadas
-          color: isReceived 
-              ? Colors.purple[100] 
-              : const Color.fromARGB(255, 224, 224, 224),
+          color:
+              isReceived
+                  ? Colors.purple[100]
+                  : const Color.fromARGB(255, 224, 224, 224),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -195,11 +225,7 @@ class ChatPage extends StatelessWidget {
               color: Colors.purple,
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              Icons.schedule,
-              color: Colors.white,
-              size: 20,
-            ),
+            child: Icon(Icons.schedule, color: Colors.white, size: 20),
           ),
           SizedBox(width: 8),
           // Campo de texto para digitar mensagem

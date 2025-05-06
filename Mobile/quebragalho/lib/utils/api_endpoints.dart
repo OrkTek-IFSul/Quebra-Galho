@@ -2,9 +2,11 @@ class ApiEndpoints {
   // Base URL
   static const String baseUrl = 'http://localhost:8080/api';
 
-    // Avaliações
-  static String criarAvaliacao(int agendamentoId) => '/avaliacoes/$agendamentoId';
-  static String getAvaliacoesServico(int servicoId) => '/avaliacoes/servico/$servicoId';
+  // Avaliações
+  static String criarAvaliacao(int agendamentoId) =>
+      '/avaliacoes/$agendamentoId';
+  static String getAvaliacoesServico(int servicoId) =>
+      '/avaliacoes/servico/$servicoId';
   static String deletarAvaliacao(int id) => '/avaliacoes/$id';
 
   // Usuários
@@ -26,17 +28,23 @@ class ApiEndpoints {
   static String deletarServico(int id) => '/servicos/$id';
   static String criarServico(int prestadorId) => '/servicos/$prestadorId';
   static const String getServicos = '/servicos';
-  static String getServicosPorPrestador(int prestadorId) => '/servicos/prestador/$prestadorId';
+  static String getServicosPorPrestador(int prestadorId) =>
+      '/servicos/prestador/$prestadorId';
 
   // Tags de Prestadores
-  static String atualizarTagPrestador(int tagId, int prestadorId) => '/tag-prestador/$tagId/$prestadorId';
-  static String deletarTagPrestador(int tagId, int prestadorId) => '/tag-prestador/$tagId/$prestadorId';
-  static String getTagPrestador(int prestadorId) => '/tag-prestador/prestador/$prestadorId';
+  static String atualizarTagPrestador(int tagId, int prestadorId) =>
+      '/tag-prestador/$tagId/$prestadorId';
+  static String deletarTagPrestador(int tagId, int prestadorId) =>
+      '/tag-prestador/$tagId/$prestadorId';
+  static String getTagPrestador(int prestadorId) =>
+      '/tag-prestador/prestador/$prestadorId';
 
   // Agendamentos
   static const String criarAgendamento = '/agendamentos';
-  static String getAgendamentosUsuario(int usuarioId) => '/agendamentos/usuario/$usuarioId';
-  static String getAgendamentosPrestador(int prestadorId) => '/agendamentos/prestador/$prestadorId';
+  static String getAgendamentosUsuario(int usuarioId) =>
+      '/agendamentos/usuario/$usuarioId';
+  static String getAgendamentosPrestador(int prestadorId) =>
+      '/agendamentos/prestador/$prestadorId';
   static String deletarAgendamento(int id) => '/agendamentos/$id';
 
   // Prestadores
@@ -50,26 +58,33 @@ class ApiEndpoints {
   static String atualizarRespostas(int id) => '/respostas/$id';
   static String deletarRespostas(int id) => '/respostas/$id';
   static String criarRespostas(int avaliacaoId) => '/respostas/$avaliacaoId';
-  static String getRespostas(int avaliacaoId) => '/respostas/avaliacao/$avaliacaoId';
-  
+  static String getRespostas(int avaliacaoId) =>
+      '/respostas/avaliacao/$avaliacaoId';
+
   // Denúncias
   static String atualizarDenuncias(int id) => '/denuncias/$id/resolver';
   static const String criarDenuncias = '/denuncias/';
   static const String getDenuncias = '/denuncias/pendentes/';
-  
+
   //Portfolio
   static String criarPortfolio(int prestadorId) => '/portfolio/$prestadorId';
-  static String getPortfolio(int prestadorId) => '/portfolio/prestador/$prestadorId';
+  static String getPortfolio(int prestadorId) =>
+      '/portfolio/prestador/$prestadorId';
   static String deletarPortfolio(int id) => '/portfolio/$id';
 
   //Tags de Serviços
-  static String criarTagServico(int tagId, int servicoId) => '/tag-servico/$tagId/$servicoId';
-  static String deletarTagServico(int tagId, int servicoId) => '/tag-servico/$tagId/$servicoId';
-  static String getTagServico(int servicoId) => '/tag-servico/servico/$servicoId';
+  static String criarTagServico(int tagId, int servicoId) =>
+      '/tag-servico/$tagId/$servicoId';
+  static String deletarTagServico(int tagId, int servicoId) =>
+      '/tag-servico/$tagId/$servicoId';
+  static String getTagServico(int servicoId) =>
+      '/tag-servico/servico/$servicoId';
 
   //Apelos
   static String atualizarApelo(int id) => '/apelos/$id/resolver';
   static String criarApelo(int denunciaId) => '/apelos/$denunciaId';
   static String getApelo(int id) => '/apelos/$id';
   static const String getApelos = '/apelos/pendentes';
+
+  static String loginUsuario = '$baseUrl/usuarios/login';
 }

@@ -54,4 +54,32 @@ class UsuarioService {
   static Future<void> removerImagemPerfil(int usuarioId) async {
     await ApiService.delete(ApiEndpoints.removerImagemUsuario(usuarioId));
   }
+
+  // Realiza o login do usuário com email e senha
+  static Future<Usuario> loginUsuario(String email, String senha) async {
+    final response = await ApiService.post(
+      ApiEndpoints.loginUsuario,
+      body: {'email': email, 'senha': senha},
+    );
+
+    return Usuario.fromJson(response);
+  }
+
+  /* Future<Usuario> criarUsuario(Usuario usuario) async {
+    // Checa se o email já está cadastrado
+    var usuarios = await UsuarioService.getTodosUsuarios();
+    if (usuarios.any((e) => e.email == usuario.email)) {
+      throw Exception('Email já cadastrado');
+    }
+    return this.criarUsuario(usuario);
+  }
+
+  Future<String> loginUsuario(String email, String senha) async {
+    var usuarios = await UsuarioService.getTodosUsuarios();
+    var usuario = usuarios.firstWhere((e) => e.email == email);
+    if (usuario.senha != senha) {
+      throw Exception('Credenciais inválidas');
+    }
+    return 'token_gerado'; // Retorna um token gerado
+  }*/
 }
