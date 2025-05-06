@@ -1,10 +1,14 @@
 package com.orktek.quebragalho.service;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -133,5 +137,47 @@ public class PrestadorService {
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Falha ao enviar imagem de documento", e);
         }
+    }
+
+    /**
+     * Obtém o caminho do arquivo de imagem do documento do prestador
+     * 
+     * @param prestadorId ID do prestador
+     * @return Caminho do arquivo
+     */
+    public Path getFilePath(Long prestadorId) {
+        Prestador prestador = prestadorRepository.findById(prestadorId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prestador não encontrado"));
+        
+        return fileStorageService.getFilePath(prestador.getDocumentoPath());
+    }
+
+    /**
+     * Carrega a imagem do documento do prestador como recurso
+     * 
+     * @param prestadorId ID do prestador
+     * @return Recurso da imagem
+     */
+    public Resource carregarImagemDocumento(Long prestadorId) throws FileNotFoundException {
+        Prestador prestador = prestadorRepository.findById(prestadorId)
+                .orElseThrow(
+                        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Documento do prestador não encontrado"));
+
+        return fileStorageService.loadFileAsResource(prestador.getDocumentoPath());
+    }
+
+    /**
+     * Obtém os bytes da imagem do documento do prestador
+     * 
+     * @param prestadorId ID do prestador
+     * @return Bytes da imagem
+     */
+    public byte[] obterBytesImagem(Long prestadorId) throws IOException {
+        Prestador prestador = prestadorRepository.findById(prestadorId)
+                .orElseThrow(
+                        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Documento do prestador não encontrado"));
+
+        Path imagePath = fileStorageService.getFilePath(prestador.getDocumentoPath());
+        return Files.readAllBytes(imagePath);
     }
 }

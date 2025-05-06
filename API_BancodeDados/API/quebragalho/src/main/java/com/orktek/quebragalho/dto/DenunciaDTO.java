@@ -2,7 +2,9 @@ package com.orktek.quebragalho.dto;
 
 import com.orktek.quebragalho.model.Denuncia;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
 
+@Data
 public class DenunciaDTO {
 
     @Schema(description = "Identificador único da denúncia", example = "1")

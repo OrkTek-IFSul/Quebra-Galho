@@ -1,72 +1,35 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter_quebragalho/models/tag_model.dart';
+import 'package:flutter_quebragalho/services/api_service.dart';
 import 'package:flutter_quebragalho/utils/api_endpoints.dart';
 
 class TagService {
-  static const String _baseUrl = 'http://localhost:8080/api/tags';  // Base URL para as Tags
+  // Busca uma tag pelo ID
+  static Future<Tag> getTag(int id) async {
+    final response = await ApiService.get(ApiEndpoints.getTag(id));
+    return Tag.fromJson(response);
+  }
 
-  // Método para atualizar o status da tag
-  static Future<Tags> atualizarStatusTag({
-    required int id,
-    required String novoStatus,
-  }) async {
-    if (novoStatus != 'Ativo' && novoStatus != 'Inativo') {
-      throw ArgumentError('Status deve ser "Ativo" ou "Inativo"');
-    }
+  // Busca todas as tags
+  static Future<List<Tag>> getTodasTags() async {
+    final response = await ApiService.get(ApiEndpoints.getTags);
+    return (response as List).map((json) => Tag.fromJson(json)).toList();
+  }
 
-    final response = await http.put(
-      Uri.parse(ApiEndpoints.atualizarStatusTag(id)),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({'status': novoStatus}),
+  // Cria uma nova tag
+  static Future<Tag> criarTag(Tag tag) async {
+    final response = await ApiService.post(
+      ApiEndpoints.criarTag,
+      body: tag.toJson(),
     );
-
-    if (response.statusCode == 200) {
-      return Tags.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('Erro ao atualizar status da tag');
-    }
+    return Tag.fromJson(response);
   }
 
-  // Método para obter todas as tags
-  static Future<List<Tags>> getTags() async {
-    final response = await http.get(Uri.parse(ApiEndpoints.getTags));
-
-    if (response.statusCode == 200) {
-      List<dynamic> data = json.decode(response.body);
-      return data.map((item) => Tags.fromJson(item)).toList();
-    } else {
-      throw Exception('Falha ao carregar tags');
-    }
-  }
-
-  // Método para criar uma nova tag
-  static Future<Tags> criarTag({
-    required String nome,
-    String status = 'Ativo',
-  }) async {
-    final response = await http.post(
-      Uri.parse(ApiEndpoints.criarTag),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'nome': nome,
-        'status': status,
-      }),
+  // Atualiza uma tag existente pelo ID
+  static Future<Tag> atualizarTag(int id, Tag tag) async {
+    final response = await ApiService.put(
+      ApiEndpoints.atualizarStatusTag(id),
+      body: tag.toJson(),
     );
-
-    if (response.statusCode == 200) {
-      return Tags.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('Erro ao criar tag');
-    }
-  }
-
-  // Método para deletar uma tag
-  static Future<void> deletarTag(int id) async {
-    final response = await http.delete(Uri.parse('$_baseUrl/$id'));
-
-    if (response.statusCode != 200) {
-      throw Exception('Erro ao deletar tag');
-    }
+    return Tag.fromJson(response);
   }
 }

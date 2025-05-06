@@ -20,6 +20,8 @@ class ApiEndpoints {
   static String atualizarStatusTag(int id) => '/tags/$id/status';
   static const String getTags = '/tags';
   static const String criarTag = '/tags';
+  static String getTag(int id) => '/tags/$id';
+
 
   // Serviços
   static String atualizarServico(int id) => '/servicos/$id';

@@ -1,10 +1,14 @@
 package com.orktek.quebragalho.service;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -72,7 +76,6 @@ public class UsuarioService {
         return usuarioRepository.findById(id);
     }
 
-    
     public String getNomeUsuario(Long id) {
         return usuarioRepository.findById(id).map(Usuario::getNome)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
@@ -194,5 +197,47 @@ public class UsuarioService {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Erro ao remover imagem de perfil", e);
             }
         }
+    }
+
+    /**
+     * Obtém o caminho do arquivo de imagem do usuário
+     * 
+     * @param usuarioId ID do usuário
+     * @return Caminho do arquivo
+     */
+    public Path getFilePath(Long usuarioId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+
+        return fileStorageService.getFilePath(usuario.getImgPerfil());
+    }
+
+    /**
+     * Carrega a imagem de um usuário como recurso
+     * 
+     * @param usuarioId ID do usuário
+     * @return Recurso da imagem
+     */
+    public Resource carregarImagemUsuario(Long usuarioId) throws FileNotFoundException {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(
+                        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+
+        return fileStorageService.loadFileAsResource(usuario.getImgPerfil());
+    }
+
+    /**
+     * Obtém os bytes da imagem do usuário
+     * 
+     * @param usuarioId ID do usuário
+     * @return Bytes da imagem
+     */
+    public byte[] obterBytesImagem(Long usuarioId) throws IOException {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(
+                        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+
+        Path imagePath = fileStorageService.getFilePath(usuario.getImgPerfil());
+        return Files.readAllBytes(imagePath);
     }
 }

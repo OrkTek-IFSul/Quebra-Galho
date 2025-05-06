@@ -10,6 +10,7 @@ import com.orktek.quebragalho.model.Portfolio;
 @Repository
 public interface PortfolioRepository extends JpaRepository<Portfolio, Long> {
 
-    List<Portfolio> findByPrestadorId(Long prestadorId);
-
+    List<Portfolio> findByPrestadorId(Long idPrestador);
 }
+
+
