@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class PrestadorFormModal extends StatelessWidget {
-  const PrestadorFormModal({Key? key}) : super(key: key);
+  const PrestadorFormModal({super.key});
 
   @override
   Widget build(BuildContext context) {

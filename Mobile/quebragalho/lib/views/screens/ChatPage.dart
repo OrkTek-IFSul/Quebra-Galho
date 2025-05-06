@@ -46,11 +46,14 @@ class ChatPage extends StatelessWidget {
                     showModalBottomSheet(
                       context: context,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(16),
+                        ),
                       ),
                       builder: (BuildContext context) {
                         return FractionallySizedBox(
-                          heightFactor: 0.7, // Define que o modal ocupará 30% da altura da tela
+                          heightFactor:
+                              0.7, // Define que o modal ocupará 30% da altura da tela
                           child: ServicoCancelarModal(
                             onConfirm: () {
                               Navigator.of(context).pop(); // Fecha o modal
@@ -63,7 +66,10 @@ class ChatPage extends StatelessWidget {
                   },
                   child: Text(
                     'Cancelar',
-                    style: TextStyle(color: const Color.fromARGB(255, 88, 88, 88), fontSize: 14),
+                    style: TextStyle(
+                      color: const Color.fromARGB(255, 88, 88, 88),
+                      fontSize: 14,
+                    ),
                   ),
                 ),
               ),
@@ -79,11 +85,14 @@ class ChatPage extends StatelessWidget {
                     showModalBottomSheet(
                       context: context,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(16),
+                        ),
                       ),
                       builder: (BuildContext context) {
                         return FractionallySizedBox(
-                          heightFactor: 0.7, // Define que o modal ocupará 30% da altura da tela
+                          heightFactor:
+                              0.7, // Define que o modal ocupará 30% da altura da tela
                           child: ServicoConfirmarModal(
                             onConfirm: () {
                               Navigator.of(context).pop(); // Fecha o modal
@@ -132,7 +141,7 @@ class ChatPage extends StatelessWidget {
                 _buildMessage('Brastemp, das antigas aquelas', true, '17:44'),
                 _buildMessage('show bem tranquilo', false, '17:45'),
                 _buildMessage('passa o endereço', false, '17:45'),
-                _buildMessage('Rua fulano de tal, 247', true, '17:44'),
+                _buildMessage('Rua fulano de tal, 157', true, '17:44'),
               ],
             ),
           ),
@@ -156,9 +165,10 @@ class ChatPage extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           // Cor diferente para mensagens recebidas e enviadas
-          color: isReceived 
-              ? Colors.purple[100] 
-              : const Color.fromARGB(255, 224, 224, 224),
+          color:
+              isReceived
+                  ? Colors.purple[100]
+                  : const Color.fromARGB(255, 224, 224, 224),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -195,11 +205,7 @@ class ChatPage extends StatelessWidget {
               color: Colors.purple,
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              Icons.schedule,
-              color: Colors.white,
-              size: 20,
-            ),
+            child: Icon(Icons.schedule, color: Colors.white, size: 20),
           ),
           SizedBox(width: 8),
           // Campo de texto para digitar mensagem

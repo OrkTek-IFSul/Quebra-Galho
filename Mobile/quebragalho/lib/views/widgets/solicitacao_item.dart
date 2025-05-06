@@ -9,13 +9,13 @@ class SolicitacaoItem extends StatelessWidget {
   final Color statusColor;
 
   const SolicitacaoItem({
-    Key? key,
+    super.key,
     required this.nome,
     required this.data,
     required this.hora,
     required this.status,
     required this.statusColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

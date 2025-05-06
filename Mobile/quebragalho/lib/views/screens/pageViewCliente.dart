@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quebragalho/views/screens/HomePage.dart';
 import 'package:flutter_quebragalho/views/screens/UserProfile.dart';
 import 'package:flutter_quebragalho/views/screens/chatsPage.dart';
 
@@ -12,11 +13,13 @@ class PageViewCore extends StatefulWidget {
 
 class _PageViewCoreState extends State<PageViewCore> {
   int _currentIndex = 0; // Armazena o índice da aba selecionada.
-  final PageController _pageController = PageController(); // Controlador para a navegação entre páginas.
+  final PageController _pageController =
+      PageController(); // Controlador para a navegação entre páginas.
 
   // Lista de telas que serão exibidas em cada aba.
   final List<Widget> _pages = [
-    HomeScreen(),  // Tela inicial
+
+    HomePage(),  // Tela inicial
     ChatsPage(),   // Tela de conversas
     UserProfile(), // Tela de perfil do usuário
   ];
@@ -29,7 +32,8 @@ class _PageViewCoreState extends State<PageViewCore> {
         controller: _pageController, // Controlador para definir a página atual.
         onPageChanged: (index) {
           setState(() {
-            _currentIndex = index; // Atualiza o índice da aba ao trocar de página.
+            _currentIndex =
+                index; // Atualiza o índice da aba ao trocar de página.
           });
         },
         children: _pages, // Exibe as telas definidas na lista _pages.
@@ -53,21 +57,24 @@ class _PageViewCoreState extends State<PageViewCore> {
           BottomNavigationBarItem(
             icon: Icon(
               Icons.home_outlined,
-              size: 30, // Remove a cor fixa para permitir o controle automático.
+              size:
+                  30, // Remove a cor fixa para permitir o controle automático.
             ),
             label: '', // Sem texto para o label.
           ),
           BottomNavigationBarItem(
             icon: Icon(
               Icons.sms_outlined,
-              size: 30, // Remove a cor fixa para permitir o controle automático.
+              size:
+                  30, // Remove a cor fixa para permitir o controle automático.
             ),
             label: '',
           ),
           BottomNavigationBarItem(
             icon: Icon(
               Icons.person_outline,
-              size: 30, // Remove a cor fixa para permitir o controle automático.
+              size:
+                  30, // Remove a cor fixa para permitir o controle automático.
             ),
             label: '',
           ),
@@ -75,30 +82,9 @@ class _PageViewCoreState extends State<PageViewCore> {
         selectedItemColor: Colors.purple, // Cor para o item selecionado.
         unselectedItemColor: Colors.grey, // Cor para os itens não selecionados.
         showSelectedLabels: false, // Não exibe labels para o item selecionado.
-        showUnselectedLabels: false, // Não exibe labels para os itens não selecionados.
+        showUnselectedLabels:
+            false, // Não exibe labels para os itens não selecionados.
       ),
     );
   }
 }
-
-// Telas de exemplo
-
-/// Tela inicial do aplicativo. Exibe um texto simples centralizado.
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      // Exibe o texto "Home Screen" com estilo de destaque.
-      child: Text(
-        'Home Screen',
-        style: TextStyle(
-          fontSize: 24, // Tamanho da fonte destacado.
-          fontWeight: FontWeight.bold, // Texto em negrito.
-        ),
-      ),
-    );
-  }
-}
-
