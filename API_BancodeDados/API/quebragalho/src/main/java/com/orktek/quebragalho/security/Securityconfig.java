@@ -11,13 +11,15 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig {
+public class Securityconfig {
     // Injeta o filtro JWT personalizado responsável por interceptar as requisições
     @Autowired
+    @Lazy // Injeta o filtro JWT de forma atrasada para evitar problemas de inicialização circular
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     // Define o bean de AuthenticationManager, necessário para autenticar usuários
@@ -30,26 +32,23 @@ public class SecurityConfig {
     // Define a cadeia de filtros de segurança (SecurityFilterChain)
     @SuppressWarnings("removal")
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf().disable() // Desabilita CSRF porque o sistema usa tokens (JWT) ao invés de cookies
-                .authorizeHttpRequests()
-                // Permite acesso público sem autenticação a qualquer endpoint que comece com
-                // /api/auth/
-                .requestMatchers("/api/auth/**").permitAll()
-                // Requer autenticação para qualquer outra rota
-                .anyRequest().authenticated()
-                .and()
-                // Define que a aplicação não irá manter sessões (stateless)
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-
-        // Adiciona o filtro JWT antes do filtro padrão de autenticação por
-        // usuário/senha
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
-        // Constrói e retorna a cadeia de filtros
-        return http.build();
-    }
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        .csrf(csrf -> csrf.disable()) // Desabilita a proteção CSRF, pois não é necessária para APIs REST
+        .cors(cors -> cors.configure(http))  // Configura o CORS (Cross-Origin Resource Sharing) para permitir requisições de diferentes origens
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/auth/login", "/api/usuarios").permitAll()  // Permite acesso público às rotas de login e cadastro de usuários
+            .anyRequest().authenticated() // Exige autenticação para todas as outras rotas
+        )
+        .sessionManagement(session -> session
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        );
+    
+    // Adicione o filtro JWT ANTES do UsernamePasswordAuthenticationFilter
+    http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+    
+    return http.build();
+}
 
     // Define um bean para codificação de senhas usando o algoritmo BCrypt
     @Bean
