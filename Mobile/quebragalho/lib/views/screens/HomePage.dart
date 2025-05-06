@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quebragalho/views/screens/PrestadorPage_UserVision.dart';
+import 'package:flutter_quebragalho/views/screens/notificationsPage.dart';
 import 'package:flutter_quebragalho/views/widgets/DestaqueCardHome.dart';
 import 'package:flutter_quebragalho/views/widgets/ProfessionalCardItem.dart';
 import 'package:flutter_quebragalho/views/widgets/_HeaderDelegate.dart';
@@ -111,7 +112,14 @@ class _HomePageState extends State<HomePage> {
                     iconSize: 30,
                     icon: const Icon(Icons.notifications_none_outlined),
                     color: Colors.purple,
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => NotificationsPage(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -157,41 +165,34 @@ class _HomePageState extends State<HomePage> {
           SliverToBoxAdapter(
             child: SizedBox(
               height: 180,
-              child: ListView(
+              child: ListView.builder(
+                itemCount: 10,
+                itemBuilder: (context, index) {
+                  return Row(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8.0),
+                        child: DestaqueCard(
+                          imageUrl:
+                              "https://gru.ifsp.edu.br/images/phocagallery/galeria2/image03_grd.png",
+                          name: "Nome Template",
+                          tag: "Tag Template",
+                          price: 75,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PrestadorPageUserVision(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                },
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
-                children: [
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4.0),
-                    child: DestaqueCard(
-                      imageUrl:
-                          "https://gru.ifsp.edu.br/images/phocagallery/galeria2/image03_grd.png",
-                      name: "Nome Template",
-                      tag: "Tag Template",
-                      price: 99,
-                      onTap: () {},
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8.0),
-                    child: DestaqueCard(
-                      imageUrl:
-                          "https://gru.ifsp.edu.br/images/phocagallery/galeria2/image03_grd.png",
-                      name: "Nome Template",
-                      tag: "Tag Template",
-                      price: 75,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => PrestadorPageUserVision(),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  SizedBox(height: 24),
-                ],
               ),
             ),
           ),
