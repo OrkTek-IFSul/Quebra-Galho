@@ -79,6 +79,7 @@ class _HomePageState extends State<HomePage> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
