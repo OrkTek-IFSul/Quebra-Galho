@@ -6,6 +6,7 @@ import com.orktek.quebragalho.model.Resposta;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+@Data
 public class RespostaDTO {
     @Schema(description = "Identificador único da resposta", example = "1")
     private Long id;

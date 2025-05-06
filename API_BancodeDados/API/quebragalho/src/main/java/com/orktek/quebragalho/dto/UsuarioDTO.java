@@ -21,7 +21,7 @@ public class UsuarioDTO {
     private String telefone;
 
     @Schema(description = "Path da imagem de perfil do usuário", example = "/img/usuario123.jpeg")
-    private String imgPerfil;
+    private String imagemPerfilUrl;
 
     @Schema(description = "Indica se o usuário é administrador", example = "false")
     private Boolean isAdmin;
@@ -41,7 +41,7 @@ public class UsuarioDTO {
         this.nome = usuario.getNome();
         this.email = usuario.getEmail();
         this.telefone = usuario.getTelefone();
-        this.imgPerfil = usuario.getImgPerfil();
+        this.imagemPerfilUrl = "/api/usuario/" + usuario.getId() + "/imagem";
         this.isAdmin = usuario.getIsAdmin();
         this.isModerador = usuario.getIsModerador();
         this.documento = usuario.getDocumento();

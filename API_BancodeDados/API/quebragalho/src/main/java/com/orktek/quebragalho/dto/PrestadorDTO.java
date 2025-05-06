@@ -24,7 +24,7 @@ public class PrestadorDTO {
     private String descricao;
 
     @Schema(description = "Path da imagem de perfil do prestador", example = "/img/prestador123.jpeg")
-    private String imgPerfil;
+    private String imagemPerfilUrl;
 
     @Schema(description = "Caminho do documento do prestador", example = "/img/prestador123.jpeg")
     private String documentoPath;
@@ -37,8 +37,8 @@ public class PrestadorDTO {
         this.nome = prestador.getUsuario().getNome();
         this.email = prestador.getUsuario().getEmail();
         this.descricao = prestador.getDescricao();
-        this.imgPerfil = prestador.getUsuario().getImgPerfil();
-        this.documentoPath = prestador.getDocumentoPath();
+        this.imagemPerfilUrl = "/api/usuario/" + prestador.getUsuario().getId() + "/imagem";
+        this.documentoPath = "/api/prestador/" + prestador.getId() + "/documento";
         this.servicos = prestador.getServicos().stream()
                 .map(ServicoSimplificadoDTO::new)
                 .collect(Collectors.toList());

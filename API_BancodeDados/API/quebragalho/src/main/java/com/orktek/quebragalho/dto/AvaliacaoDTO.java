@@ -6,6 +6,9 @@ import com.orktek.quebragalho.model.Avaliacao;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import lombok.Data;
+
+@Data
 public class AvaliacaoDTO {
 
     @Schema(description = "Identificador único da avaliação", example = "1")
