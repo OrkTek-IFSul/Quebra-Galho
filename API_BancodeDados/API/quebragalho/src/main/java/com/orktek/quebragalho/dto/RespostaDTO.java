@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import com.orktek.quebragalho.model.Resposta;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
 
 @Data
 public class RespostaDTO {
