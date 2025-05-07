@@ -21,7 +21,7 @@ USE `quebragalhodb` ;
 -- Table `quebragalhodb`.`usuario`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quebragalhodb`.`usuario` (
-  `id_usuario` INT NOT NULL AUTO_INCREMENT,
+  `id_usuario` BIGINT NOT NULL AUTO_INCREMENT,
   `nome` VARCHAR(60) NOT NULL,
   `email` VARCHAR(60) NOT NULL,
   `senha` VARCHAR(255) NOT NULL,
@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS `quebragalhodb`.`usuario` (
   `num_strike` INT NOT NULL,
   `img_perfil` VARCHAR(100) NULL,
   `token` VARCHAR(100) NULL,
-  `is_admin` TINYINT NOT NULL,
-  `is_moderador` TINYINT NOT NULL,
+  `is_admin` BIT NOT NULL,
+  `is_moderador` BIT NOT NULL,
   PRIMARY KEY (`id_usuario`))
 ENGINE = InnoDB;
 
@@ -40,10 +40,10 @@ ENGINE = InnoDB;
 -- Table `quebragalhodb`.`prestador`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quebragalhodb`.`prestador` (
-  `id_prestador` INT NOT NULL AUTO_INCREMENT,
+  `id_prestador` BIGINT NOT NULL AUTO_INCREMENT,
   `descricao_prestador` VARCHAR(200) NOT NULL,
   `documento_path` VARCHAR(100) NOT NULL,
-  `id_usuario_fk` INT NOT NULL,
+  `id_usuario_fk` BIGINT NOT NULL,
   PRIMARY KEY (`id_prestador`),
   INDEX `fk_prestador_usuario_idx` (`id_usuario_fk` ASC),
   CONSTRAINT `fk_prestador_usuario`
@@ -58,11 +58,11 @@ ENGINE = InnoDB;
 -- Table `quebragalhodb`.`chat`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quebragalhodb`.`chat` (
-  `id_chat` INT NOT NULL AUTO_INCREMENT,
+  `id_chat` BIGINT NOT NULL AUTO_INCREMENT,
   `mensagens` VARCHAR(200) NOT NULL,
   `data` DATE NOT NULL,
-  `id_prestador_fk` INT NOT NULL,
-  `id_usuario_fk` INT NOT NULL,
+  `id_prestador_fk` BIGINT NOT NULL,
+  `id_usuario_fk` BIGINT NOT NULL,
   PRIMARY KEY (`id_chat`),
   INDEX `fk_chat_prestador1_idx` (`id_prestador_fk` ASC),
   INDEX `fk_chat_usuario1_idx` (`id_usuario_fk` ASC),
@@ -83,9 +83,9 @@ ENGINE = InnoDB;
 -- Table `quebragalhodb`.`tag`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quebragalhodb`.`tag` (
-  `id_tag` INT NOT NULL AUTO_INCREMENT,
+  `id_tag` BIGINT NOT NULL AUTO_INCREMENT,
   `nome` VARCHAR(45) NOT NULL,
-  `status` VARCHAR(45) NOT NULL,
+  `status` VARCHAR(100) NOT NULL,
   PRIMARY KEY (`id_tag`))
 ENGINE = InnoDB;
 
@@ -94,11 +94,11 @@ ENGINE = InnoDB;
 -- Table `quebragalhodb`.`servico`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quebragalhodb`.`servico` (
-  `id_servico` INT NOT NULL AUTO_INCREMENT,
+  `id_servico` BIGINT NOT NULL AUTO_INCREMENT,
   `nome` VARCHAR(45) NOT NULL,
   `descricao` VARCHAR(45) NOT NULL,
   `preco` DOUBLE NOT NULL,
-  `id_prestador_fk` INT NOT NULL,
+  `id_prestador_fk` BIGINT NOT NULL,
   PRIMARY KEY (`id_servico`),
   INDEX `fk_servico_prestador1_idx` (`id_prestador_fk` ASC),
   CONSTRAINT `fk_servico_prestador1`
@@ -113,9 +113,9 @@ ENGINE = InnoDB;
 -- Table `quebragalhodb`.`portfolio`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quebragalhodb`.`portfolio` (
-  `id_portfolio` INT NOT NULL AUTO_INCREMENT,
+  `id_portfolio` BIGINT NOT NULL AUTO_INCREMENT,
   `img_porfolio_path` VARCHAR(45) NOT NULL,
-  `id_prestador_fk` INT NOT NULL,
+  `id_prestador_fk` BIGINT NOT NULL,
   PRIMARY KEY (`id_portfolio`),
   INDEX `fk_portfolio_prestador1_idx` (`id_prestador_fk` ASC),
   CONSTRAINT `fk_portfolio_prestador1`
@@ -130,15 +130,15 @@ ENGINE = InnoDB;
 -- Table `quebragalhodb`.`agendamento`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quebragalhodb`.`agendamento` (
-  `id_agendamento` INT NOT NULL AUTO_INCREMENT,
+  `id_agendamento` BIGINT NOT NULL AUTO_INCREMENT,
   `data_hora` DATETIME NOT NULL,
-  `status` TINYINT NOT NULL,
-  `id_servico_fk` INT NOT NULL,
-  `id_usuario_fk` INT NOT NULL,
+  `status` BIT NOT NULL,
+  `id_servico_fk` BIGINT NOT NULL,
+  `id_usuario_fk` BIGINT NOT NULL,
   PRIMARY KEY (`id_agendamento`),
-  INDEX `fk_agendamento_servico1_idx` (`id_servico_fk` ASC),
+  INDEX `fk_agendamento_servico_idx` (`id_servico_fk` ASC),
   INDEX `fk_agendamento_usuario1_idx` (`id_usuario_fk` ASC),
-  CONSTRAINT `fk_agendamento_servico1`
+  CONSTRAINT `fk_agendamento_servico`
     FOREIGN KEY (`id_servico_fk`)
     REFERENCES `quebragalhodb`.`servico` (`id_servico`)
     ON DELETE NO ACTION
@@ -155,14 +155,14 @@ ENGINE = InnoDB;
 -- Table `quebragalhodb`.`avaliacao`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quebragalhodb`.`avaliacao` (
-  `id_avaliacao` INT NOT NULL AUTO_INCREMENT,
+  `id_avaliacao` BIGINT NOT NULL AUTO_INCREMENT,
   `nota` INT NOT NULL,
   `comentario` VARCHAR(200) NOT NULL,
   `data` DATE NOT NULL,
-  `id_agendamento_fk` INT NOT NULL,
+  `id_agendamento_fk` BIGINT NOT NULL,
   PRIMARY KEY (`id_avaliacao`),
-  INDEX `fk_avaliacao_agendamento1_idx` (`id_agendamento_fk` ASC),
-  CONSTRAINT `fk_avaliacao_agendamento1`
+  INDEX `fk_avaliacao_agendamento_idx` (`id_agendamento_fk` ASC),
+  CONSTRAINT `fk_avaliacao_agendamento`
     FOREIGN KEY (`id_agendamento_fk`)
     REFERENCES `quebragalhodb`.`agendamento` (`id_agendamento`)
     ON DELETE NO ACTION
@@ -174,10 +174,10 @@ ENGINE = InnoDB;
 -- Table `quebragalhodb`.`resposta`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quebragalhodb`.`resposta` (
-  `id_resposta` INT NOT NULL AUTO_INCREMENT,
+  `id_resposta` BIGINT NOT NULL AUTO_INCREMENT,
   `comentario_resposta` VARCHAR(100) NOT NULL,
   `data` DATE NOT NULL,
-  `id_avaliacao_fk` INT NOT NULL,
+  `id_avaliacao_fk` BIGINT NOT NULL,
   PRIMARY KEY (`id_resposta`),
   INDEX `fk_resposta_avaliacao1_idx` (`id_avaliacao_fk` ASC),
   CONSTRAINT `fk_resposta_avaliacao1`
@@ -192,13 +192,13 @@ ENGINE = InnoDB;
 -- Table `quebragalhodb`.`denuncia`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quebragalhodb`.`denuncia` (
-  `id_denuncia` INT NOT NULL AUTO_INCREMENT,
+  `id_denuncia` BIGINT NOT NULL AUTO_INCREMENT,
   `tipo` VARCHAR(45) NOT NULL,
   `motivo` VARCHAR(100) NOT NULL,
-  `status` TINYINT NOT NULL,
-  `id_comentario` INT NULL,
-  `id_denunciante` INT NOT NULL,
-  `id_denunciado` INT NOT NULL,
+  `status` BIT NOT NULL,
+  `id_comentario` BIGINT NULL,
+  `id_denunciante` BIGINT NOT NULL,
+  `id_denunciado` BIGINT NOT NULL,
   PRIMARY KEY (`id_denuncia`),
   INDEX `fk_denuncia_usuario1_idx` (`id_denunciante` ASC),
   INDEX `fk_denuncia_usuario2_idx` (`id_denunciado` ASC),
@@ -219,10 +219,10 @@ ENGINE = InnoDB;
 -- Table `quebragalhodb`.`apelo`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quebragalhodb`.`apelo` (
-  `id_apelo` INT NOT NULL AUTO_INCREMENT,
-  `justificativa` VARCHAR(50) NOT NULL,
-  `status` TINYINT NOT NULL,
-  `id_denuncia_fk` INT NOT NULL,
+  `id_apelo` BIGINT NOT NULL AUTO_INCREMENT,
+  `justificativa` VARCHAR(100) NOT NULL,
+  `status` BIT NOT NULL,
+  `id_denuncia_fk` BIGINT NOT NULL,
   PRIMARY KEY (`id_apelo`),
   INDEX `fk_apelo_denuncia1_idx` (`id_denuncia_fk` ASC),
   CONSTRAINT `fk_apelo_denuncia1`
@@ -237,8 +237,8 @@ ENGINE = InnoDB;
 -- Table `quebragalhodb`.`tag_prestador`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quebragalhodb`.`tag_prestador` (
-  `id_tag_fk` INT NOT NULL,
-  `id_prestador_fk` INT NOT NULL,
+  `id_tag_fk` BIGINT NOT NULL,
+  `id_prestador_fk` BIGINT NOT NULL,
   PRIMARY KEY (`id_tag_fk`, `id_prestador_fk`),
   INDEX `fk_tag_has_prestador_prestador1_idx` (`id_prestador_fk` ASC),
   INDEX `fk_tag_has_prestador_tag1_idx` (`id_tag_fk` ASC),
@@ -259,8 +259,8 @@ ENGINE = InnoDB;
 -- Table `quebragalhodb`.`tag_servico`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quebragalhodb`.`tag_servico` (
-  `id_tag_fk` INT NOT NULL,
-  `id_servico_fk` INT NOT NULL,
+  `id_tag_fk` BIGINT NOT NULL,
+  `id_servico_fk` BIGINT NOT NULL,
   PRIMARY KEY (`id_tag_fk`, `id_servico_fk`),
   INDEX `fk_tag_has_servico_servico1_idx` (`id_servico_fk` ASC),
   INDEX `fk_tag_has_servico_tag1_idx` (`id_tag_fk` ASC),
@@ -280,7 +280,6 @@ ENGINE = InnoDB;
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
-
 
 -- =============================================
 -- USUÁRIOS (20 registros)
