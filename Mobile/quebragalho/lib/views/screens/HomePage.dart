@@ -146,6 +146,7 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+<<<<<<< HEAD
       body: RefreshIndicator(
         onRefresh: _refreshAll,
         color: Colors.purple,
@@ -164,6 +165,137 @@ class _HomePageState extends State<HomePage> {
                   horizontal: screenWidth * 0.05,
                 ).copyWith(top: MediaQuery.of(context).padding.top + 10),
                 child: Row(
+=======
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            pinned: false,
+            floating: true,
+            snap: true,
+            backgroundColor: Colors.white,
+            elevation: 0,
+            automaticallyImplyLeading: false,
+            expandedHeight: 80,
+            flexibleSpace: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.05,
+              ).copyWith(top: MediaQuery.of(context).padding.top + 10),
+              child: Row(
+                children: [
+                  Text(
+                    'O que você precisa ',
+                    style: TextStyle(color: Colors.purple, fontSize: 24),
+                  ),
+                  Text(
+                    'hoje?',
+                    style: TextStyle(
+                      color: Colors.purple,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Spacer(),
+                  IconButton(
+                    iconSize: 30,
+                    icon: const Icon(Icons.notifications_none_outlined),
+                    color: Colors.purple,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => NotificationsPage(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Título 'Destaques' na homepage
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.diamond_outlined,
+                        color: Colors.grey,
+                        size: 18,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Destaques',
+                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                      ),
+                      Spacer(),
+                      TextButton(
+                        onPressed: () {},
+                        child: Text(
+                          'Ver mais',
+                          style: TextStyle(color: Colors.purple, fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Destaques na homepage
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 180,
+              child: ListView.builder(
+                itemCount: 10,
+                itemBuilder: (context, index) {
+                  return Row(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8.0),
+                        child: DestaqueCard(
+                          imageUrl:
+                              "https://gru.ifsp.edu.br/images/phocagallery/galeria2/image03_grd.png",
+                          name: "Nome Template",
+                          tag: "Tag Template",
+                          price: 75,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PrestadorPageUserVision(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                },
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+              ),
+            ),
+          ),
+
+          // SliverPersistente para categorias
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: CategoryHeaderDelegate(
+              minExtent: 160,
+              maxExtent: 160,
+              child: Container(
+                color: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+>>>>>>> c8242e21a80c81c70f701efadcaa481988f4cbdc
                   children: [
                     Text(
                       'O que você precisa ',

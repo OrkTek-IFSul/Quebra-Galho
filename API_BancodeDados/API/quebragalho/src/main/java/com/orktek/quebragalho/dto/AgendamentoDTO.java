@@ -18,7 +18,7 @@ public class AgendamentoDTO {
     private Boolean status;
 
     @Schema(description = "Serviço relacionado ao agendamento")
-    private ServicoDTO servico;
+    private Long servicoId;
 
     @Schema(description = "Prestador que realizou o servico")
     private PrestadorDTO prestador;
@@ -30,7 +30,7 @@ public class AgendamentoDTO {
         this.id = agendamento.getId();
         this.dataHora = agendamento.getDataHora();
         this.status = agendamento.getStatus();
-        this.servico = new ServicoDTO(agendamento.getServico());
+        this.servicoId = agendamento.getServico().getId();
         this.prestador = new PrestadorDTO(agendamento.getServico().getPrestador());
         this.usuario = new UsuarioDTO(agendamento.getUsuario());
     }

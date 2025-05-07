@@ -16,7 +16,7 @@ public class Apelo {
     @Schema(description = "Identificador único do apelo", example = "1")
     private Long id;
     
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, length = 100)
     @Schema(description = "Justificativa do apelo", example = "Necessidade de revisão urgente")
     private String justificativa;
     
