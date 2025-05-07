@@ -30,79 +30,78 @@ import java.util.stream.Collectors;
 @Tag(name = "Tags", description = "Gerenciamento de tags/categorias")
 public class TagController {
 
-        @Autowired
-        private TagService tagService;
+    @Autowired
+    private TagService tagService;
 
-        /**
-         * Cria uma nova tag
-         * POST /api/tags
-         */
-        @Operation(summary = "Cria uma nova tag", description = "Cria uma nova tag com nome e status fornecidos.")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "201", description = "Tag criada com sucesso"),
-                        @ApiResponse(responseCode = "400", description = "Requisição inválida")
-        })
-        @PostMapping
-        public ResponseEntity<Tags> criarTag(@RequestBody Tags tag) {
-                Tags novaTag = tagService.criarTag(tag);
-                return ResponseEntity.status(201).body(novaTag); // 201 Created
-        }
+    /**
+     * Cria uma nova tag
+     * POST /api/tags
+     */
+    @Operation(summary = "Cria uma nova tag", description = "Cria uma nova tag com nome e status fornecidos.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Tag criada com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida")
+    })
+    @PostMapping
+    public ResponseEntity<Tags> criarTag(@RequestBody Tags tag) {
+        Tags novaTag = tagService.criarTag(tag);
+        return ResponseEntity.status(201).body(novaTag); // 201 Created
+    }
 
-        /**
-         * Atualiza status de uma tag
-         * PUT /api/tags/{id}/status
-         */
-        @Operation(summary = "Atualiza status de uma tag", description = "Atualiza o status de uma tag existente com base no ID.")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Tag atualizada com sucesso"),
-                        @ApiResponse(responseCode = "404", description = "Tag não encontrada"),
-                        @ApiResponse(responseCode = "400", description = "Requisição inválida")
-        })
-        @PutMapping("/{id}/status")
-        public ResponseEntity<Tags> atualizarStatus(
-                        @Parameter(description = "ID da tag a ser atualizada", required = true) @PathVariable Long id,
-                        @Parameter(description = "Dados atualizados da tag", required = true) @RequestBody Tags tagAtualizada) {
-                Tags tag = tagService.atualizarTag(id, tagAtualizada);
-                return ResponseEntity.ok(tag); // 200 OK
-        }
+    /**
+     * Busca uma tag específica por ID
+     * GET /api/tags/{id}
+     */
+    @Operation(summary = "Buscar tag por ID", description = "Retorna os detalhes completos de uma tag específica")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Tag encontrada com sucesso", content = @Content(schema = @Schema(implementation = TagDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Tag não encontrada"),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<TagDTO> buscarPorId(
+            @Parameter(description = "ID da tag a ser buscada", required = true, example = "1") @PathVariable Long id) {
 
-        /**
-         * Busca uma tag específica por ID
-         * GET /api/tags/{id}
-         */
-        @Operation(summary = "Buscar tag por ID", description = "Retorna os detalhes completos de uma tag específica")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Tag encontrada com sucesso", content = @Content(schema = @Schema(implementation = TagDTO.class))),
-                        @ApiResponse(responseCode = "404", description = "Tag não encontrada"),
-                        @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-        })
-        @GetMapping("/{id}")
-        public ResponseEntity<TagDTO> buscarPorId(
-                        @Parameter(description = "ID da tag a ser buscada", required = true, example = "1") @PathVariable Long id) {
+        Tags tag = tagService.buscarPorId(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tag não encontrada"));
 
-                Tags tag = tagService.buscarPorId(id)
-                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                                                "Tag não encontrada"));
+        return ResponseEntity.ok(new TagDTO(tag));
+    }
 
-                return ResponseEntity.ok(new TagDTO(tag));
-        }
+    /**
+     * Lista todas as tags ativas
+     * GET /api/tags
+     */
+    @Operation(summary = "Lista todas as tags ativas", description = "Retorna uma lista de todas as tags com status 'Ativo'")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de tags retornada com sucesso", content = @Content(array = @ArraySchema(schema = @Schema(implementation = TagDTO.class)))),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    })
+    @GetMapping
+    public ResponseEntity<List<TagDTO>> listarTodasAtivas() {
+        List<TagDTO> tagsAtivas = tagService.listarTodasAtivas()
+                .stream()
+                .map(TagDTO::new)
+                .collect(Collectors.toList());
 
-        /**
-         * Lista todas as tags ativas
-         * GET /api/tags
-         */
-        @Operation(summary = "Lista todas as tags ativas", description = "Retorna uma lista de todas as tags com status 'Ativo'")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Lista de tags retornada com sucesso", content = @Content(array = @ArraySchema(schema = @Schema(implementation = TagDTO.class)))),
-                        @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-        })
-        @GetMapping
-        public ResponseEntity<List<TagDTO>> listarTodasAtivas() {
-                List<TagDTO> tagsAtivas = tagService.listarTodasAtivas()
-                                .stream()
-                                .map(TagDTO::new)
-                                .collect(Collectors.toList());
+        return ResponseEntity.ok(tagsAtivas);
+    }
 
-                return ResponseEntity.ok(tagsAtivas);
-        }
+    /**
+     * Atualiza status de uma tag
+     * PUT /api/tags/{id}/status
+     */
+    @Operation(summary = "Atualiza status de uma tag", description = "Atualiza o status de uma tag existente com base no ID.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Tag atualizada com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Tag não encontrada"),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida")
+    })
+    @PutMapping("/{id}/status")
+    public ResponseEntity<Tags> atualizarStatus(
+            @Parameter(description = "ID da tag a ser atualizada", required = true) @PathVariable Long id,
+            @Parameter(description = "Dados atualizados da tag", required = true) @RequestParam Tags tagAtualizada) {
+        Tags tag = tagService.atualizarTag(id, tagAtualizada);
+        return ResponseEntity.ok(tag); // 200 OK
+    }
 }

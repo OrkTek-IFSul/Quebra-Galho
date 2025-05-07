@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.orktek.quebragalho.model.Servico;
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import lombok.Data;
 
 @Data

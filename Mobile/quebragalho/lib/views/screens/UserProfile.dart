@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quebragalho/views/screens/SolicitacoesPageCliente.dart';
-import 'package:flutter_quebragalho/views/screens/pageViewPrestador.dart';
 import 'package:flutter_quebragalho/views/screens/reviewsPage.dart';
 import 'package:flutter_quebragalho/views/widgets/PrestadorFormModal.dart';
 import 'package:flutter_quebragalho/views/widgets/editar_email_modal.dart';
@@ -150,14 +149,7 @@ class _UserProfileState extends State<UserProfile> {
                 // Botão para selecionar perfil Prestador
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (context) =>
-                                PageViewPrestadorCore(), // Direciona para PageViewPrestador
-                      ),
-                    );
+                    isPrestador = true; // Alterna para a visualização de Prestador
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor:

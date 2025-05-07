@@ -88,7 +88,7 @@ class _SchedulePickerWidgetState extends State<SchedulePickerWidget> {
                 Text('Hora:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 Text(
                   _selectedTime != null
-                      ? '${_selectedTime!.format(context)}'
+                      ? _selectedTime!.format(context)
                       : 'Não selecionada',
                   style: TextStyle(fontSize: 18, color: Colors.purple, fontWeight: FontWeight.bold),
                 ),

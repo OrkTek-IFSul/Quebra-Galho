@@ -1,25 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quebragalho/models/tag_model.dart';
 
 class ProfessionalCard extends StatelessWidget {
-  final String imageUrl;
+  final String? imageUrl;
   final String name;
-  final String tag;
+  final List<Tag> tags;
   final double price;
-  final bool isVerified; // Novo parâmetro para verificação
+  final bool isVerified;
   final VoidCallback? onTap;
+  final ImageProvider? imageProvider;
 
   const ProfessionalCard({
     super.key,
-    required this.imageUrl,
+    this.imageUrl,
     required this.name,
-    required this.tag,
+    required this.tags,
     required this.price,
-    required this.isVerified, // Valor padrão é falso
+    required this.isVerified,
     this.onTap,
+    this.imageProvider,
   });
+
+  ImageProvider? get _finalImageProvider {
+    try {
+      if (imageProvider != null) return imageProvider;
+      if (imageUrl == null || imageUrl!.trim().isEmpty) return null;
+      if (imageUrl!.startsWith('http://') || imageUrl!.startsWith('https://')) {
+        return NetworkImage(imageUrl!);
+      }
+    } catch (_) {
+      // Qualquer erro na criação da imagem, retorna null e mostra o container roxo
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final ImageProvider? finalImage = _finalImageProvider;
+
     return Column(
       children: [
         Container(
@@ -38,13 +56,35 @@ class ProfessionalCard extends StatelessWidget {
                       height: 60,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
-                        image: DecorationImage(
-                          image: NetworkImage(imageUrl),
-                          fit: BoxFit.cover,
-                        ),
+                        color:
+                            finalImage == null
+                                ? const Color.fromARGB(255, 120, 0, 141)
+                                : null,
+                        image:
+                            finalImage != null
+                                ? DecorationImage(
+                                  image: finalImage,
+                                  fit: BoxFit.cover,
+                                )
+                                : null,
                       ),
+                      child:
+                          finalImage == null
+                              ? Center(
+                                child: Text(
+                                  name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                  style: const TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              )
+                              : null,
                     ),
                   ),
+
+                  // LINHA COM CONSTRUÇÃO CARD
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,15 +94,14 @@ class ProfessionalCard extends StatelessWidget {
                           Text(
                             name,
                             style: const TextStyle(
-                              color: Colors.black,
+                              color: Color.fromARGB(255, 38, 0, 73),
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          // Ícone de verificação, exibido apenas se isVerified for true
                           if (isVerified)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 4.0),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 4.0),
                               child: Icon(
                                 Icons.verified,
                                 color: Colors.purple,
@@ -71,27 +110,42 @@ class ProfessionalCard extends StatelessWidget {
                             ),
                         ],
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6.0,
-                          vertical: 2.0,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.purple.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          tag,
-                          style: const TextStyle(
-                            color: Colors.purple,
-                            fontSize: 10,
-                          ),
-                        ),
+                      // Exibe todas as tags em um Wrap
+                      Wrap(
+                        spacing: 4,
+                        runSpacing: 4,
+                        children:
+                            tags
+                                .map(
+                                  (tag) => Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6.0,
+                                      vertical: 2.0,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color.fromARGB(
+                                        255,
+                                        244,
+                                        184,
+                                        255,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      tag.nome, // ✅ Acessa a tag correta
+                                      style: const TextStyle(
+                                        color: Colors.purple,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
                       ),
                     ],
                   ),
                   const Spacer(),
-                  Padding(
+                  /*Padding(
                     padding: const EdgeInsets.only(right: 12.0),
                     child: Row(
                       children: [
@@ -113,7 +167,7 @@ class ProfessionalCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                  ),
+                  ),*/
                 ],
               ),
             ),

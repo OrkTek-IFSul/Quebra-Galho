@@ -3,7 +3,6 @@ package com.orktek.quebragalho.dto;
 import com.orktek.quebragalho.model.Apelo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import lombok.Data;
 
 @Data

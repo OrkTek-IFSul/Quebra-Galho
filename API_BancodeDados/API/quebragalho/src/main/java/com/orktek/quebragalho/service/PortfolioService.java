@@ -45,6 +45,7 @@ public class PortfolioService {
     public Portfolio adicionarAoPortfolio(MultipartFile imagemPortfolio, Long prestadorId) {
         Prestador prestador = prestadorRepository.findById(prestadorId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prestador nao encontrado"));
+
         try {
             String nomeArquivo = fileStorageService.storeFile(imagemPortfolio);
 
@@ -132,6 +133,7 @@ public class PortfolioService {
         Portfolio portfolio = portfolioRepository.findById(id)
                 .orElseThrow(
                         () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Item do portfolio nao encontrado"));
+
         try {
             // Remove o arquivo de imagem
             fileStorageService.deleteFile(portfolio.getImgPortfolioPath());

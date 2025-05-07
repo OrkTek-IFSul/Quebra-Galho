@@ -1,23 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quebragalho/models/tag_model.dart';
 
 class DestaqueCard extends StatelessWidget {
   final String imageUrl;
   final String name;
-  final String tag;
+  final List<Tag> tags;
   final int price;
   final VoidCallback? onTap;
+  final ImageProvider? imageProvider;
 
   const DestaqueCard({
     super.key,
     required this.imageUrl,
     required this.name,
-    required this.tag,
+    required this.tags,
     required this.price,
     this.onTap,
+    this.imageProvider,
   });
+
+  ImageProvider? get _finalImageProvider {
+    try {
+      if (imageProvider != null) return imageProvider;
+      if (imageUrl == null || imageUrl!.trim().isEmpty) return null;
+      if (imageUrl!.startsWith('http://') || imageUrl!.startsWith('https://')) {
+        return NetworkImage(imageUrl!);
+      }
+    } catch (_) {
+      // Qualquer erro na criação da imagem, retorna null e mostra o container roxo
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final ImageProvider? finalImage = _finalImageProvider;
+
     return SizedBox(
       width: 250,
       height: 320,
@@ -26,6 +44,7 @@ class DestaqueCard extends StatelessWidget {
             Clip.none, // Permite que o conteúdo do Stack ultrapasse os limites
         children: [
           Card(
+            color: Colors.white,
             clipBehavior:
                 Clip.none, // Permite que o conteúdo ultrapasse os limites do card
             shape: RoundedRectangleBorder(
@@ -49,10 +68,27 @@ class DestaqueCard extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.all(14.0),
                         child: CircleAvatar(
+                          backgroundColor: Colors.purple,
+                          child:
+                              finalImage == null
+                                  ? Center(
+                                    child: Text(
+                                      name.isNotEmpty
+                                          ? name[0].toUpperCase()
+                                          : '?',
+                                      style: TextStyle(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                  : null,
                           radius: 40,
-                          backgroundImage: NetworkImage(imageUrl),
+                          backgroundImage: finalImage,
                         ),
                       ),
+
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,22 +101,34 @@ class DestaqueCard extends StatelessWidget {
                               fontSize: 14,
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8.0,
-                              vertical: 4.0,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.purple.shade100,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              tag,
-                              style: const TextStyle(
-                                color: Colors.purple,
-                                fontSize: 10,
-                              ),
-                            ),
+                          // Exibe todas as tags em um Wrap
+                          Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            children:
+                                tags
+                                    .map(
+                                      (tag) => Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8.0,
+                                          vertical: 4.0,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.purple.shade100,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          tag.nome, // ✅ Acessa o nome de cada tag individual
+                                          style: const TextStyle(
+                                            color: Colors.purple,
+                                            fontSize: 10,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
                           ),
                           Row(
                             children: [
