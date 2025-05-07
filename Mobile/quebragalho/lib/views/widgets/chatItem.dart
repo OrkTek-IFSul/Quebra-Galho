@@ -11,9 +11,10 @@ Widget ChatItem({
   const int messageLimit = 30; // Limite de caracteres para exibir a mensagem
 
   // Se a mensagem possuir mais caracteres do que o limite, ela é truncada e finalizada com "..."
-  String truncatedMessage = message.length > messageLimit
-      ? '${message.substring(0, messageLimit)}...'
-      : message;
+  String truncatedMessage =
+      message.length > messageLimit
+          ? '${message.substring(0, messageLimit)}...'
+          : message;
 
   return Column(
     children: [
@@ -25,10 +26,7 @@ Widget ChatItem({
             Stack(
               children: [
                 // Avatar básico com fundo cinza
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: Colors.grey.shade300,
-                ),
+                CircleAvatar(radius: 24, backgroundColor: Colors.grey.shade300),
                 // Se houver mensagens não lidas, exibe um pequeno indicador verde no canto inferior direito do avatar
                 if (unreadCount > 0)
                   Positioned(
@@ -41,12 +39,14 @@ Widget ChatItem({
                   ),
               ],
             ),
-            SizedBox(width: 12), // Espaçamento entre o avatar e o conteúdo textual
-
+            SizedBox(
+              width: 12,
+            ), // Espaçamento entre o avatar e o conteúdo textual
             // Coluna que exibe o nome do usuário e a mensagem (truncada, se necessário)
             Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start, // Alinha o texto à esquerda
+                crossAxisAlignment:
+                    CrossAxisAlignment.start, // Alinha o texto à esquerda
                 children: [
                   // Exibe o nome do usuário em fonte maior e em negrito
                   Text(
@@ -62,11 +62,10 @@ Widget ChatItem({
                   // Exibe a mensagem truncada com um estilo de texto menor e cor cinza
                   Text(
                     truncatedMessage,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                    overflow: TextOverflow.ellipsis, // Garante que o texto não ultrapasse o espaço disponível
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                    overflow:
+                        TextOverflow
+                            .ellipsis, // Garante que o texto não ultrapasse o espaço disponível
                   ),
                 ],
               ),
@@ -74,16 +73,11 @@ Widget ChatItem({
 
             // Coluna que exibe a hora da mensagem e, se houver, um contador para mensagens não lidas
             Column(
-              crossAxisAlignment: CrossAxisAlignment.end, // Alinha o texto à direita
+              crossAxisAlignment:
+                  CrossAxisAlignment.end, // Alinha o texto à direita
               children: [
                 // Exibe a hora da mensagem
-                Text(
-                  time,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
+                Text(time, style: TextStyle(fontSize: 12, color: Colors.grey)),
                 // Se existir alguma mensagem não lida, exibe um ícone de contador em um círculo
                 if (unreadCount > 0)
                   Container(
@@ -109,11 +103,7 @@ Widget ChatItem({
       ),
       // Linha divisória para separar os itens do chat
       SizedBox(height: 8),
-      Divider(
-        color: Colors.grey.shade300,
-        thickness: 1,
-        height: 1,
-      ),
+      Divider(color: Colors.grey.shade300, thickness: 1, height: 1),
     ],
   );
 }

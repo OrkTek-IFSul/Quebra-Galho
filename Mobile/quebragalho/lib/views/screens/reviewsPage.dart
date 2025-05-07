@@ -13,9 +13,14 @@ class ReviewsPage extends StatelessWidget {
         backgroundColor: Colors.white, // Define a cor de fundo branco.
         elevation: 0, // Remove a sombra (elevação).
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: Colors.purple), // Ícone de voltar com cor púrpura.
+          icon: Icon(
+            Icons.arrow_back_ios,
+            color: Colors.purple,
+          ), // Ícone de voltar com cor púrpura.
           onPressed: () {
-            Navigator.pop(context); // Ao pressionar, volta para a tela anterior.
+            Navigator.pop(
+              context,
+            ); // Ao pressionar, volta para a tela anterior.
           },
         ),
         title: Text(
@@ -53,22 +58,21 @@ class ReviewsPage extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, // Alinha o conteúdo à esquerda.
+          crossAxisAlignment:
+              CrossAxisAlignment.start, // Alinha o conteúdo à esquerda.
           children: [
             SizedBox(height: 16), // Espaçamento superior.
             // Texto informativo sobre o total de avaliações.
             Text(
               'Avaliações: 14',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
             SizedBox(height: 16), // Espaçamento entre texto e lista.
             // Lista de avaliações utilizando ListView.builder.
             Expanded(
               child: ListView.builder(
-                itemCount: 10, // Define o número de avaliações a serem exibidas.
+                itemCount:
+                    10, // Define o número de avaliações a serem exibidas.
                 itemBuilder: (context, index) {
                   return Column(
                     children: [
@@ -76,18 +80,24 @@ class ReviewsPage extends StatelessWidget {
                         padding: const EdgeInsets.only(bottom: 16.0),
                         // Linha que organiza o avatar, informações do usuário e a nota.
                         child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start, // Alinha os itens pelo topo.
+                          crossAxisAlignment:
+                              CrossAxisAlignment
+                                  .start, // Alinha os itens pelo topo.
                           children: [
                             // Exibe o avatar do usuário com tamanho e cor definidos.
                             CircleAvatar(
                               radius: 20,
                               backgroundColor: Colors.grey.shade300,
                             ),
-                            SizedBox(width: 12), // Espaçamento entre avatar e as informações.
+                            SizedBox(
+                              width: 12,
+                            ), // Espaçamento entre avatar e as informações.
                             // Coluna com o nome do usuário e o comentário/avaliação.
                             Expanded(
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start, // Alinha os textos à esquerda.
+                                crossAxisAlignment:
+                                    CrossAxisAlignment
+                                        .start, // Alinha os textos à esquerda.
                                 children: [
                                   Text(
                                     'José Silvano', // Nome do usuário avaliador.
@@ -97,15 +107,20 @@ class ReviewsPage extends StatelessWidget {
                                       color: Colors.purple,
                                     ),
                                   ),
-                                  SizedBox(height: 4), // Espaçamento entre o nome e o comentário.
+                                  SizedBox(
+                                    height: 4,
+                                  ), // Espaçamento entre o nome e o comentário.
                                   Text(
                                     'Lorem ipsumLorem ipsumLorem ipsumLorem ipsum.', // Conteúdo da avaliação.
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: Colors.grey,
                                     ),
-                                    overflow: TextOverflow.ellipsis, // Trunca o texto que ultrapassa o limite.
-                                    maxLines: 2, // Limite de linhas para exibição.
+                                    overflow:
+                                        TextOverflow
+                                            .ellipsis, // Trunca o texto que ultrapassa o limite.
+                                    maxLines:
+                                        2, // Limite de linhas para exibição.
                                   ),
                                 ],
                               ),
@@ -132,10 +147,7 @@ class ReviewsPage extends StatelessWidget {
                         ),
                       ),
                       // Linha divisória entre as avaliações.
-                      Divider(
-                        color: Colors.grey.shade300,
-                        thickness: 1,
-                      ),
+                      Divider(color: Colors.grey.shade300, thickness: 1),
                     ],
                   );
                 },

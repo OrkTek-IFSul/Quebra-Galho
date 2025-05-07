@@ -4,10 +4,7 @@ import 'package:flutter_quebragalho/views/screens/notificationConfirmService.dar
 class ServicoConfirmarModal extends StatelessWidget {
   final VoidCallback onConfirm;
 
-  const ServicoConfirmarModal({
-    super.key,
-    required this.onConfirm,
-  });
+  const ServicoConfirmarModal({super.key, required this.onConfirm});
 
   @override
   Widget build(BuildContext context) {
@@ -36,13 +33,12 @@ class ServicoConfirmarModal extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.purple,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8), // Diminui os cantos arredondados
+                borderRadius: BorderRadius.circular(
+                  8,
+                ), // Diminui os cantos arredondados
               ),
             ),
-            child: Text(
-              'Confirmar',
-              style: TextStyle(color: Colors.white),
-            ),
+            child: Text('Confirmar', style: TextStyle(color: Colors.white)),
           ),
         ),
       ],

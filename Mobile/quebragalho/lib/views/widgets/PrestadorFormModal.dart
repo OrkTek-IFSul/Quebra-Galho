@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class PrestadorFormModal extends StatelessWidget {
-  const PrestadorFormModal({Key? key}) : super(key: key);
+  const PrestadorFormModal({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -36,10 +36,7 @@ class PrestadorFormModal extends StatelessWidget {
             Text(
               'Para garantir a segurança, confiança e transparência entre os usuários da plataforma, é necessário que todos os prestadores de serviço realizem o cadastro com CPF ou CNPJ, além de fazer o upload de um documento oficial com foto.\n\n'
               'Essa verificação nos ajuda a manter um ambiente mais seguro para todos, prevenindo fraudes e assegurando que os serviços sejam realizados por pessoas ou empresas devidamente identificadas.',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade700,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
             ),
             SizedBox(height: 24),
             // Campo CPF / CNPJ
@@ -80,15 +77,16 @@ class PrestadorFormModal extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.cloud_upload_outlined, color: Colors.purple, size: 40),
+                    Icon(
+                      Icons.cloud_upload_outlined,
+                      color: Colors.purple,
+                      size: 40,
+                    ),
                     SizedBox(height: 8),
                     Text(
                       'Upload de documento\n(RG, CPF ou Comprovante de CNPJ)',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.purple,
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.purple),
                     ),
                   ],
                 ),

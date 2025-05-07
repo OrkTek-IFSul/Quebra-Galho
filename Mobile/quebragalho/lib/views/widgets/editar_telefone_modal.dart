@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class EditarTelefoneModal extends StatelessWidget {
-  const EditarTelefoneModal({Key? key}) : super(key: key);
+  const EditarTelefoneModal({super.key});
 
   @override
   Widget build(BuildContext context) {

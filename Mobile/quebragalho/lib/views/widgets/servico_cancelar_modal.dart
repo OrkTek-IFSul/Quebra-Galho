@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 class ServicoCancelarModal extends StatelessWidget {
   final VoidCallback onConfirm;
 
-  const ServicoCancelarModal({
-    super.key,
-    required this.onConfirm,
-  });
+  const ServicoCancelarModal({super.key, required this.onConfirm});
 
   @override
   Widget build(BuildContext context) {
@@ -27,13 +24,12 @@ class ServicoCancelarModal extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.purple,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8), // Diminui os cantos arredondados
+                borderRadius: BorderRadius.circular(
+                  8,
+                ), // Diminui os cantos arredondados
               ),
             ),
-            child: Text(
-              'Confirmar',
-              style: TextStyle(color: Colors.white),
-            ),
+            child: Text('Confirmar', style: TextStyle(color: Colors.white)),
           ),
         ),
       ],

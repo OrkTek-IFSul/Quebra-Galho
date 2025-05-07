@@ -25,52 +25,78 @@ class _ChatsPageState extends State<ChatsPage> {
       // O body da tela utiliza Padding para adicionar margens nas laterais e no topo.
       body: Padding(
         padding: EdgeInsets.only(
-          left: MediaQuery.of(context).size.width * 0.1, // 10% de espaçamento à esquerda.
-          right: MediaQuery.of(context).size.width * 0.1, // 10% de espaçamento à direita.
-          top: MediaQuery.of(context).size.height * 0.05, // 5% de espaçamento no topo.
+          left:
+              MediaQuery.of(context).size.width *
+              0.1, // 10% de espaçamento à esquerda.
+          right:
+              MediaQuery.of(context).size.width *
+              0.1, // 10% de espaçamento à direita.
+          top:
+              MediaQuery.of(context).size.height *
+              0.05, // 5% de espaçamento no topo.
         ),
         // Coluna organiza os widgets verticalmente.
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, // Alinha os widgets à esquerda.
+          crossAxisAlignment:
+              CrossAxisAlignment.start, // Alinha os widgets à esquerda.
           children: [
             // Texto "Chats" serve como título da tela.
             Text(
               'Chats',
               style: TextStyle(
-                color: Colors.purple,        // Cor do texto definida como púrpura.
-                fontSize: 24,                // Tamanho da fonte.
+                color: Colors.purple, // Cor do texto definida como púrpura.
+                fontSize: 24, // Tamanho da fonte.
                 fontWeight: FontWeight.bold, // Texto em negrito.
               ),
             ),
-            SizedBox(height: 16), // Espaçamento vertical entre o título e o campo de pesquisa.
-
+            SizedBox(
+              height: 16,
+            ), // Espaçamento vertical entre o título e o campo de pesquisa.
             // Campo de pesquisa para filtrar chats.
             TextField(
               decoration: InputDecoration(
                 hintText: 'Pesquise...', // Texto de dica para o usuário.
-                hintStyle: TextStyle(fontSize: 12, color: Colors.grey), // Estilo do texto de dica.
-                prefixIcon: Icon(Icons.search, color: Colors.grey, size: 18), // Ícone de pesquisa posicionado à esquerda.
+                hintStyle: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                ), // Estilo do texto de dica.
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: Colors.grey,
+                  size: 18,
+                ), // Ícone de pesquisa posicionado à esquerda.
                 // Borda padrão do TextField.
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8), // Bordas arredondadas.
-                  borderSide: BorderSide(color: const Color.fromARGB(255, 196, 196, 196)), // Define a cor da borda.
+                  borderRadius: BorderRadius.circular(
+                    8,
+                  ), // Bordas arredondadas.
+                  borderSide: BorderSide(
+                    color: const Color.fromARGB(255, 196, 196, 196),
+                  ), // Define a cor da borda.
                 ),
                 // Borda quando o TextField está habilitado.
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: const Color.fromARGB(255, 196, 196, 196)),
+                  borderSide: BorderSide(
+                    color: const Color.fromARGB(255, 196, 196, 196),
+                  ),
                 ),
                 // Borda ao focar o TextField.
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: const Color.fromARGB(255, 196, 196, 196)),
+                  borderSide: BorderSide(
+                    color: const Color.fromARGB(255, 196, 196, 196),
+                  ),
                 ),
-                filled: true, // Ativa o preenchimento do campo com uma cor definida.
-                fillColor: Colors.grey.shade200, // Cor de fundo do campo de pesquisa.
+                filled:
+                    true, // Ativa o preenchimento do campo com uma cor definida.
+                fillColor:
+                    Colors.grey.shade200, // Cor de fundo do campo de pesquisa.
               ),
             ),
-            SizedBox(height: 16), // Espaçamento entre o campo de pesquisa e a lista de chats.
-
+            SizedBox(
+              height: 16,
+            ), // Espaçamento entre o campo de pesquisa e a lista de chats.
             // Lista de chats exibida em um ListView.
             Expanded(
               child: ListView(
@@ -79,9 +105,7 @@ class _ChatsPageState extends State<ChatsPage> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => ChatPage(),
-                        ),
+                        MaterialPageRoute(builder: (context) => ChatPage()),
                       );
                     },
                     child: ChatItem(

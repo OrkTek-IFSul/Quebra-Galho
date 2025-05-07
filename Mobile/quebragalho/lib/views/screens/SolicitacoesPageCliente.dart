@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quebragalho/views/widgets/solicitacao_item.dart';
 
 class SolicitacoesPageCliente extends StatelessWidget {
-  const SolicitacoesPageCliente({Key? key}) : super(key: key);
+  const SolicitacoesPageCliente({super.key});
 
   @override
   Widget build(BuildContext context) {

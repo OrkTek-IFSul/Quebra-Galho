@@ -25,7 +25,8 @@ class _SignUpPageState extends State<SignUpPage> {
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch, // Ocupa toda a largura disponível.
+            crossAxisAlignment:
+                CrossAxisAlignment.stretch, // Ocupa toda a largura disponível.
             children: [
               // Espaço para posicionar o título mais abaixo.
               SizedBox(height: 35),
@@ -53,9 +54,11 @@ class _SignUpPageState extends State<SignUpPage> {
               SizedBox(height: 16),
               // Exibição das abas para selecionar o tipo de cadastro.
               TabBar(
-                indicatorColor: Colors.purple, // Cor do indicador da aba selecionada.
+                indicatorColor:
+                    Colors.purple, // Cor do indicador da aba selecionada.
                 labelColor: Colors.purple, // Cor do texto da aba selecionada.
-                unselectedLabelColor: Colors.grey, // Cor do texto das abas não selecionadas.
+                unselectedLabelColor:
+                    Colors.grey, // Cor do texto das abas não selecionadas.
                 tabs: <Widget>[
                   Tab(text: 'Cliente'), // Aba para cadastro de clientes.
                   Tab(text: 'Prestador'), // Aba para cadastro de prestadores.
@@ -70,7 +73,9 @@ class _SignUpPageState extends State<SignUpPage> {
                       child: SingleChildScrollView(
                         child: Padding(
                           // Aplica espaçamento horizontal relativo à largura da tela.
-                          padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.1),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: MediaQuery.of(context).size.width * 0.1,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -86,7 +91,10 @@ class _SignUpPageState extends State<SignUpPage> {
                               TextField(
                                 decoration: InputDecoration(
                                   hintText: 'Digite seu nome completo',
-                                  hintStyle: TextStyle(color: Colors.grey, fontSize: 10),
+                                  hintStyle: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 10,
+                                  ),
                                 ),
                               ),
                               SizedBox(height: 8), // Espaçamento reduzido
@@ -95,16 +103,23 @@ class _SignUpPageState extends State<SignUpPage> {
                                 children: [
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           'TELEFONE',
-                                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 10,
+                                          ),
                                         ),
                                         TextField(
                                           decoration: InputDecoration(
                                             hintText: '(99) 99999-9999',
-                                            hintStyle: TextStyle(color: Colors.grey, fontSize: 10),
+                                            hintStyle: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 10,
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -113,16 +128,23 @@ class _SignUpPageState extends State<SignUpPage> {
                                   SizedBox(width: 16),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           'CPF',
-                                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 10,
+                                          ),
                                         ),
                                         TextField(
                                           decoration: InputDecoration(
                                             hintText: 'XXX.XXX.XXX-XX',
-                                            hintStyle: TextStyle(color: Colors.grey, fontSize: 10),
+                                            hintStyle: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 10,
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -134,38 +156,57 @@ class _SignUpPageState extends State<SignUpPage> {
                               // Campo para EMAIL
                               Text(
                                 'EMAIL',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
                               ),
                               TextField(
                                 decoration: InputDecoration(
                                   hintText: 'Digite seu email',
-                                  hintStyle: TextStyle(color: Colors.grey, fontSize: 10),
+                                  hintStyle: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 10,
+                                  ),
                                 ),
                               ),
                               SizedBox(height: 8),
                               // Campo para NOVA SENHA
                               Text(
                                 'NOVA SENHA',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
                               ),
                               TextField(
-                                obscureText: true, // Esconde o conteúdo digitado
+                                obscureText:
+                                    true, // Esconde o conteúdo digitado
                                 decoration: InputDecoration(
                                   hintText: 'Digite sua nova senha',
-                                  hintStyle: TextStyle(color: Colors.grey, fontSize: 10),
+                                  hintStyle: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 10,
+                                  ),
                                 ),
                               ),
                               SizedBox(height: 8),
                               // Campo para CONFIRMAR SENHA
                               Text(
                                 'CONFIRMAR SENHA',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
                               ),
                               TextField(
                                 obscureText: true,
                                 decoration: InputDecoration(
                                   hintText: 'Confirme sua nova senha',
-                                  hintStyle: TextStyle(color: Colors.grey, fontSize: 10),
+                                  hintStyle: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 10,
+                                  ),
                                 ),
                               ),
                               SizedBox(height: 8),
@@ -173,7 +214,8 @@ class _SignUpPageState extends State<SignUpPage> {
                               Row(
                                 children: [
                                   Checkbox(
-                                    value: false, // Valor inicial não selecionado.
+                                    value:
+                                        false, // Valor inicial não selecionado.
                                     onChanged: (value) {
                                       // Lógica para aceitar os termos (a ser implementada).
                                     },
@@ -195,7 +237,9 @@ class _SignUpPageState extends State<SignUpPage> {
                     Center(
                       child: SingleChildScrollView(
                         child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.1),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: MediaQuery.of(context).size.width * 0.1,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -211,7 +255,10 @@ class _SignUpPageState extends State<SignUpPage> {
                               TextField(
                                 decoration: InputDecoration(
                                   hintText: 'Digite seu nome completo',
-                                  hintStyle: TextStyle(color: Colors.grey, fontSize: 10),
+                                  hintStyle: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 10,
+                                  ),
                                 ),
                               ),
                               SizedBox(height: 8),
@@ -220,16 +267,23 @@ class _SignUpPageState extends State<SignUpPage> {
                                 children: [
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           'TELEFONE',
-                                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 10,
+                                          ),
                                         ),
                                         TextField(
                                           decoration: InputDecoration(
                                             hintText: '(99) 99999-9999',
-                                            hintStyle: TextStyle(color: Colors.grey, fontSize: 10),
+                                            hintStyle: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 10,
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -238,16 +292,23 @@ class _SignUpPageState extends State<SignUpPage> {
                                   SizedBox(width: 16),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           'CPF / CNPJ',
-                                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 10,
+                                          ),
                                         ),
                                         TextField(
                                           decoration: InputDecoration(
                                             hintText: 'XXX.XXX.XXX-XX',
-                                            hintStyle: TextStyle(color: Colors.grey, fontSize: 10),
+                                            hintStyle: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 10,
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -259,19 +320,28 @@ class _SignUpPageState extends State<SignUpPage> {
                               // Campo para EMAIL
                               Text(
                                 'EMAIL',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
                               ),
                               TextField(
                                 decoration: InputDecoration(
                                   hintText: 'Digite seu email',
-                                  hintStyle: TextStyle(color: Colors.grey, fontSize: 10),
+                                  hintStyle: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 10,
+                                  ),
                                 ),
                               ),
                               SizedBox(height: 8),
                               // Seção para UPLOAD DE DOCUMENTO
                               Text(
                                 'UPLOAD DE DOCUMENTO',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
                               ),
                               SizedBox(height: 8),
                               // Container que simula a área de upload para documentos
@@ -282,23 +352,37 @@ class _SignUpPageState extends State<SignUpPage> {
                                 child: Container(
                                   height: 120,
                                   decoration: BoxDecoration(
-                                    border: Border.all(color: Color.fromARGB(255, 243, 173, 255), width: 2),
+                                    border: Border.all(
+                                      color: Color.fromARGB(255, 243, 173, 255),
+                                      width: 2,
+                                    ),
                                     borderRadius: BorderRadius.circular(8),
                                     color: Color.fromARGB(50, 230, 200, 250),
                                   ),
                                   child: Center(
                                     child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
-                                        Icon(Icons.cloud_upload, size: 40, color: Colors.purple),
+                                        Icon(
+                                          Icons.cloud_upload,
+                                          size: 40,
+                                          color: Colors.purple,
+                                        ),
                                         SizedBox(height: 8),
                                         Text(
                                           'Upload de documento',
-                                          style: TextStyle(color: Colors.purple, fontWeight: FontWeight.bold),
+                                          style: TextStyle(
+                                            color: Colors.purple,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                         Text(
                                           '(RG, CPF ou Comprovante de CNPJ)',
-                                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                                          style: TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 12,
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -309,26 +393,38 @@ class _SignUpPageState extends State<SignUpPage> {
                               // Campo para NOVA SENHA
                               Text(
                                 'NOVA SENHA',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
                               ),
                               TextField(
                                 obscureText: true,
                                 decoration: InputDecoration(
                                   hintText: 'Digite sua nova senha',
-                                  hintStyle: TextStyle(color: Colors.grey, fontSize: 10),
+                                  hintStyle: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 10,
+                                  ),
                                 ),
                               ),
                               SizedBox(height: 8),
                               // Campo para CONFIRMAR SENHA
                               Text(
                                 'CONFIRMAR SENHA',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
                               ),
                               TextField(
                                 obscureText: true,
                                 decoration: InputDecoration(
                                   hintText: 'Confirme sua nova senha',
-                                  hintStyle: TextStyle(color: Colors.grey, fontSize: 10),
+                                  hintStyle: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 10,
+                                  ),
                                 ),
                               ),
                               SizedBox(height: 8),
@@ -375,7 +471,11 @@ class _SignUpPageState extends State<SignUpPage> {
             ),
             child: Text(
               'Cadastrar',
-              style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),

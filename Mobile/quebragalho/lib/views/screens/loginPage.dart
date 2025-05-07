@@ -21,10 +21,16 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       // O corpo principal da tela com padding horizontal.
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 30.0), // Espaçamento nas laterais.
+        padding: const EdgeInsets.symmetric(
+          horizontal: 30.0,
+        ), // Espaçamento nas laterais.
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center, // Centraliza verticalmente os elementos.
-          crossAxisAlignment: CrossAxisAlignment.stretch, // Faz com que os elementos se estiquem horizontalmente.
+          mainAxisAlignment:
+              MainAxisAlignment
+                  .center, // Centraliza verticalmente os elementos.
+          crossAxisAlignment:
+              CrossAxisAlignment
+                  .stretch, // Faz com que os elementos se estiquem horizontalmente.
           children: [
             // LOGO: Espaço reservado para um widget de logo (não implementado aqui).
 
@@ -39,19 +45,22 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
             SizedBox(height: 8), // Espaçamento vertical curto.
-
             // Parágrafo explicativo para o usuário.
             Text(
               "Adicione suas credenciais para acessar os serviços do app",
               textAlign: TextAlign.left,
               style: TextStyle(
                 fontSize: 20, // Tamanho adequado para leitura.
-                color: const Color.fromARGB(255, 151, 151, 151), // Cor cinza para texto secundário.
+                color: const Color.fromARGB(
+                  255,
+                  151,
+                  151,
+                  151,
+                ), // Cor cinza para texto secundário.
                 fontWeight: FontWeight.w600, // Leve destaque no peso do texto.
               ),
             ),
             SizedBox(height: 34), // Espaçamento antes dos inputs.
-
             // Rótulo para o campo de Email/Telefone.
             Text(
               "EMAIL / TELEFONE",
@@ -61,12 +70,12 @@ class _LoginPageState extends State<LoginPage> {
             // Campo de texto para entrada de Email ou Telefone.
             TextField(
               decoration: InputDecoration(
-                border: UnderlineInputBorder(), // Exibe somente uma borda inferior.
+                border:
+                    UnderlineInputBorder(), // Exibe somente uma borda inferior.
                 labelText: 'Email ou Telefone', // Rótulo que fica flutuante.
               ),
             ),
             SizedBox(height: 16), // Espaçamento entre os campos.
-
             // Rótulo para o campo de Senha.
             Text(
               "SENHA",
@@ -77,15 +86,17 @@ class _LoginPageState extends State<LoginPage> {
             TextField(
               obscureText: true, // Esconde o texto digitado.
               decoration: InputDecoration(
-                border: UnderlineInputBorder(), // Exibe somente a borda inferior.
+                border:
+                    UnderlineInputBorder(), // Exibe somente a borda inferior.
                 labelText: 'Senha', // Rótulo para o campo.
               ),
             ),
             SizedBox(height: 16), // Espaçamento entre os campos.
-
             // Linha que agrupa o checkbox "Manter conectado" e o botão "Esqueceu sua senha?".
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween, // Distribui os elementos nas extremidades.
+              mainAxisAlignment:
+                  MainAxisAlignment
+                      .spaceBetween, // Distribui os elementos nas extremidades.
               children: [
                 Row(
                   children: [
@@ -110,7 +121,9 @@ class _LoginPageState extends State<LoginPage> {
                   },
                   child: Text(
                     "Esqueceu sua senha?",
-                    style: TextStyle(color: Colors.purple), // Destaca com cor púrpura.
+                    style: TextStyle(
+                      color: Colors.purple,
+                    ), // Destaca com cor púrpura.
                   ),
                 ),
               ],
@@ -121,7 +134,9 @@ class _LoginPageState extends State<LoginPage> {
 
       // Área inferior da tela contendo RichText e o botão "Acessar".
       bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min, // Ajusta a coluna para o tamanho mínimo necessário.
+        mainAxisSize:
+            MainAxisSize
+                .min, // Ajusta a coluna para o tamanho mínimo necessário.
         children: [
           // Espaço com o texto informativo e link para cadastro.
           Padding(
@@ -140,14 +155,17 @@ class _LoginPageState extends State<LoginPage> {
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
-                      recognizer: TapGestureRecognizer()
-                        ..onTap = () {
-                          // Navega para a página de cadastro ao ser acionado.
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => SignUpPage()),
-                          );
-                        },
+                      recognizer:
+                          TapGestureRecognizer()
+                            ..onTap = () {
+                              // Navega para a página de cadastro ao ser acionado.
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SignUpPage(),
+                                ),
+                              );
+                            },
                     ),
                   ],
                 ),
@@ -173,7 +191,8 @@ class _LoginPageState extends State<LoginPage> {
                 style: TextStyle(
                   fontSize: 20, // Tamanho de fonte adequado.
                   color: Colors.white, // Texto na cor branca para contraste.
-                  fontWeight: FontWeight.bold, // Texto em negrito para destaque.
+                  fontWeight:
+                      FontWeight.bold, // Texto em negrito para destaque.
                 ),
               ),
             ),

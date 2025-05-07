@@ -12,13 +12,14 @@ class PageViewPrestadorCore extends StatefulWidget {
 
 class _PageViewPrestadorCoreState extends State<PageViewPrestadorCore> {
   int _currentIndex = 0; // Armazena o índice da aba selecionada.
-  final PageController _pageController = PageController(); // Controlador para a navegação entre páginas.
+  final PageController _pageController =
+      PageController(); // Controlador para a navegação entre páginas.
 
   // Lista de telas que serão exibidas em cada aba.
   final List<Widget> _pages = [
     UserProfile(), // Tela de perfil do usuário
-    HomeScreen(),  // Tela inicial
-    ChatsPage(),   // Tela de conversas
+    HomeScreen(), // Tela inicial
+    ChatsPage(), // Tela de conversas
   ];
 
   @override
@@ -29,7 +30,8 @@ class _PageViewPrestadorCoreState extends State<PageViewPrestadorCore> {
         controller: _pageController, // Controlador para definir a página atual.
         onPageChanged: (index) {
           setState(() {
-            _currentIndex = index; // Atualiza o índice da aba ao trocar de página.
+            _currentIndex =
+                index; // Atualiza o índice da aba ao trocar de página.
           });
         },
         children: _pages, // Exibe as telas definidas na lista _pages.
@@ -53,21 +55,24 @@ class _PageViewPrestadorCoreState extends State<PageViewPrestadorCore> {
           BottomNavigationBarItem(
             icon: Icon(
               Icons.home_outlined,
-              size: 30, // Remove a cor fixa para permitir o controle automático.
+              size:
+                  30, // Remove a cor fixa para permitir o controle automático.
             ),
             label: '', // Sem texto para o label.
           ),
           BottomNavigationBarItem(
             icon: Icon(
               Icons.sms_outlined,
-              size: 30, // Remove a cor fixa para permitir o controle automático.
+              size:
+                  30, // Remove a cor fixa para permitir o controle automático.
             ),
             label: '',
           ),
           BottomNavigationBarItem(
             icon: Icon(
               Icons.notifications_none_outlined,
-              size: 30, // Remove a cor fixa para permitir o controle automático.
+              size:
+                  30, // Remove a cor fixa para permitir o controle automático.
             ),
             label: '',
           ),
@@ -75,7 +80,8 @@ class _PageViewPrestadorCoreState extends State<PageViewPrestadorCore> {
         selectedItemColor: Colors.purple, // Cor para o item selecionado.
         unselectedItemColor: Colors.grey, // Cor para os itens não selecionados.
         showSelectedLabels: false, // Não exibe labels para o item selecionado.
-        showUnselectedLabels: false, // Não exibe labels para os itens não selecionados.
+        showUnselectedLabels:
+            false, // Não exibe labels para os itens não selecionados.
       ),
     );
   }
@@ -101,4 +107,3 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
-
