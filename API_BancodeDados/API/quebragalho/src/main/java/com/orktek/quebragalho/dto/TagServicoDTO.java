@@ -41,12 +41,16 @@ class ServicoSimplificadoDTO {
     @Schema(description = "Nome do serviço", example = "Criação de Logo")
     private String nome;
     
+    @Schema(description = "Preço do serviço", example = "200.00")
+    private double preco;
+
     @Schema(description = "Categoria", example = "Design")
     private String prestador;
 
     public ServicoSimplificadoDTO(Servico servico) {
         this.id = servico.getId();
         this.nome = servico.getNome();
+        this.preco = servico.getPreco();
         this.prestador = servico.getPrestador().getUsuario().getNome(); 
     }
 }

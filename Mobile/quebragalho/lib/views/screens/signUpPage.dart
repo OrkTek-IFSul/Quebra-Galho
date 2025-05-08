@@ -1,4 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_quebragalho/models/prestador_model.dart';
+import 'package:flutter_quebragalho/models/usuario_model.dart';
+import 'package:flutter_quebragalho/services/prestador_service.dart';
+import 'package:flutter_quebragalho/services/usuario_service.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:http/http.dart' as http;
 
 /// Página de cadastro que permite o registro de clientes e prestadores.
 /// Utiliza abas para alternar entre os dois formulários.
@@ -10,6 +18,47 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
+  // Variável para controlar o tipo de cadastro (Cliente ou Prestador).
+  bool isCliente = true;
+
+  //Variavel para verificar se o arquivo está sendo upad
+  bool _isUploading = false;
+
+  // Variável para controlar a aceitação dos termos de compromisso e privacidade.
+  bool usuarioConcordaComTermos = false;
+  bool prestadorConcordaComTermos = false;
+
+  //TextEditingController para usuario.
+  final TextEditingController _nomeUsuarioController = TextEditingController();
+  final TextEditingController _emailUsuarioController = TextEditingController();
+  final TextEditingController _senhaUsuarioController = TextEditingController();
+  final TextEditingController _senhaConfirmaUsuarioController =
+      TextEditingController();
+  final TextEditingController _documentoUsuarioController =
+      TextEditingController();
+  final TextEditingController _telefoneUsuarioController =
+      TextEditingController();
+
+  //TextEditingController para prestador.
+  final TextEditingController _nomePrestadorController =
+      TextEditingController();
+  final TextEditingController _emailPrestadorController =
+      TextEditingController();
+  final TextEditingController _senhaPrestadorController =
+      TextEditingController();
+  final TextEditingController _senhaConfirmaPrestadorController =
+      TextEditingController();
+  final TextEditingController _documentoPrestadorController =
+      TextEditingController();
+  final TextEditingController _telefonePrestadorController =
+      TextEditingController();
+  // Variável para armazenar o documento selecionado para upload.
+  File? file;
+  // Variável para armazenar o usuario criado para o prestador.
+  Usuario? usuarioPrestadorCriado;
+  // Variável para armazenar o prestador criado para envio do documento.
+  Prestador? prestadorCriado;
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -63,6 +112,14 @@ class _SignUpPageState extends State<SignUpPage> {
                   Tab(text: 'Cliente'), // Aba para cadastro de clientes.
                   Tab(text: 'Prestador'), // Aba para cadastro de prestadores.
                 ],
+                onTap: (index) {
+                  setState(() {
+                    isCliente =
+                        index ==
+                        0; // Atualiza o estado com base na aba selecionada.
+                  });
+                  print('Está na aba Cliente? $isCliente');
+                },
               ),
               // Conteúdo das abas (formulários).
               Expanded(
@@ -89,6 +146,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                 ),
                               ),
                               TextField(
+                                controller: _nomeUsuarioController,
                                 decoration: InputDecoration(
                                   hintText: 'Digite seu nome completo',
                                   hintStyle: TextStyle(
@@ -114,6 +172,8 @@ class _SignUpPageState extends State<SignUpPage> {
                                           ),
                                         ),
                                         TextField(
+                                          controller:
+                                              _telefoneUsuarioController,
                                           decoration: InputDecoration(
                                             hintText: '(99) 99999-9999',
                                             hintStyle: TextStyle(
@@ -139,6 +199,8 @@ class _SignUpPageState extends State<SignUpPage> {
                                           ),
                                         ),
                                         TextField(
+                                          controller:
+                                              _documentoUsuarioController,
                                           decoration: InputDecoration(
                                             hintText: 'XXX.XXX.XXX-XX',
                                             hintStyle: TextStyle(
@@ -162,6 +224,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                 ),
                               ),
                               TextField(
+                                controller: _emailUsuarioController,
                                 decoration: InputDecoration(
                                   hintText: 'Digite seu email',
                                   hintStyle: TextStyle(
@@ -180,6 +243,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                 ),
                               ),
                               TextField(
+                                controller: _senhaUsuarioController,
                                 obscureText:
                                     true, // Esconde o conteúdo digitado
                                 decoration: InputDecoration(
@@ -200,6 +264,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                 ),
                               ),
                               TextField(
+                                controller: _senhaConfirmaUsuarioController,
                                 obscureText: true,
                                 decoration: InputDecoration(
                                   hintText: 'Confirme sua nova senha',
@@ -215,9 +280,13 @@ class _SignUpPageState extends State<SignUpPage> {
                                 children: [
                                   Checkbox(
                                     value:
-                                        false, // Valor inicial não selecionado.
+                                        usuarioConcordaComTermos, // Valor inicial não selecionado.
                                     onChanged: (value) {
-                                      // Lógica para aceitar os termos (a ser implementada).
+                                      setState(() {
+                                        usuarioConcordaComTermos =
+                                            value ??
+                                            false; // Mantém controle se aceitou ou não os termos
+                                      });
                                     },
                                   ),
                                   Expanded(
@@ -253,6 +322,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                 ),
                               ),
                               TextField(
+                                controller: _nomePrestadorController,
                                 decoration: InputDecoration(
                                   hintText: 'Digite seu nome completo',
                                   hintStyle: TextStyle(
@@ -278,6 +348,8 @@ class _SignUpPageState extends State<SignUpPage> {
                                           ),
                                         ),
                                         TextField(
+                                          controller:
+                                              _telefonePrestadorController,
                                           decoration: InputDecoration(
                                             hintText: '(99) 99999-9999',
                                             hintStyle: TextStyle(
@@ -303,6 +375,8 @@ class _SignUpPageState extends State<SignUpPage> {
                                           ),
                                         ),
                                         TextField(
+                                          controller:
+                                              _documentoPrestadorController,
                                           decoration: InputDecoration(
                                             hintText: 'XXX.XXX.XXX-XX',
                                             hintStyle: TextStyle(
@@ -326,6 +400,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                 ),
                               ),
                               TextField(
+                                controller: _emailPrestadorController,
                                 decoration: InputDecoration(
                                   hintText: 'Digite seu email',
                                   hintStyle: TextStyle(
@@ -346,8 +421,37 @@ class _SignUpPageState extends State<SignUpPage> {
                               SizedBox(height: 8),
                               // Container que simula a área de upload para documentos
                               GestureDetector(
-                                onTap: () {
-                                  // Lógica para realizar o upload de documento.
+                                onTap: () async {
+                                  try {
+                                    // Abre o seletor de arquivos
+                                    FilePickerResult? result = await FilePicker
+                                        .platform
+                                        .pickFiles(
+                                          type: FileType.custom,
+                                          allowedExtensions: [
+                                            'jpg',
+                                            'png',
+                                          ], // Tipos de arquivos permitidos
+                                        );
+
+                                    if (result != null &&
+                                        result.files.single.path != null) {
+                                      setState(() {
+                                        _isUploading = true;
+                                      });
+
+                                      // Obtém o arquivo selecionado
+                                      file = File(result.files.single.name);
+                                    }
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Erro no upload da imagem',
+                                        ),
+                                      ),
+                                    );
+                                  }
                                 },
                                 child: Container(
                                   height: 120,
@@ -399,6 +503,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                 ),
                               ),
                               TextField(
+                                controller: _senhaPrestadorController,
                                 obscureText: true,
                                 decoration: InputDecoration(
                                   hintText: 'Digite sua nova senha',
@@ -418,6 +523,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                 ),
                               ),
                               TextField(
+                                controller: _senhaConfirmaPrestadorController,
                                 obscureText: true,
                                 decoration: InputDecoration(
                                   hintText: 'Confirme sua nova senha',
@@ -432,9 +538,12 @@ class _SignUpPageState extends State<SignUpPage> {
                               Row(
                                 children: [
                                   Checkbox(
-                                    value: false,
+                                    value: prestadorConcordaComTermos,
                                     onChanged: (value) {
-                                      // Lógica para aceitar os termos (a ser implementada).
+                                      setState(() {
+                                        prestadorConcordaComTermos =
+                                            value ?? false;
+                                      });
                                     },
                                   ),
                                   Expanded(
@@ -460,8 +569,151 @@ class _SignUpPageState extends State<SignUpPage> {
         bottomNavigationBar: SizedBox(
           height: 60,
           child: ElevatedButton(
-            onPressed: () {
-              // Ação a ser executada ao clicar no botão "Cadastrar".
+            onPressed: () async {
+              //Se for Cliente
+              if (isCliente) {
+                // Validações dos campos
+                if (_nomeUsuarioController.text.isEmpty ||
+                    _telefoneUsuarioController.text.isEmpty ||
+                    _documentoUsuarioController.text.isEmpty ||
+                    _emailUsuarioController.text.isEmpty ||
+                    _senhaUsuarioController.text.isEmpty ||
+                    _senhaConfirmaUsuarioController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Por favor, preencha todos os campos'),
+                    ),
+                  );
+                  return;
+                }
+                //Valida se as senhas são iguais
+                if (_senhaUsuarioController.text !=
+                    _senhaConfirmaUsuarioController.text) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('As senhas não coincidem')),
+                  );
+                  return;
+                }
+                //Verifica se o usuário concorda com os termos
+                if (!usuarioConcordaComTermos) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Você precisa aceitar os termos para prosseguir',
+                      ),
+                    ),
+                  );
+                  return;
+                }
+                //Cria um novo Usuário com as informações
+                final novoUsuario = Usuario(
+                  nome: _nomeUsuarioController.text,
+                  email: _emailUsuarioController.text,
+                  senha: _senhaUsuarioController.text,
+                  documento: _documentoUsuarioController.text,
+                  telefone: _telefoneUsuarioController.text,
+                );
+                //Abre o envio para a API
+                try {
+                  //Tenta enviar
+                  await UsuarioService.criarUsuario(novoUsuario);
+                  //Sucesso
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Usuário cadastrado com sucesso!')),
+                  );
+                } catch (e) {
+                  //Caso aconteça algum erro na hora do envio
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Erro ao cadastrar Usuário: ${e.toString()}',
+                      ),
+                    ),
+                  );
+                }
+                //TODO Redirect para a tela de login ou outra ação desejada
+              } else {
+                // Lógica para cadastrar prestador.
+                // Validações para o Prestador
+                if (_nomePrestadorController.text.isEmpty ||
+                    _telefonePrestadorController.text.isEmpty ||
+                    _documentoPrestadorController.text.isEmpty ||
+                    _emailPrestadorController.text.isEmpty ||
+                    _senhaPrestadorController.text.isEmpty ||
+                    _senhaConfirmaPrestadorController.text.isEmpty ||
+                    file == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Por favor, preencha todos os campos'),
+                    ),
+                  );
+                  return;
+                }
+
+                if (_senhaPrestadorController.text !=
+                    _senhaConfirmaPrestadorController.text) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('As senhas não coincidem')),
+                  );
+                  return;
+                }
+
+                if (!prestadorConcordaComTermos) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Você precisa aceitar os termos para prosseguir',
+                      ),
+                    ),
+                  );
+                  return;
+                }
+
+                // Criar instância de usuário do Prestador
+                final novoPrestador = Usuario(
+                  nome: _nomePrestadorController.text,
+                  telefone: _telefonePrestadorController.text,
+                  documento: _documentoPrestadorController.text,
+                  email: _emailPrestadorController.text,
+                  senha: _senhaPrestadorController.text,
+                );
+
+                // Aqui você pode salvar o prestador
+                try {
+                  //Request para criar o usuário do prestador
+                  usuarioPrestadorCriado = await UsuarioService.criarUsuario(
+                    novoPrestador,
+                  );
+                  //Cria o prestador 
+                  final prestador = Prestador(
+                    descricao: 'Prestador recém criado',
+                  );
+                  //Request para criar o prestador
+                  final prestadorCriado = await PrestadorService.criarPrestador(
+                    prestador.toJson(),
+                    'http://localhost:8080/api/prestadores/${usuarioPrestadorCriado!.id}',
+                  );
+                  //Upload do documento do prestador
+                  await PrestadorService.uploadImagemDocumento(
+                    prestadorCriado.id!,
+                    file!,
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Prestador cadastrado com sucesso!'),
+                    ),
+                  );
+                  //TODO Redirect para a tela de login ou outra ação desejada
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Erro ao cadastrar prestador: ${e.toString()}',
+                      ),
+                    ),
+                  );
+                }
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.purple, // Cor de fundo do botão.
