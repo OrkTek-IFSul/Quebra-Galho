@@ -107,7 +107,7 @@ class Prestador {
       servicosIds: servicosIds ?? this.servicosIds,
       portfoliosIds: portfoliosIds ?? this.portfoliosIds,
       chatsIds: chatsIds ?? this.chatsIds,
-      tags: tags ?? this.tags,
+      tags: tags ?? tags,
     );
   }
 }

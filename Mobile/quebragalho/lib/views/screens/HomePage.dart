@@ -4,13 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quebragalho/models/tag_model.dart';
 import 'package:flutter_quebragalho/services/prestador_service.dart';
 import 'package:flutter_quebragalho/services/tag_service.dart';
+import 'package:flutter_quebragalho/models/prestador_model.dart';
 import 'package:flutter_quebragalho/views/screens/PrestadorPage_UserVision.dart';
-import 'package:flutter_quebragalho/views/widgets/DestaqueCardHome.dart';
 import 'package:flutter_quebragalho/views/widgets/ProfessionalCardItem.dart';
+import 'package:flutter_quebragalho/views/widgets/ProfileImageBuilder.dart';
 import 'package:flutter_quebragalho/views/widgets/_HeaderDelegate.dart';
 import 'package:flutter_quebragalho/views/widgets/buildTabCategories.dart';
-import 'package:flutter_quebragalho/views/widgets/ProfileImageBuilder.dart';
-import 'package:flutter_quebragalho/models/prestador_model.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -146,26 +145,6 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-<<<<<<< HEAD
-      body: RefreshIndicator(
-        onRefresh: _refreshAll,
-        color: Colors.purple,
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              pinned: false,
-              floating: true,
-              snap: true,
-              backgroundColor: Colors.white,
-              elevation: 0,
-              automaticallyImplyLeading: false,
-              expandedHeight: 80,
-              flexibleSpace: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: screenWidth * 0.05,
-                ).copyWith(top: MediaQuery.of(context).padding.top + 10),
-                child: Row(
-=======
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -195,7 +174,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   Spacer(),
-                  IconButton(
+                  /*IconButton(
                     iconSize: 30,
                     icon: const Icon(Icons.notifications_none_outlined),
                     color: Colors.purple,
@@ -207,84 +186,13 @@ class _HomePageState extends State<HomePage> {
                         ),
                       );
                     },
-                  ),
+                  ),*/
                 ],
               ),
             ),
           ),
 
-          // Título 'Destaques' na homepage
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.diamond_outlined,
-                        color: Colors.grey,
-                        size: 18,
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        'Destaques',
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
-                      ),
-                      Spacer(),
-                      TextButton(
-                        onPressed: () {},
-                        child: Text(
-                          'Ver mais',
-                          style: TextStyle(color: Colors.purple, fontSize: 12),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Destaques na homepage
-          SliverToBoxAdapter(
-            child: SizedBox(
-              height: 180,
-              child: ListView.builder(
-                itemCount: 10,
-                itemBuilder: (context, index) {
-                  return Row(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8.0),
-                        child: DestaqueCard(
-                          imageUrl:
-                              "https://gru.ifsp.edu.br/images/phocagallery/galeria2/image03_grd.png",
-                          name: "Nome Template",
-                          tag: "Tag Template",
-                          price: 75,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => PrestadorPageUserVision(),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  );
-                },
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
-              ),
-            ),
-          ),
-
-          // SliverPersistente para categorias
+          // SliverPersistentHeader para categorias
           SliverPersistentHeader(
             pinned: true,
             delegate: CategoryHeaderDelegate(
@@ -295,261 +203,139 @@ class _HomePageState extends State<HomePage> {
                 padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
->>>>>>> c8242e21a80c81c70f701efadcaa481988f4cbdc
                   children: [
-                    Text(
-                      'O que você precisa ',
-                      style: TextStyle(color: Colors.purple, fontSize: 24),
-                    ),
-                    Text(
-                      'hoje?',
-                      style: TextStyle(
-                        color: Colors.purple,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                    SizedBox(height: 30),
+                    TextField(
+                      controller: _searchController,
+                      onChanged: _filtrarPrestadores,
+                      decoration: InputDecoration(
+                        hintText: 'Pesquise...',
+                        hintStyle: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: Colors.grey,
+                          size: 20,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Color(0xFFC4C4C4)),
+                        ),
                       ),
                     ),
-                    
-                    /*IconButton(
-                      iconSize: 30,
-                      icon: const Icon(Icons.notifications_none_outlined),
-                      color: Colors.purple,
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => NotificationsPage(),
-                          ),
-                        );
-                      },
-                    ),*/
-                  ],
-                ),
-              ),
-            ),
+                    const SizedBox(height: 10),
 
-            // Título 'Destaques' na homepage
-            /*SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.07),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.local_fire_department_sharp,
-                          color: Colors.purple,
-                          size: 24,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Em alta',
-                          style: TextStyle(
+                    if (isLoadingTags)
+                      Center(
+                        child: SizedBox(
+                          height: 40,
+                          child: CircularProgressIndicator(
                             color: Colors.purple,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        Spacer(),
-                        /*TextButton(
-                          onPressed: () {},
-                          child: Text(
-                            'Ver mais',
-                            style: TextStyle(color: Colors.purple, fontSize: 12),
-                          ),
-                        ),*/
-                      ],
+                      )
+                    else if (errorTags != null)
+                      Center(
+                        child: Text(
+                          'Erro ao carregar categorias',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      )
+                    else
+                      CustomCategoryTabBar(
+                        categories: tags.map((tag) => tag.nome).toList(),
+                        onTagSelected: (index) {
+                          setState(() {
+                            selectedTagIndex = index;
+                          });
+                          _aplicarFiltros();
+                        },
+                        initialSelectedIndex: selectedTagIndex,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Estado de carregamento
+          if(isLoading)
+            SliverFillRemaining(
+              child: Center(
+                child: CircularProgressIndicator(color: Colors.purple),
+              ),
+            )
+          else if (error != null)
+            SliverFillRemaining(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    SizedBox(height: 16),
+                    Text(
+                      error!,
+                      style: TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _loadPrestadores,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple,
+                      ),
+                      child: Text('Tentar novamente'),
                     ),
                   ],
                 ),
               ),
-            ),*/
-
-            // Destaques na homepage
-           /* SliverToBoxAdapter(
-              child: SizedBox(
-                height: 180,
-                child: ListView.builder(
-                  itemCount: _prestadoresAleatorios.length,
-                  itemBuilder: (context, index) {
-                    final prestador = _prestadoresAleatorios[index];
-                    return Row(
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8.0),
-                          child: DestaqueCard(
-                            imageUrl: prestador.imgPerfil as String,
-                            name: prestador.nome,
-                            tags: prestador.tags,
-                            price: 75,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) => PrestadorPageUserVision(),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                  scrollDirection: Axis.horizontal,
-                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+            )
+          else if (prestadores.isEmpty)
+            SliverFillRemaining(
+              child: Center(
+                child: Text(
+                  'Nenhum prestador encontrado',
+                  style: TextStyle(fontSize: 16),
                 ),
               ),
-            ),*/
-
-            // SliverPersistente para categorias
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: CategoryHeaderDelegate(
-                minExtent: 160,
-                maxExtent: 160,
-                child: Container(
-                  color: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: 30),
-                      TextField(
-                        controller: _searchController,
-                        onChanged: _filtrarPrestadores,
-                        decoration: InputDecoration(
-                          hintText: 'Pesquise...',
-                          hintStyle: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey,
-                          ),
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color: Colors.grey,
-                            size: 20,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: Color(0xFFC4C4C4)),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-
-                      if (isLoadingTags)
-                        Center(
-                          child: SizedBox(
-                            height: 40,
-                            child: CircularProgressIndicator(
-                              color: Colors.purple,
+            )
+          else
+            SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final prestador = _prestadoresFiltrados[index];
+                return Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth * 0.05,
+                    vertical: 8,
+                  ),
+                  child: ProfileImageBuilder(
+                    prestador: prestador,
+                    builder: (context, imageProvider) {
+                      return ProfessionalCard(
+                        // Não usamos aqui, fornecemos o imageProvider
+                        imageUrl: prestador.imgPerfil,
+                        name: prestador.nome,
+                        tags: prestador.tags,
+                        price: 99, // Valor padrão se não existir
+                        isVerified: prestador.isVerified,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PrestadorPageUserVision(prestador: prestador),
                             ),
-                          ),
-                        )
-                      else if (errorTags != null)
-                        Center(
-                          child: Text(
-                            'Erro ao carregar categorias',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        )
-                      else
-                        CustomCategoryTabBar(
-                          categories: tags.map((tag) => tag.nome).toList(),
-                          onTagSelected: (index) {
-                            setState(() {
-                              selectedTagIndex = index;
-                            });
-                            _aplicarFiltros();
-
-
-                          },
-                          initialSelectedIndex: selectedTagIndex,
-                        ),
-                    ],
+                          );
+                        },
+                      );
+                    },
                   ),
-                ),
-              ),
+                );
+              }, 
+              childCount: _prestadoresFiltrados.length),
             ),
-
-            // Estado de carregamento
-            if (isLoading)
-              SliverFillRemaining(
-                child: Center(
-                  child: CircularProgressIndicator(color: Colors.purple),
-                ),
-              )
-            else if (error != null)
-              SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, color: Colors.red, size: 48),
-                      SizedBox(height: 16),
-                      Text(
-                        error!,
-                        style: TextStyle(color: Colors.red),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadPrestadores,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.purple,
-                        ),
-                        child: Text('Tentar novamente'),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            else if (prestadores.isEmpty)
-              SliverFillRemaining(
-                child: Center(
-                  child: Text(
-                    'Nenhum prestador encontrado',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                ),
-              )
-            else
-              SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final prestador = _prestadoresFiltrados[index];
-                  return Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: screenWidth * 0.05,
-                      vertical: 8,
-                    ),
-                    child: ProfileImageBuilder(
-                      prestador: prestador,
-                      builder: (context, imageProvider) {
-                        return ProfessionalCard(
-                          // Não usamos aqui, fornecemos o imageProvider
-                          imageUrl: prestador.imgPerfil,
-                          name: prestador.nome,
-                          tags: prestador.tags,
-                          price: 99, // Valor padrão se não existir
-                          isVerified: prestador.isVerified,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => PrestadorPageUserVision(prestador: prestador),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  );
-                }, childCount: _prestadoresFiltrados.length),
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }

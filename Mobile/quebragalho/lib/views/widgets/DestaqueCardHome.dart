@@ -22,9 +22,9 @@ class DestaqueCard extends StatelessWidget {
   ImageProvider? get _finalImageProvider {
     try {
       if (imageProvider != null) return imageProvider;
-      if (imageUrl == null || imageUrl!.trim().isEmpty) return null;
-      if (imageUrl!.startsWith('http://') || imageUrl!.startsWith('https://')) {
-        return NetworkImage(imageUrl!);
+      if (imageUrl.trim().isEmpty) return null;
+      if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+        return NetworkImage(imageUrl);
       }
     } catch (_) {
       // Qualquer erro na criação da imagem, retorna null e mostra o container roxo
@@ -69,6 +69,8 @@ class DestaqueCard extends StatelessWidget {
                         padding: const EdgeInsets.all(14.0),
                         child: CircleAvatar(
                           backgroundColor: Colors.purple,
+                          radius: 40,
+                          backgroundImage: finalImage,
                           child:
                               finalImage == null
                                   ? Center(
@@ -84,8 +86,6 @@ class DestaqueCard extends StatelessWidget {
                                     ),
                                   )
                                   : null,
-                          radius: 40,
-                          backgroundImage: finalImage,
                         ),
                       ),
 

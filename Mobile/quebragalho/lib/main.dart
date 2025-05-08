@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quebragalho/views/screens/HomePage.dart';
 import 'package:flutter_quebragalho/views/screens/SplashScreen.dart';
-import 'package:flutter_quebragalho/views/screens/pageViewCliente.dart';
 
 
 void main() {

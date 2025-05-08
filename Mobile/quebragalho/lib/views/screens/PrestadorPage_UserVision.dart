@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quebragalho/models/prestador_model.dart';
-import 'package:flutter_quebragalho/views/screens/reviewsPage.dart';
 
 class PrestadorPageUserVision extends StatefulWidget {
   final Prestador prestador;
