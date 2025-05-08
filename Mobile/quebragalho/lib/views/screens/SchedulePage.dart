@@ -1,71 +1,137 @@
+
 import 'package:flutter/material.dart';
+import 'package:flutter_quebragalho/services/agendamento_service.dart';
 import 'package:flutter_quebragalho/views/widgets/SchedulePickerWidget.dart';
 
-/// Página que exibe as avaliações do serviço.
-/// Utiliza um AppBar customizado e uma lista de avaliações.
-class Schedulepage extends StatelessWidget {
-  const Schedulepage({super.key});
+class SchedulePage extends StatefulWidget {
+  final int servicoId;
+  final int prestadorId;
+  final int usuarioId;
+
+  const SchedulePage({
+    super.key,
+    required this.servicoId,
+    required this.prestadorId,
+    required this.usuarioId,
+  });
+
+  @override
+  State<SchedulePage> createState() => _SchedulePageState();
+}
+
+class _SchedulePageState extends State<SchedulePage> {
+  late DateTime _selectedDate;
+  TimeOfDay? _selectedTime;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDate = DateTime.now();
+  }
+
+  Future<void> _submitAgendamento() async {
+    if (_selectedTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecione um horário!')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final dataHora = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+        _selectedTime!.hour,
+        _selectedTime!.minute,
+      );
+
+      final response = await AgendamentoService().criarAgendamento(
+        dataHora: dataHora,
+        status: true,
+        servicoId: widget.servicoId,
+        usuarioId: widget.usuarioId,
+      );
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Agendamento realizado com sucesso!')),
+        );
+        Navigator.pop(context);
+      } else {
+        throw Exception('Erro na API: ${response.statusCode}');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro: ${e.toString()}')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _handleDateChanged(DateTime date) {
+    setState(() => _selectedDate = date);
+  }
+
+  void _handleTimeChanged(TimeOfDay time) {
+    setState(() => _selectedTime = time);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // AppBar customizado sem elevação e com título centralizado.
       appBar: AppBar(
-        backgroundColor: Colors.white, // Define a cor de fundo branco.
-        elevation: 0, // Remove a sombra (elevação).
+        backgroundColor: Colors.white,
+        elevation: 0,
         leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios,
-            color: Colors.purple,
-          ), // Ícone de voltar com cor púrpura.
-          onPressed: () {
-            Navigator.pop(
-              context,
-            ); // Ao pressionar, volta para a tela anterior.
-          },
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.purple),
+          onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          'Agendar Serviço', // Título da página.
+        title: const Text(
+          'Agendar Serviço',
           style: TextStyle(
-            color: Colors.purple, // Cor do texto púrpura.
-            fontSize: 16, // Tamanho da fonte definido.
-            fontWeight: FontWeight.w700, // Texto em negrito.
+            color: Colors.purple,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
           ),
         ),
-        centerTitle: true, // Centraliza o título na AppBar.
+        centerTitle: true,
       ),
-      // Corpo da página com padding horizontal.
       body: Center(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child:
-                  SchedulePickerWidget(), // Widget separado para manter o código limpo
+            Expanded(
+              child: SchedulePickerWidget(
+                onDateChanged: _handleDateChanged,
+                onTimeChanged: _handleTimeChanged,
+                initialDate: _selectedDate,
+              ),
             ),
-            Spacer(),
             SizedBox(
-              height: 80, // Altura definida para o botão.
-              width: double.infinity, // Ocupa toda a largura.
+              height: 80,
+              width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  // Ação de login a ser implementada.
-                },
+                onPressed: _isLoading ? null : _submitAgendamento,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple, // Cor de fundo do botão.
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.zero, // Sem cantos arredondados.
+                  backgroundColor: Colors.purple,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.zero,
                   ),
                 ),
-                child: Text(
-                  "Solicitar",
-                  style: TextStyle(
-                    fontSize: 20, // Tamanho de fonte adequado.
-                    color: Colors.white, // Texto na cor branca para contraste.
-                    fontWeight:
-                        FontWeight.bold, // Texto em negrito para destaque.
-                  ),
-                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        "Solicitar",
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
           ],

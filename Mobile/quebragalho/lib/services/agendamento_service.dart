@@ -7,23 +7,39 @@ class AgendamentoService {
   static const String _baseUrl = 'http://localhost:8080/api/agendamentos';
 
   // Método para criar agendamento
-  Future<http.Response> criarAgendamento(Map<String, dynamic> data, String url) async {
+  Future<http.Response> criarAgendamento({
+    required DateTime dataHora,
+    required bool status,
+    required int servicoId,
+    required int usuarioId,
+    String? observacoes,
+  }) async {
     try {
-      // Realizando uma requisição POST com os dados do agendamento
+      final url = Uri.parse(_baseUrl)
+          .replace(queryParameters: {
+            'servicoId': servicoId.toString(),
+            'usuarioId': usuarioId.toString(),
+          });
+
+      final body = {
+        'dataHora': dataHora.toIso8601String(),
+        'status': status,
+        if (observacoes != null) 'observacoes': observacoes,
+      };
+
       final response = await http.post(
-        Uri.parse(url),
+        url,
         headers: {'Content-Type': 'application/json'},
-        body: json.encode(data),  // Convertendo o Map para JSON
+        body: jsonEncode(body),
       );
 
-      // Verificando a resposta
-      if (response.statusCode == 200) {
-        return response; // Retorna a resposta bem-sucedida
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return response;
       } else {
         throw Exception('Erro ao criar agendamento: ${response.statusCode}');
       }
     } catch (e) {
-      rethrow; // Propaga o erro
+      rethrow;
     }
   }
 
