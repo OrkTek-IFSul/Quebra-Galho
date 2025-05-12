@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.orktek.quebragalho.dto.UsuarioDTO.CriarUsuarioDTO;
+import com.orktek.quebragalho.dto.UsuarioDTO.UsuarioGenericoDTO;
 import com.orktek.quebragalho.model.Usuario;
 import com.orktek.quebragalho.repository.UsuarioRepository;
 
@@ -32,6 +34,8 @@ public class UsuarioService {
     @Autowired
     private FileStorageService fileStorageService;// Para manipulação de arquivos
 
+    // TODO UTILIZAR NA CONTROLLER DE CRIAÇÃO DE USUARIO E ALTERAR O RETORNO PARA
+    // GETUSUARIODTO
     /**
      * Cria um novo usuário no sistema
      * 
@@ -41,7 +45,18 @@ public class UsuarioService {
      *                                 cadastrados
      */
     @Transactional
-    public Usuario criarUsuario(Usuario usuario) {
+    public UsuarioGenericoDTO criarUsuario(CriarUsuarioDTO usuarioDTO) {
+        Usuario usuario = new Usuario();
+        usuario.setNome(usuarioDTO.getNome());
+        usuario.setEmail(usuarioDTO.getEmail());
+        usuario.setSenha(usuarioDTO.getSenha());
+        usuario.setTelefone(usuarioDTO.getTelefone());
+        usuario.setDocumento(usuarioDTO.getDocumento());
+        usuario.setNumStrike(0); // Inicializa o número de strikes
+        usuario.setImgPerfil(null); // Inicializa a imagem de perfil como nula
+        usuario.setIsAdmin(false);
+        usuario.setIsModerador(false);
+
         // Verifica se email já está em uso
         if (usuarioRepository.existsByEmail(usuario.getEmail())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já existe");
@@ -54,7 +69,78 @@ public class UsuarioService {
 
         // Criptografa a senha antes de salvar
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
-        return usuarioRepository.save(usuario);
+
+        // Salva o usuário no banco de dados
+        usuarioRepository.save(usuario);
+        // Cria um novo DTO com os dados do usuário
+        UsuarioGenericoDTO retornoUsuarioDTO = new UsuarioGenericoDTO();
+        retornoUsuarioDTO.setId(usuario.getId());
+        retornoUsuarioDTO.setNome(usuario.getNome());
+        retornoUsuarioDTO.setEmail(usuario.getEmail());
+        retornoUsuarioDTO.setTelefone(usuario.getTelefone());
+        retornoUsuarioDTO.setDocumento(usuario.getDocumento());
+        // Retorna o DTO com os dados do usuário
+        return retornoUsuarioDTO; // Retorna o usuário criado
+    }
+
+    // TODO UTILIZAR NA CONTROLLER DE ALTERAR USUARIO E ALTERAR O RETORNO PARA
+    // GETUSUARIODTO
+    /**
+     * Altera os dados de um usuário existente no sistema.
+     *
+     * @param id         O identificador único do usuário a ser alterado.
+     * @param usuarioDTO Um objeto do tipo {@link CriarUsuarioDTO} contendo os novos
+     *                   dados do usuário.
+     *                   Inclui informações como nome, e-mail, telefone, documento
+     *                   e, opcionalmente, senha.
+     * 
+     * @return Um objeto do tipo {@link CriarUsuarioDTO} representando o usuário
+     *         atualizado.
+     * 
+     * @throws ResponseStatusException Se o usuário não for encontrado
+     *                                 (HttpStatus.NOT_FOUND).
+     * @throws ResponseStatusException Se o e-mail informado já estiver em uso por
+     *                                 outro usuário (HttpStatus.CONFLICT).
+     * @throws ResponseStatusException Se o documento informado já estiver em uso
+     *                                 por outro usuário (HttpStatus.CONFLICT).
+     */
+    @Transactional
+    public UsuarioGenericoDTO alterarUsuario(Long id, CriarUsuarioDTO usuarioDTO) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+
+        // Verifica se email já está em uso por OUTRO usuário (ignorando o atual)
+        if (usuarioRepository.existsByEmailAndIdNot(usuarioDTO.getEmail(), id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já está em uso por outro usuário");
+        }
+
+        // Verifica se documento já está cadastrado por OUTRO usuário (ignorando o
+        // atual)
+        if (usuarioRepository.existsByDocumentoAndIdNot(usuarioDTO.getDocumento(), id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Documento já está em uso por outro usuário");
+        }
+
+        // Atualiza os dados do usuário
+        usuario.setNome(usuarioDTO.getNome());
+        usuario.setEmail(usuarioDTO.getEmail());
+        usuario.setTelefone(usuarioDTO.getTelefone());
+        usuario.setDocumento(usuarioDTO.getDocumento());
+
+        // Só atualiza a senha se foi fornecida no DTO
+        if (usuarioDTO.getSenha() != null && !usuarioDTO.getSenha().isBlank()) {
+            usuario.setSenha(passwordEncoder.encode(usuarioDTO.getSenha()));
+        }
+        // Salva o usuário no banco de dados
+        usuarioRepository.save(usuario);
+        // Cria um novo DTO com os dados do usuário
+        UsuarioGenericoDTO retornoUsuarioDTO = new UsuarioGenericoDTO();
+        retornoUsuarioDTO.setId(usuario.getId());
+        retornoUsuarioDTO.setNome(usuario.getNome());
+        retornoUsuarioDTO.setEmail(usuario.getEmail());
+        retornoUsuarioDTO.setTelefone(usuario.getTelefone());
+        retornoUsuarioDTO.setDocumento(usuario.getDocumento());
+        // Retorna o DTO com os dados do usuário
+        return retornoUsuarioDTO;
     }
 
     /**

@@ -2,7 +2,8 @@ package com.orktek.quebragalho.dto;
 
 import java.time.LocalDate;
 
-import com.orktek.quebragalho.model.Avaliacao;
+import com.orktek.quebragalho.dto.AgendamentoDTO.CriarAgendamentoDTO;
+
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -23,14 +24,5 @@ public class AvaliacaoDTO {
     private LocalDate data;
 
     @Schema(description = "Agendamento relacionado à avaliação")
-    private AgendamentoDTO agendamento;
-
-
-    public AvaliacaoDTO(Avaliacao avaliacao) {
-        this.id = avaliacao.getId();
-        this.nota = avaliacao.getNota();
-        this.comentario = avaliacao.getComentario();
-        this.data = avaliacao.getData();
-        this.agendamento = new AgendamentoDTO(avaliacao.getAgendamento());
-    }
+    private CriarAgendamentoDTO agendamento;
 }

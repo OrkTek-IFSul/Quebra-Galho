@@ -1,6 +1,6 @@
 package com.orktek.quebragalho.dto;
 
-import com.orktek.quebragalho.model.Denuncia;
+import com.orktek.quebragalho.dto.UsuarioDTO.CriarUsuarioDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -23,21 +23,8 @@ public class DenunciaDTO {
     private String idComentario;
 
     @Schema(description = "Usuário que realizou a denúncia")
-    private UsuarioDTO denunciante;
+    private CriarUsuarioDTO denunciante;
 
     @Schema(description = "Usuário que foi denunciado")
-    private UsuarioDTO denunciado;
-
-    public DenunciaDTO(Denuncia denuncia) {
-        this.id = denuncia.getId();
-        this.tipo = denuncia.getTipo();
-        this.motivo = denuncia.getMotivo();
-        this.status = denuncia.getStatus();
-        if (denuncia.getIdComentario() == null)
-            this.idComentario = "Não se aplica";
-        else
-            this.idComentario = Long.toString(denuncia.getIdComentario());
-        this.denunciante = new UsuarioDTO(denuncia.getDenunciante());
-        this.denunciado = new UsuarioDTO(denuncia.getDenunciado());
-    }
+    private CriarUsuarioDTO denunciado;
 }

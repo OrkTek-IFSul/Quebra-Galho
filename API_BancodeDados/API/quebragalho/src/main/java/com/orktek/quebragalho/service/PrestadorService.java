@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.orktek.quebragalho.dto.PrestadorDTO.PrestadorGenericoDTO;
+import com.orktek.quebragalho.dto.UsuarioDTO.UsuarioGenericoDTO;
 import com.orktek.quebragalho.model.Prestador;
 import com.orktek.quebragalho.model.Usuario;
 import com.orktek.quebragalho.repository.PrestadorRepository;
@@ -29,35 +32,54 @@ public class PrestadorService {
 
     @Autowired
     private PrestadorRepository prestadorRepository;
-    
+
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    // TODO UTILIZAR NA CONTROLLER DE CRIAÇÃO DE USUÁRIOS
     /**
      * Cria um novo prestador de serviço associado a um usuário
+     * 
      * @param prestador Objeto Prestador com os dados
      * @param usuarioId ID do usuário que será o prestador
      * @return Prestador criado
      * @throws ResponseStatusException se usuário não existir ou já for prestador
      */
     @Transactional
-    public Prestador criarPrestador(Prestador prestador, Long usuarioId) {
+    public PrestadorGenericoDTO criarPrestador(UsuarioGenericoDTO usuarioDTO, String descricao) {
         // Verifica se usuário existe
-        Usuario usuario = usuarioRepository.findById(usuarioId)
+        Usuario usuario = usuarioRepository.findById(usuarioDTO.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
-        
-        // Verifica se usuário já é prestador
-        if (prestadorRepository.existsByUsuario(usuario)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Este usuario ja é um prestador");
-        }
-        
-        // Associa o usuário ao prestador
+
+        Prestador prestador = new Prestador();
+        prestador.setDescricao(descricao);
         prestador.setUsuario(usuario);
-        return prestadorRepository.save(prestador);
+        prestador.setDocumentoPath("");
+        prestador.setDataHoraInicio(LocalDateTime.now());
+        prestador.setDataHoraFim(LocalDateTime.now());
+        // Salva o prestador no banco de dados
+        prestadorRepository.save(prestador);
+
+        // Cria um novo DTO com os dados do prestador
+        PrestadorGenericoDTO RetornoPrestadorDTO = new PrestadorGenericoDTO();
+        RetornoPrestadorDTO.setId(prestador.getId());
+        RetornoPrestadorDTO.setDescricao(prestador.getDescricao());
+        // Cria um novo DTO com os dados do usuário
+        UsuarioGenericoDTO usuarioRetorno = new UsuarioGenericoDTO();
+        usuarioRetorno.setId(usuario.getId());
+        usuarioRetorno.setNome(usuario.getNome());
+        usuarioRetorno.setEmail(usuario.getEmail());
+        usuarioRetorno.setDocumento(usuario.getDocumento());
+        usuarioRetorno.setTelefone(usuario.getTelefone());
+        // Adiciona o usuário ao DTO do prestador
+        RetornoPrestadorDTO.setUsuario(usuarioRetorno);
+        // Retorna o DTO com os dados do prestador
+        return RetornoPrestadorDTO;
     }
 
     /**
      * Lista todos os prestadores cadastrados
+     * 
      * @return Lista de Prestador
      */
     public List<Prestador> listarTodos() {
@@ -66,15 +88,20 @@ public class PrestadorService {
 
     /**
      * Busca prestador pelo ID
+     * 
      * @param id ID do prestador
      * @return Optional contendo o prestador se encontrado
      */
     public Optional<Prestador> buscarPorId(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("ID do prestador não pode ser nulo");
+        }
         return prestadorRepository.findById(id);
     }
-    
+
     /**
      * Busca prestador pelo ID do usuário associado
+     * 
      * @param usuarioId ID do usuário
      * @return Optional contendo o prestador se encontrado
      */
@@ -82,27 +109,50 @@ public class PrestadorService {
         return prestadorRepository.findByUsuarioId(usuarioId);
     }
 
+    // TODO IMPLEMENTAR NA CONTROLLER DE ALTERAR PRESTADOR
     /**
-     * Atualiza os dados de um prestador
+     * Atualiza descricao de prestador
+     * 
      * @param id ID do prestador
-     * @param prestadorAtualizado Objeto com os novos dados
      * @return Prestador atualizado
      * @throws ResponseStatusException se prestador não for encontrado
      */
-    @Transactional
-    public Prestador atualizarPrestador(Long id, Prestador prestadorAtualizado) {
-        return prestadorRepository.findById(id)
-                .map(prestador -> {
-                    // Atualiza apenas os campos permitidos
-                    prestador.setDescricao(prestadorAtualizado.getDescricao());
-                    prestador.setDocumentoPath(prestadorAtualizado.getDocumentoPath());
-                    return prestadorRepository.save(prestador);
-                })
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prestador nao encontrado"));
-    }
+    // @Transactional
+    // public void atualizarPrestador(Long id, AtualizarPrestadorDTO dto) {
+    //     Prestador prestador = prestadorRepository.findById(id)
+    //             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prestador não encontrado"));
+
+    //     // Atualizar campos simples
+    //     if (dto.getDescricao() != null) {
+    //         prestador.setDescricao(dto.getDescricao());
+    //     }
+
+    //     // Converter e atualizar datas
+    //     if (dto.getHorarioInicio() != null) {
+    //         prestador.setDataHoraInicio(dto.parseHorarioInicio());
+    //     }
+
+    //     if (dto.getHorarioFim() != null) {
+    //         prestador.setDataHoraFim(dto.parseHorarioFim());
+    //     }
+
+    //     // Atualizar usuário se necessário
+    //     if (dto.getUsuario() != null) {
+    //         Usuario usuario = prestador.getUsuario();
+    //         usuario.setNome(dto.getUsuario().getNome());
+    //         usuario.setEmail(dto.getUsuario().getEmail());
+    //         usuario.setTelefone(dto.getUsuario().getTelefone());
+    //         usuario.setDocumento(dto.getUsuario().getDocumento());
+    //         usuarioRepository.save(usuario);
+    //     }
+    //     prestadorRepository.save(prestador);
+    // }
+
+
 
     /**
      * Remove um prestador do sistema
+     * 
      * @param id ID do prestador
      */
     @Transactional
@@ -110,29 +160,31 @@ public class PrestadorService {
         prestadorRepository.deleteById(id);
     }
 
-        /**
+    /**
      * Adiciona a imagem de documento do prestador
+     * 
      * @param prestadorId ID do prestador
-     * @param documento Arquivo de imagem a ser salvo
+     * @param documento   Arquivo de imagem a ser salvo
      * @return Nome do arquivo salvo
-     * @throws ResponseStatusException se usuário não for encontrado ou ocorrer erro no upload
+     * @throws ResponseStatusException se usuário não for encontrado ou ocorrer erro
+     *                                 no upload
      */
     @Transactional
     public String enviarImagemDocumento(Long prestadorId, MultipartFile documento) {
         Prestador prestador = prestadorRepository.findById(prestadorId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prestador nao encontrado"));
-        
+
         try {
             // Remove a imagem antiga se existir
             if (prestador.getDocumentoPath() != null) {
                 fileStorageService.deleteFile(prestador.getDocumentoPath());
             }
-            
+
             // Salva a nova imagem
             String nomeArquivo = fileStorageService.storeFile(documento);
             prestador.setDocumentoPath(nomeArquivo);
             prestadorRepository.save(prestador);
-            
+
             return nomeArquivo;
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Falha ao enviar imagem de documento", e);
@@ -148,7 +200,7 @@ public class PrestadorService {
     public Path getFilePath(Long prestadorId) {
         Prestador prestador = prestadorRepository.findById(prestadorId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prestador não encontrado"));
-        
+
         return fileStorageService.getFilePath(prestador.getDocumentoPath());
     }
 
@@ -161,7 +213,8 @@ public class PrestadorService {
     public Resource carregarImagemDocumento(Long prestadorId) throws FileNotFoundException {
         Prestador prestador = prestadorRepository.findById(prestadorId)
                 .orElseThrow(
-                        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Documento do prestador não encontrado"));
+                        () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                "Documento do prestador não encontrado"));
 
         return fileStorageService.loadFileAsResource(prestador.getDocumentoPath());
     }
@@ -175,7 +228,8 @@ public class PrestadorService {
     public byte[] obterBytesImagem(Long prestadorId) throws IOException {
         Prestador prestador = prestadorRepository.findById(prestadorId)
                 .orElseThrow(
-                        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Documento do prestador não encontrado"));
+                        () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                "Documento do prestador não encontrado"));
 
         Path imagePath = fileStorageService.getFilePath(prestador.getDocumentoPath());
         return Files.readAllBytes(imagePath);

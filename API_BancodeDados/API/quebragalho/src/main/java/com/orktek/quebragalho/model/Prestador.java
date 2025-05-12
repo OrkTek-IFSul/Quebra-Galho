@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -22,6 +23,14 @@ public class Prestador {
     @Column(name = "descricao_prestador", nullable = false, length = 200)
     @Schema(description = "Descrição do prestador", example = "Prestador especializado em serviços elétricos")
     private String descricao;
+    
+    @Column(name = "data_hora_inicio")
+    @Schema(description = "Início do horário disponível", example = "Prestador especializado em serviços elétricos")
+    private LocalDateTime dataHoraInicio;
+    
+    @Column(name = "data_hora_fim")
+    @Schema(description = "Fim do horário disponível", example = "Prestador especializado em serviços elétricos")
+    private LocalDateTime dataHoraFim;
     
     @Column(name = "documento_path", nullable = false, length = 100)
     @Schema(description = "Caminho do documento do prestador", example = "/img/prestador123.jpeg")

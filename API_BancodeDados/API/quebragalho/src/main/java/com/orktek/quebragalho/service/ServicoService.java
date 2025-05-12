@@ -50,6 +50,11 @@ public class ServicoService {
         return servicoRepository.findAll();
     }
     
+
+    public Optional<Servico> buscarPorIdEPrestador(Long idServico, Long idPrestador) {
+        return Optional.ofNullable(servicoRepository.findByIdAndPrestadorId(idServico, idPrestador))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Servico nao encontrado"));
+    }
     /**
      * Lista serviços de um prestador específico
      * @param prestadorId ID do prestador
@@ -68,6 +73,7 @@ public class ServicoService {
         return servicoRepository.findById(id);
     }
 
+    
     /**
      * Atualiza os dados de um serviço
      * @param id ID do serviço
@@ -86,14 +92,5 @@ public class ServicoService {
                     return servicoRepository.save(servico);
                 })
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Servico nao encontrado"));
-    }
-
-    /**
-     * Remove um serviço do sistema
-     * @param id ID do serviço
-     */
-    @Transactional
-    public void deletarServico(Long id) {
-        servicoRepository.deleteById(id);
     }
 }

@@ -1,12 +1,16 @@
-package com.orktek.quebragalho.dto;
+package com.orktek.quebragalho.dto.ServicoDTO;
 
 import java.util.List;
 
+import com.orktek.quebragalho.dto.TagDTO;
+import com.orktek.quebragalho.dto.PrestadorDTO.PrestadorGenericoDTO;
 import com.orktek.quebragalho.model.Servico;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
+@Schema(description = "DTO para criar um serviço")
 public class ServicoDTO {
     @Schema(description = "Identificador único do serviço", example = "1")
     private Long id;
@@ -21,25 +25,19 @@ public class ServicoDTO {
     private Double preco;
 
     @Schema(description = "Prestador responsável pelo serviço")
-    private PrestadorDTO prestador;
-
-    @Schema(description = "Lista de agendamentos associados ao serviço")
-    private List<AgendamentoDTO> agendamentos;
+    private PrestadorGenericoDTO prestador;
 
     @Schema(description = "Lista de tags associadas ao serviço")
     private List<TagDTO> tags;
 
-    public ServicoDTO(Servico servico) {
-        this.id = servico.getId();
-        this.nome = servico.getNome();
-        this.descricao = servico.getDescricao();
-        this.preco = servico.getPreco();
-        this.prestador = new PrestadorDTO(servico.getPrestador());
-        this.agendamentos = servico.getAgendamentos().stream()
-                .map(AgendamentoDTO::new)
-                .toList();
-        this.tags = servico.getTags().stream()
-                .map(TagDTO::new)
-                .toList();
+    public static ServicoDTO fromEntity(Servico servico) {
+        ServicoDTO dto = new ServicoDTO();
+        dto.setId(servico.getId());
+        dto.setNome(servico.getNome());
+        dto.setDescricao(servico.getDescricao());
+        dto.setPreco(servico.getPreco());
+        dto.setPrestador(PrestadorGenericoDTO.fromEntity(servico.getPrestador()));
+        dto.setTags(servico.getTags().stream().map(TagDTO::fromEntity).toList());
+        return dto;
     }
 }

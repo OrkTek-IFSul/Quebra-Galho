@@ -64,8 +64,12 @@ public class TagController {
 
         Tags tag = tagService.buscarPorId(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tag não encontrada"));
+        
+        TagDTO tagDTO = new TagDTO();
+        tagDTO.setId(tag.getId());
+        tagDTO.setNome(tag.getNome()); 
 
-        return ResponseEntity.ok(new TagDTO(tag));
+        return ResponseEntity.ok(tagDTO); // 200 OK
     }
 
     /**
@@ -81,7 +85,7 @@ public class TagController {
     public ResponseEntity<List<TagDTO>> listarTodasAtivas() {
         List<TagDTO> tagsAtivas = tagService.listarTodasAtivas()
                 .stream()
-                .map(TagDTO::new)
+                .map(TagDTO::fromEntity)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(tagsAtivas);

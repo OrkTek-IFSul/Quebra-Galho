@@ -1,13 +1,13 @@
 package com.orktek.quebragalho.controller;
 
-import java.util.List;
-import java.util.stream.Collectors;
+// import java.util.List;
+// import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.orktek.quebragalho.dto.ApeloDTO;
+// import com.orktek.quebragalho.dto.ApeloDTO;
 import com.orktek.quebragalho.model.Apelo;
 import com.orktek.quebragalho.service.ApeloService;
 
@@ -47,21 +47,21 @@ public class ApeloController {
         return ResponseEntity.status(201).body(novoApelo); // 201 Created
     }
 
-    /**
-     * Lista todos os apelos pendentes
-     * GET /api/apelos/pendentes
-     */
-    @Operation(summary = "Lista apelos pendentes", description = "Retorna uma lista de todos os apelos pendentes")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Lista de apelos pendentes retornada com sucesso")
-    })
-    @GetMapping("/pendentes")
-    public ResponseEntity<List<ApeloDTO>> listarPendentes() {
-        List<ApeloDTO> apelos = apeloService.listarPendentes()
-        .stream().map(ApeloDTO::new)
-        .collect(Collectors.toList());
-        return ResponseEntity.ok(apelos); // 200 OK
-    }
+    // /**
+    //  * Lista todos os apelos pendentes
+    //  * GET /api/apelos/pendentes
+    //  */
+    // @Operation(summary = "Lista apelos pendentes", description = "Retorna uma lista de todos os apelos pendentes")
+    // @ApiResponses({
+    //     @ApiResponse(responseCode = "200", description = "Lista de apelos pendentes retornada com sucesso")
+    // })
+    // @GetMapping("/pendentes")
+    // public ResponseEntity<List<ApeloDTO>> listarPendentes() {
+    //     List<ApeloDTO> apelos = apeloService.listarPendentes()
+    //     .stream().map(ApeloDTO::new)
+    //     .collect(Collectors.toList());
+    //     return ResponseEntity.ok(apelos); // 200 OK
+    // }
 
     /**
      * Resolve um apelo (aceita ou rejeita)
@@ -82,22 +82,22 @@ public class ApeloController {
         return ResponseEntity.ok(apelo); // 200 OK
     }
 
-    /**
-     * Busca apelo por ID
-     * GET /api/apelos/{id}
-     */
-    @Operation(summary = "Busca apelo por ID", description = "Retorna os detalhes de um apelo específico pelo ID")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Apelo encontrado"),
-        @ApiResponse(responseCode = "404", description = "Apelo não encontrado")
-    })
-    @GetMapping("/{id}")
-    public ResponseEntity<ApeloDTO> buscarPorId(
-            @Parameter(description = "ID do apelo a ser buscado", required = true)
-            @PathVariable Long id) {
-        return apeloService.buscarPorId(id)
-                .map(ApeloDTO::new) 
-                .map(ResponseEntity::ok) // 200 OK se encontrado
-                .orElse(ResponseEntity.notFound().build()); // 404 Not Found
-    }
+    // /**
+    //  * Busca apelo por ID
+    //  * GET /api/apelos/{id}
+    //  */
+    // @Operation(summary = "Busca apelo por ID", description = "Retorna os detalhes de um apelo específico pelo ID")
+    // @ApiResponses({
+    //     @ApiResponse(responseCode = "200", description = "Apelo encontrado"),
+    //     @ApiResponse(responseCode = "404", description = "Apelo não encontrado")
+    // })
+    // @GetMapping("/{id}")
+    // public ResponseEntity<ApeloDTO> buscarPorId(
+    //         @Parameter(description = "ID do apelo a ser buscado", required = true)
+    //         @PathVariable Long id) {
+    //     return apeloService.buscarPorId(id)
+    //             .map(ApeloDTO::new) 
+    //             .map(ResponseEntity::ok) // 200 OK se encontrado
+    //             .orElse(ResponseEntity.notFound().build()); // 404 Not Found
+    // }
 }

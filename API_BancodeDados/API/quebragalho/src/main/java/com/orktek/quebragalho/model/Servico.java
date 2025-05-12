@@ -30,6 +30,10 @@ public class Servico {
     @Schema(description = "Preço do serviço", example = "50.0")
     private Double preco;
     
+    @Column(nullable = false)
+    @Schema(description = "Serviço ativo ou não", example = "true")
+    private Boolean ativo;
+
     @ManyToOne
     @JoinColumn(name = "id_prestador_fk", nullable = false)
     @Schema(description = "Prestador responsável pelo serviço")

@@ -2,8 +2,6 @@ package com.orktek.quebragalho.dto;
 
 import java.time.LocalDate;
 
-import com.orktek.quebragalho.model.Resposta;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -20,11 +18,4 @@ public class RespostaDTO {
 
     @Schema(description = "Avaliação associada à resposta")
     private AvaliacaoDTO avaliacao;
-
-    public RespostaDTO(Resposta resposta) {
-        this.id = resposta.getId();
-        this.resposta = resposta.getResposta();
-        this.data = resposta.getData();
-        this.avaliacao = new AvaliacaoDTO(resposta.getAvaliacao());
-    }
 }

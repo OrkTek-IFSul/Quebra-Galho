@@ -14,13 +14,19 @@ public class TagDTO {
     
     @Schema(description = "Nome da tag", example = "Design")
     private String nome;
-    
-    @Schema(description = "Status da tag", example = "Ativo")
-    private String status;
 
-    public TagDTO(Tags tag) {
-        this.id = tag.getId();
-        this.nome = tag.getNome();
-        this.status = tag.getStatus();
+    public static TagDTO fromEntity (Tags tag) {
+        TagDTO dto = new TagDTO();
+        dto.setId(tag.getId());
+        dto.setNome(tag.getNome());
+        return dto;
+    }
+
+    public Object toEntity() {
+        Tags tag = new Tags();
+        tag.setId(this.id);
+        tag.setNome(this.nome);
+        tag.setStatus("Ativo");
+        return tag;
     }
 }

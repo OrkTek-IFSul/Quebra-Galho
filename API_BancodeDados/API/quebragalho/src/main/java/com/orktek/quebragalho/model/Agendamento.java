@@ -22,9 +22,13 @@ public class Agendamento {
     @Schema(description = "Data e hora do agendamento", example = "2023-12-01T14:30:00")
     private LocalDateTime dataHora;
 
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false)
     @Schema(description = "Status do agendamento", example = "true")
     private Boolean status;
+
+    @Column(name = "status_aceito")
+    @Schema(description = "Status de aceitação do agendamento", example = "true")
+    private Boolean statusAceito;
 
     @ManyToOne
     @JoinColumn(name = "id_servico_fk", nullable = false)
