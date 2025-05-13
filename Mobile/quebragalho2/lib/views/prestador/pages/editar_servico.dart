@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:quebragalho2/services/editar_servico_services.dart';
 
 class EditarServico extends StatefulWidget {
   final String nomeInicial;
   final String descricaoInicial;
   final int valorInicial;
+  //final int idPrestador;
+  //final int idServico;
 
   const EditarServico({
     super.key,
     required this.nomeInicial,
     required this.descricaoInicial,
     required this.valorInicial,
+    //required this.idPrestador,
+    //required this.idServico,
   });
 
   @override
@@ -20,6 +25,8 @@ class _EditarServicoState extends State<EditarServico> {
   late TextEditingController nomeController;
   late TextEditingController descricaoController;
   late TextEditingController valorController;
+  bool _isSaving = false;
+  final _servicoService = EditarServicoService();
 
   @override
   void initState() {
@@ -37,7 +44,7 @@ class _EditarServicoState extends State<EditarServico> {
     super.dispose();
   }
 
-  void _salvarServico() {
+  Future<void> _salvarServico() async {
     final nome = nomeController.text;
     final descricao = descricaoController.text;
     final valor = int.tryParse(valorController.text);
@@ -49,11 +56,31 @@ class _EditarServicoState extends State<EditarServico> {
       return;
     }
 
-    // Aqui você pode salvar no backend ou setState em outra tela
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Serviço "$nome" salvo com sucesso!')),
+    setState(() => _isSaving = true);
+
+    const idPrestador = 1; //tem que puxar da tela anterior depois, só pra teste
+    const idServico = 1; //tem que puxar da tela anterior depois, só pra teste
+
+    final sucesso = await _servicoService.atualizarServico(
+      idPrestador: idPrestador,
+      idServico: idServico,
+      nome: nome,
+      descricao: descricao,
+      valor: valor,
     );
-    Navigator.pop(context);
+
+    setState(() => _isSaving = false);
+
+    if (sucesso) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Serviço "$nome" salvo com sucesso!')),
+      );
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao salvar serviço')),
+      );
+    }
   }
 
   @override
@@ -96,10 +123,12 @@ class _EditarServicoState extends State<EditarServico> {
             ),
             const SizedBox(height: 32),
             Center(
-              child: ElevatedButton(
-                onPressed: _salvarServico,
-                child: const Text('Salvar'),
-              ),
+              child: _isSaving
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _salvarServico,
+                      child: const Text('Salvar'),
+                    ),
             ),
           ],
         ),
