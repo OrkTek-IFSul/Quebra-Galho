@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.orktek.quebragalho.dto.PrestadorDTO.AtualizarPrestadorDTO;
 import com.orktek.quebragalho.dto.PrestadorDTO.PrestadorGenericoDTO;
 import com.orktek.quebragalho.dto.UsuarioDTO.UsuarioGenericoDTO;
 import com.orktek.quebragalho.model.Prestador;
@@ -117,38 +118,27 @@ public class PrestadorService {
      * @return Prestador atualizado
      * @throws ResponseStatusException se prestador não for encontrado
      */
-    // @Transactional
-    // public void atualizarPrestador(Long id, AtualizarPrestadorDTO dto) {
-    //     Prestador prestador = prestadorRepository.findById(id)
-    //             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prestador não encontrado"));
+    @Transactional
+    public void atualizarPrestador(Long id, AtualizarPrestadorDTO dto) {
+        Prestador prestador = prestadorRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prestador não encontrado"));
 
-    //     // Atualizar campos simples
-    //     if (dto.getDescricao() != null) {
-    //         prestador.setDescricao(dto.getDescricao());
-    //     }
+        // Atualizar campos simples
+        prestador.setDescricao(dto.getDescricao());
+        prestador.setDataHoraInicio(dto.getHorarioInicio());
+        prestador.setDataHoraFim(dto.getHorarioFim());
 
-    //     // Converter e atualizar datas
-    //     if (dto.getHorarioInicio() != null) {
-    //         prestador.setDataHoraInicio(dto.parseHorarioInicio());
-    //     }
-
-    //     if (dto.getHorarioFim() != null) {
-    //         prestador.setDataHoraFim(dto.parseHorarioFim());
-    //     }
-
-    //     // Atualizar usuário se necessário
-    //     if (dto.getUsuario() != null) {
-    //         Usuario usuario = prestador.getUsuario();
-    //         usuario.setNome(dto.getUsuario().getNome());
-    //         usuario.setEmail(dto.getUsuario().getEmail());
-    //         usuario.setTelefone(dto.getUsuario().getTelefone());
-    //         usuario.setDocumento(dto.getUsuario().getDocumento());
-    //         usuarioRepository.save(usuario);
-    //     }
-    //     prestadorRepository.save(prestador);
-    // }
-
-
+        // Atualizar usuário se necessário
+        if (dto.getUsuario() != null) {
+            Usuario usuario = prestador.getUsuario();
+            usuario.setNome(dto.getUsuario().getNome());
+            usuario.setEmail(dto.getUsuario().getEmail());
+            usuario.setTelefone(dto.getUsuario().getTelefone());
+            usuario.setDocumento(dto.getUsuario().getDocumento());
+            usuarioRepository.save(usuario);
+        }
+        prestadorRepository.save(prestador);
+    }
 
     /**
      * Remove um prestador do sistema

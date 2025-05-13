@@ -16,7 +16,7 @@ import io.swagger.v3.oas.annotations.Parameter;
  */
 @RestController
 @RequestMapping("/api/agendamentos")
-@Tag(name = "Agendamentos", description = "Gerenciamento de agendamentos de serviços")
+// @Tag(name = "Agendamentos", description = "Gerenciamento de agendamentos de serviços")
 public class AgendamentoController {
 
     @Autowired

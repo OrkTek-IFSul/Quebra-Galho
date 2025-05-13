@@ -89,6 +89,7 @@ public class ServicoService {
                     servico.setNome(servicoAtualizado.getNome());
                     servico.setDescricao(servicoAtualizado.getDescricao());
                     servico.setPreco(servicoAtualizado.getPreco());
+                    servico.setTags(servicoAtualizado.getTags());
                     return servicoRepository.save(servico);
                 })
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Servico nao encontrado"));

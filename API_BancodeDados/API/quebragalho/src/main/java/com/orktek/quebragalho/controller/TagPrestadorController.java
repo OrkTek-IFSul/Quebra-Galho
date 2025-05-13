@@ -18,7 +18,7 @@ import io.swagger.v3.oas.annotations.Parameter;
  */
 @RestController
 @RequestMapping("/api/tag-prestador")
-@Tag(name = "TagPrestador", description = "Gerenciamento do relacionamento entre tags e prestadores")
+// @Tag(name = "TagPrestador", description = "Gerenciamento do relacionamento entre tags e prestadores")
 public class TagPrestadorController {
 
     @Autowired
@@ -29,7 +29,7 @@ public class TagPrestadorController {
      * POST /api/tag-prestador/{tagId}/{prestadorId}
      */
     @PostMapping("/{tagId}/{prestadorId}")
-    @Operation(summary = "Adiciona uma tag a um prestador", description = "Associa uma tag existente a um prestador específico.")
+    //@Operation(summary = "Adiciona uma tag a um prestador", description = "Associa uma tag existente a um prestador específico.")
     @ApiResponse(responseCode = "200", description = "Tag adicionada com sucesso.")
     @ApiResponse(responseCode = "400", description = "Requisição inválida.")
     @ApiResponse(responseCode = "404", description = "Tag ou prestador não encontrado.")
@@ -45,7 +45,7 @@ public class TagPrestadorController {
      * DELETE /api/tag-prestador/{tagId}/{prestadorId}
      */
     @DeleteMapping("/{tagId}/{prestadorId}")
-    @Operation(summary = "Remove uma tag de um prestador", description = "Desassocia uma tag de um prestador específico.")
+    //@Operation(summary = "Remove uma tag de um prestador", description = "Desassocia uma tag de um prestador específico.")
     @ApiResponse(responseCode = "204", description = "Tag removida com sucesso.")
     @ApiResponse(responseCode = "400", description = "Requisição inválida.")
     @ApiResponse(responseCode = "404", description = "Tag ou prestador não encontrado.")
@@ -61,7 +61,7 @@ public class TagPrestadorController {
      * GET /api/tag-prestador/prestador/{prestadorId}
      */
     @GetMapping("/prestador/{prestadorId}")
-    @Operation(summary = "Lista tags de um prestador", description = "Retorna uma lista de IDs de tags associadas a um prestador específico.")
+    //@Operation(summary = "Lista tags de um prestador", description = "Retorna uma lista de IDs de tags associadas a um prestador específico.")
     @ApiResponse(responseCode = "200", description = "Lista de tags retornada com sucesso.")
     @ApiResponse(responseCode = "400", description = "Requisição inválida.")
     @ApiResponse(responseCode = "404", description = "Prestador não encontrado.")

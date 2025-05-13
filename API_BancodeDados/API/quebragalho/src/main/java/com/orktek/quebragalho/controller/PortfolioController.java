@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/portfolio")
-@Tag(name = "Portfolio", description = "Gerenciamento do portfólio de prestadores")
+// @Tag(name = "Portfolio", description = "Gerenciamento do portfólio de prestadores")
 public class PortfolioController {
 
         @Autowired
@@ -44,7 +44,7 @@ public class PortfolioController {
          * POST /api/portfolio/{prestadorId}
          */
         @PostMapping("/{prestadorId}")
-        @Operation(summary = "Adiciona item ao portfólio", description = "Adiciona um novo item ao portfólio de um prestador")
+        //@Operation(summary = "Adiciona item ao portfólio", description = "Adiciona um novo item ao portfólio de um prestador")
         @ApiResponses({
                         @ApiResponse(responseCode = "201", description = "Item adicionado com sucesso"),
                         @ApiResponse(responseCode = "400", description = "Erro na requisição"),
@@ -62,7 +62,7 @@ public class PortfolioController {
          * GET /api/portfolio/prestador/{prestadorId}
          */
         @GetMapping("/prestador/{prestadorId}")
-        @Operation(summary = "Lista itens do portfólio", description = "Lista todos os itens do portfólio de um prestador")
+        //@Operation(summary = "Lista itens do portfólio", description = "Lista todos os itens do portfólio de um prestador")
         @ApiResponses({
                         @ApiResponse(responseCode = "200", description = "Itens listados com sucesso"),
                         @ApiResponse(responseCode = "404", description = "Prestador não encontrado"),
@@ -83,7 +83,7 @@ public class PortfolioController {
          * GET /api/portfolio/{id}/imagem
          */
         @GetMapping("/{id}/imagem")
-        @Operation(summary = "Obtém imagem do portfólio", description = "Retorna a imagem de um item do portfólio")
+        //@Operation(summary = "Obtém imagem do portfólio", description = "Retorna a imagem de um item do portfólio")
         @ApiResponses({
                         @ApiResponse(responseCode = "200", description = "Imagem retornada com sucesso", content = @Content(mediaType = "image/*")),
                         @ApiResponse(responseCode = "404", description = "Item não encontrado"),
@@ -112,7 +112,7 @@ public class PortfolioController {
          * DELETE /api/portfolio/{id}
          */
         @DeleteMapping("/{id}")
-        @Operation(summary = "Remove item do portfólio", description = "Remove um item do portfólio pelo ID")
+        //@Operation(summary = "Remove item do portfólio", description = "Remove um item do portfólio pelo ID")
         @ApiResponses({
                         @ApiResponse(responseCode = "204", description = "Item removido com sucesso"),
                         @ApiResponse(responseCode = "404", description = "Item não encontrado"),
@@ -129,7 +129,7 @@ public class PortfolioController {
          * GET /api/portfolio/imagem/{id}
          */
         @GetMapping("/imagem/{id}")
-        @Operation(summary = "Obtém imagem do portfólio", description = "Retorna a imagem de um item específico do portfólio")
+        //@Operation(summary = "Obtém imagem do portfólio", description = "Retorna a imagem de um item específico do portfólio")
         @ApiResponses({
                         @ApiResponse(responseCode = "200", description = "Imagem retornada com sucesso"),
                         @ApiResponse(responseCode = "404", description = "Item não encontrado"),

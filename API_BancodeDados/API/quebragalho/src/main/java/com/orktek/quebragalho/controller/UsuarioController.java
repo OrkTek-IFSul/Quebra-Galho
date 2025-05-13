@@ -31,7 +31,7 @@ import java.nio.file.Path;
  */
 @RestController
 @RequestMapping("/api/usuarios")
-@Tag(name = "Usuários", description = "Operações relacionadas a usuários")
+// @Tag(name = "Usuários", description = "Operações relacionadas a usuários")
 public class UsuarioController {
 
     @Autowired

@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/tags")
-@Tag(name = "Tags", description = "Gerenciamento de tags/categorias")
+// @Tag(name = "Tags", description = "Gerenciamento de tags/categorias")
 public class TagController {
 
     @Autowired
@@ -37,7 +37,7 @@ public class TagController {
      * Cria uma nova tag
      * POST /api/tags
      */
-    @Operation(summary = "Cria uma nova tag", description = "Cria uma nova tag com nome e status fornecidos.")
+    //@Operation(summary = "Cria uma nova tag", description = "Cria uma nova tag com nome e status fornecidos.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Tag criada com sucesso"),
             @ApiResponse(responseCode = "400", description = "Requisição inválida")
@@ -52,7 +52,7 @@ public class TagController {
      * Busca uma tag específica por ID
      * GET /api/tags/{id}
      */
-    @Operation(summary = "Buscar tag por ID", description = "Retorna os detalhes completos de uma tag específica")
+    //@Operation(summary = "Buscar tag por ID", description = "Retorna os detalhes completos de uma tag específica")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tag encontrada com sucesso", content = @Content(schema = @Schema(implementation = TagDTO.class))),
             @ApiResponse(responseCode = "404", description = "Tag não encontrada"),
@@ -76,7 +76,7 @@ public class TagController {
      * Lista todas as tags ativas
      * GET /api/tags
      */
-    @Operation(summary = "Lista todas as tags ativas", description = "Retorna uma lista de todas as tags com status 'Ativo'")
+    //@Operation(summary = "Lista todas as tags ativas", description = "Retorna uma lista de todas as tags com status 'Ativo'")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de tags retornada com sucesso", content = @Content(array = @ArraySchema(schema = @Schema(implementation = TagDTO.class)))),
             @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
@@ -95,7 +95,7 @@ public class TagController {
      * Atualiza status de uma tag
      * PUT /api/tags/{id}/status
      */
-    @Operation(summary = "Atualiza status de uma tag", description = "Atualiza o status de uma tag existente com base no ID.")
+    //@Operation(summary = "Atualiza status de uma tag", description = "Atualiza o status de uma tag existente com base no ID.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tag atualizada com sucesso"),
             @ApiResponse(responseCode = "404", description = "Tag não encontrada"),

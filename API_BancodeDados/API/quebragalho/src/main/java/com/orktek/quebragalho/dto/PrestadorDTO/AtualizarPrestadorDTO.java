@@ -2,21 +2,14 @@ package com.orktek.quebragalho.dto.PrestadorDTO;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-
-import com.orktek.quebragalho.dto.TagDTO;
-import com.orktek.quebragalho.dto.ServicoDTO.ServicoSimplesDTO;
 import com.orktek.quebragalho.dto.UsuarioDTO.UsuarioGenericoDTO;
 import com.orktek.quebragalho.model.Prestador;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
-@Schema(description = "DTO para perfil de prestador")
-public class PrestadorPerfilDTO {
-
-    @Schema(description = "Identificador único do prestador", example = "1")
-    private Long id;
+@Schema(description = "DTO para atualizar perfil de prestador")
+public class AtualizarPrestadorDTO {
 
     @Schema(description = "Descrição do prestador", example = "Prestador especializado em serviços elétricos")
     private String descricao;
@@ -24,29 +17,16 @@ public class PrestadorPerfilDTO {
     @Schema(description = "Usuario do prestador")
     private UsuarioGenericoDTO usuario;
 
-    @Schema(description = "Lista de serviços oferecidos pelo prestador")
-    private List<ServicoSimplesDTO> servicos;
-
-    @Schema(description = "Lista de tags do prestador")
-    private List<TagDTO> tags;
-
     @Schema(description = "Horario de inicio", example = "2025-05-01T08:00:00")
     private String horarioInicio;
 
     @Schema(description = "Horario de encerramento", example = "2025-05-01T08:00:00")
     private String horarioFim;
 
-    public static PrestadorPerfilDTO fromEntity(Prestador prestador) {
-        PrestadorPerfilDTO dto = new PrestadorPerfilDTO();
-        dto.setId(prestador.getId());
+    public static AtualizarPrestadorDTO fromEntity(Prestador prestador) {
+        AtualizarPrestadorDTO dto = new AtualizarPrestadorDTO();
         dto.setDescricao(prestador.getDescricao());
         dto.setUsuario(UsuarioGenericoDTO.fromEntity(prestador.getUsuario()));
-        dto.setServicos(prestador.getServicos().stream()
-                .map(ServicoSimplesDTO::fromEntity)
-                .toList());
-        dto.setTags(prestador.getTags().stream()
-                .map(TagDTO::fromEntity)
-                .toList());
         dto.setHorarioInicio(prestador.getDataHoraInicio());
         dto.setHorarioFim(prestador.getDataHoraFim());
         return dto;

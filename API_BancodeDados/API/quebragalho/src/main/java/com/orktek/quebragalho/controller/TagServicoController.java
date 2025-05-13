@@ -17,7 +17,8 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/tag-servico")
-@Tag(name = "TagServico", description = "Gerenciamento do relacionamento entre tags e serviços")
+// @Tag(name = "TagServico", description = "Gerenciamento do relacionamento
+// entre tags e serviços")
 public class TagServicoController {
 
     @Autowired
@@ -28,15 +29,17 @@ public class TagServicoController {
      * POST /api/tag-servico/{tagId}/{servicoId}
      */
     @PostMapping("/{tagId}/{servicoId}")
-    @Operation(
-        summary = "Adiciona uma tag a um serviço",
-        description = "Associa uma tag existente a um serviço específico pelo ID.",
-        responses = {
-            @ApiResponse(responseCode = "200", description = "Tag adicionada com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Requisição inválida"),
-            @ApiResponse(responseCode = "404", description = "Tag ou serviço não encontrado")
-        }
-    )
+    // @Operation(
+    // summary = "Adiciona uma tag a um serviço",
+    // description = "Associa uma tag existente a um serviço específico pelo ID.",
+    // responses = {
+    // @ApiResponse(responseCode = "200", description = "Tag adicionada com
+    // sucesso"),
+    // @ApiResponse(responseCode = "400", description = "Requisição inválida"),
+    // @ApiResponse(responseCode = "404", description = "Tag ou serviço não
+    // encontrado")
+    // }
+    // )
     public ResponseEntity<Void> adicionarTag(
             @Parameter(description = "ID da tag a ser associada", required = true) @PathVariable Long tagId,
             @Parameter(description = "ID do serviço ao qual a tag será associada", required = true) @PathVariable Long servicoId) {
@@ -49,15 +52,15 @@ public class TagServicoController {
      * DELETE /api/tag-servico/{tagId}/{servicoId}
      */
     @DeleteMapping("/{tagId}/{servicoId}")
-    @Operation(
-        summary = "Remove uma tag de um serviço",
-        description = "Desassocia uma tag de um serviço específico pelo ID.",
-        responses = {
-            @ApiResponse(responseCode = "204", description = "Tag removida com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Requisição inválida"),
-            @ApiResponse(responseCode = "404", description = "Tag ou serviço não encontrado")
-        }
-    )
+    // @Operation(
+    // summary="Remove uma tag de um serviço",description="Desassocia uma tag de um serviço específico pelo ID.",responses=
+
+    // {
+    //         @ApiResponse(responseCode = "204", description = "Tag removida com sucesso"),
+    //         @ApiResponse(responseCode = "400", description = "Requisição inválida"),
+    //         @ApiResponse(responseCode = "404", description = "Tag ou serviço não encontrado")
+    //     })
+
     public ResponseEntity<Void> removerTag(
             @Parameter(description = "ID da tag a ser removida", required = true) @PathVariable Long tagId,
             @Parameter(description = "ID do serviço do qual a tag será removida", required = true) @PathVariable Long servicoId) {
@@ -70,15 +73,15 @@ public class TagServicoController {
      * GET /api/tag-servico/servico/{servicoId}
      */
     @GetMapping("/servico/{servicoId}")
-    @Operation(
-        summary = "Lista tags de um serviço",
-        description = "Retorna uma lista de IDs de tags associadas a um serviço específico.",
-        responses = {
-            @ApiResponse(responseCode = "200", description = "Lista de tags retornada com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Requisição inválida"),
-            @ApiResponse(responseCode = "404", description = "Serviço não encontrado")
-        }
-    )
+    // @Operation(
+    // summary="Lista tags de um serviço",description="Retorna uma lista de IDs de tags associadas a um serviço específico.",responses=
+
+    // {
+    //         @ApiResponse(responseCode = "200", description = "Lista de tags retornada com sucesso"),
+    //         @ApiResponse(responseCode = "400", description = "Requisição inválida"),
+    //         @ApiResponse(responseCode = "404", description = "Serviço não encontrado")
+    //     })
+
     public ResponseEntity<List<Long>> listarTagsPorServico(
             @Parameter(description = "ID do serviço cujas tags serão listadas", required = true) @PathVariable Long servicoId) {
         List<Long> tags = tagServicoService.listarTagsPorServico(servicoId);

@@ -22,7 +22,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
  */
 @RestController
 @RequestMapping("/api/apelos")
-@Tag(name = "Apelos", description = "Gerenciamento de apelos a denúncias")
+// @Tag(name = "Apelos", description = "Gerenciamento de apelos a denúncias")
 public class ApeloController {
 
     @Autowired
@@ -32,7 +32,7 @@ public class ApeloController {
      * Cria um novo apelo para uma denúncia
      * POST /api/apelos/{denunciaId}
      */
-    @Operation(summary = "Cria um novo apelo", description = "Cria um apelo para uma denúncia específica")
+    // @Operation(summary = "Cria um novo apelo", description = "Cria um apelo para uma denúncia específica")
     @ApiResponses({
         @ApiResponse(responseCode = "201", description = "Apelo criado com sucesso"),
         @ApiResponse(responseCode = "400", description = "Dados inválidos"),
@@ -67,7 +67,7 @@ public class ApeloController {
      * Resolve um apelo (aceita ou rejeita)
      * PUT /api/apelos/{id}/resolver
      */
-    @Operation(summary = "Resolve um apelo", description = "Aceita ou rejeita um apelo com base no ID")
+    //@Operation(summary = "Resolve um apelo", description = "Aceita ou rejeita um apelo com base no ID")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Apelo resolvido com sucesso"),
         @ApiResponse(responseCode = "404", description = "Apelo não encontrado")
@@ -86,7 +86,7 @@ public class ApeloController {
     //  * Busca apelo por ID
     //  * GET /api/apelos/{id}
     //  */
-    // @Operation(summary = "Busca apelo por ID", description = "Retorna os detalhes de um apelo específico pelo ID")
+    // //@Operation(summary = "Busca apelo por ID", description = "Retorna os detalhes de um apelo específico pelo ID")
     // @ApiResponses({
     //     @ApiResponse(responseCode = "200", description = "Apelo encontrado"),
     //     @ApiResponse(responseCode = "404", description = "Apelo não encontrado")
