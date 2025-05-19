@@ -10,6 +10,8 @@ dependencies:
   flutter:
     sdk: flutter
   table_calendar: ^3.0.9
+  lottie: ^2.7.0
+  image_picker: ^1.0.4
 
 dev_dependencies:
   flutter_test:
@@ -18,3 +20,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/confetti.json
+    - assets/welcome.json

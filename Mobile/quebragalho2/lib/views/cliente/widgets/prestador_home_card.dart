@@ -7,7 +7,7 @@ class PrestadorHomeCard extends StatelessWidget {
   final String imageUrl;
   final VoidCallback? onTap;
 
-  const PrestadorHomeCard({
+  const PrestadorHomeCard({super.key, 
     required this.name,
     required this.categories,
     required this.rating,

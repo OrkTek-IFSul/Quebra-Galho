@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:quebragalho2/views/cliente/pages/tela_confirmacao_solicitacao.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class AgendamentoPage extends StatefulWidget {
   final String servico;
 
-  const AgendamentoPage({required this.servico});
+  const AgendamentoPage({super.key, required this.servico});
 
   @override
   _AgendamentoPageState createState() => _AgendamentoPageState();
@@ -72,10 +73,15 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
                 onPressed: _selectedTime == null
                     ? null
                     : () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Solicitado para ${_selectedDay.day}/${_selectedDay.month} às $_selectedTime',
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ConfirmacaoPage(
+                              nomePrestador: 'João da Barbearia', // pode trocar por dinâmico depois
+                              nomeServico: widget.servico,
+                              data: _selectedDay,
+                              hora: _selectedTime!,
+                              valor: 79.90, // valor fixo exemplo
                             ),
                           ),
                         );

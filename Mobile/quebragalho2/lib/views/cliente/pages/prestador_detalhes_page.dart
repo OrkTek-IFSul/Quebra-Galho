@@ -8,7 +8,7 @@ class PrestadorDetalhesPage extends StatelessWidget {
   final String descricao;
   final List<Map<String, dynamic>> servicos; // nome e preço
 
-  const PrestadorDetalhesPage({
+  const PrestadorDetalhesPage({super.key, 
     required this.name,
     required this.categories,
     required this.imageUrl,

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:quebragalho2/views/cliente/pages/login_page.dart';
 import 'package:quebragalho2/views/cliente/pages/prestador_detalhes_page.dart';
 import 'package:quebragalho2/views/cliente/widgets/prestador_home_card.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -28,7 +31,14 @@ class _HomePageState extends State<HomePage> {
         title: Text('Home'),
         actions: [
           IconButton(icon: Icon(Icons.notifications_none), onPressed: () {}),
-          IconButton(icon: Icon(Icons.person_outline), onPressed: () {}),
+          IconButton(icon: Icon(Icons.person_outline), onPressed: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => LoginPage(),
+              ),
+            );
+          }),
         ],
       ),
       body: Padding(
