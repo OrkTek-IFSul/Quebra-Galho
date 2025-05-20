@@ -5,7 +5,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 // import com.orktek.quebragalho.dto.UsuarioDTO.CriarUsuarioDTO;
@@ -13,7 +12,6 @@ import org.springframework.web.server.ResponseStatusException;
 import com.orktek.quebragalho.service.UsuarioService;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -105,33 +103,6 @@ public class UsuarioController {
 //         usuarioService.deletarUsuario(id);
 //         return ResponseEntity.noContent().build(); // Retorna 204 No Content
 //     }
-
-    /**
-     * Upload de imagem de perfil
-     * POST /api/usuarios/{id}/imagem
-     */
-    @PostMapping("/{id}/imagem")
-    @Operation(summary = "Upload de imagem de perfil", description = "Faz o upload de uma imagem de perfil para o usuário")
-    @ApiResponse(responseCode = "200", description = "Imagem de perfil atualizada com sucesso")
-    public ResponseEntity<String> uploadImagemPerfil(
-            @Parameter(description = "ID do usuário para o qual a imagem será enviada", required = true) @PathVariable Long id,
-            @Parameter(description = "Arquivo de imagem a ser enviado", required = true) @RequestParam("file") MultipartFile file) {
-        String nomeArquivo = usuarioService.atualizarImagemPerfil(id, file);
-        return ResponseEntity.ok(nomeArquivo); // Retorna 200 OK com o nome do arquivo
-    }
-
-    /**
-     * remover imagem de perfil
-     * DELETE /api/usuarios/{id}/removerimagem
-     */
-    @DeleteMapping("/{id}/removerimagem")
-    @Operation(summary = "Remover imagem de perfil", description = "Remove a imagem de perfil do usuário")
-    @ApiResponse(responseCode = "204", description = "Imagem de perfil removida com sucesso")
-    public ResponseEntity<Void> removerImagemPerfil(
-            @Parameter(description = "ID do usuário cuja imagem será removida", required = true) @PathVariable Long id) {
-        usuarioService.removerImagemPerfil(id);
-        return ResponseEntity.noContent().build();
-    }
 
     /**
      * Obtém a imagem de um usuário
