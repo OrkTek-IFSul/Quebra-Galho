@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quebragalho2/views/cliente/pages/home_page.dart';
+import 'package:quebragalho2/views/cliente/pages/perfil_page.dart';
 
 
 class PaginaDeNavegacao extends StatefulWidget {
@@ -16,6 +17,7 @@ class _PaginaDeNavegacaoState extends State<PaginaDeNavegacao> {
 //Lista de páginas da navegação
   final List<Widget> paginas = [
     HomePage(),
+    PerfilPage(),
     
   ];
 
