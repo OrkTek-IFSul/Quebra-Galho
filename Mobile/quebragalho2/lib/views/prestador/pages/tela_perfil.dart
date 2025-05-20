@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quebragalho2/views/prestador/pages/adicionar_servico.dart';
 import 'package:quebragalho2/views/prestador/pages/editar_servico.dart';
-import 'package:quebragalho2/views/prestador/pages/meus_dados.dart';
 import 'package:quebragalho2/views/prestador/widgets/servico_card.dart';
 
 class PerfilPage extends StatefulWidget {
