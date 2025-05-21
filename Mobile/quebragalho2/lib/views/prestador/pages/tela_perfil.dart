@@ -153,7 +153,8 @@ class _PerfilPageState extends State<PerfilPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => AdicionarServico(),
+                   builder: (context) => const AdicionarServicoScreen(),
+
                       ),
                     );
                   },

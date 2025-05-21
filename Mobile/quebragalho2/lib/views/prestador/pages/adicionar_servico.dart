@@ -1,13 +1,42 @@
 import 'package:flutter/material.dart';
 
-class AdicionarServico extends StatefulWidget {
-  const AdicionarServico({super.key});
+// Tu pantalla principal, desde donde navegarás a AdicionarServicoScreen
+class PerfilPage extends StatefulWidget {
+  const PerfilPage({super.key});
 
   @override
-  State<AdicionarServico> createState() => _AdicionarServicoState();
+  State<PerfilPage> createState() => _PerfilPageState();
 }
 
-class _AdicionarServicoState extends State<AdicionarServico> {
+class _PerfilPageState extends State<PerfilPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Perfil')),
+      body: Center(
+        child: ElevatedButton(
+          child: const Text('Ir a Adicionar Serviço'),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AdicionarServicoScreen()),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+// Tu pantalla AdicionarServicoScreen 
+class AdicionarServicoScreen extends StatefulWidget {
+  const AdicionarServicoScreen({super.key});
+
+  @override
+  State<AdicionarServicoScreen> createState() => _AdicionarServicoScreenState();
+}
+
+class _AdicionarServicoScreenState extends State<AdicionarServicoScreen> {
   final TextEditingController nomeController = TextEditingController();
   final TextEditingController descricaoController = TextEditingController();
   final TextEditingController valorController = TextEditingController();
@@ -24,11 +53,18 @@ class _AdicionarServicoState extends State<AdicionarServico> {
       return;
     }
 
-    // Aqui poderia adicionar ao backend, state, banco etc
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Serviço "$nome" adicionado com sucesso!')),
     );
-    Navigator.pop(context); // volta pra tela anterior
+    Navigator.pop(context);
+  }
+
+  @override
+  void dispose() {
+    nomeController.dispose();
+    descricaoController.dispose();
+    valorController.dispose();
+    super.dispose();
   }
 
   @override
@@ -81,4 +117,8 @@ class _AdicionarServicoState extends State<AdicionarServico> {
       ),
     );
   }
+}
+
+void main() {
+  runApp(const MaterialApp(home: PerfilPage()));
 }
