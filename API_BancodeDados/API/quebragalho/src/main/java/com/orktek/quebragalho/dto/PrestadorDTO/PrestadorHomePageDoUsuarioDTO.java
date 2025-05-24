@@ -24,7 +24,7 @@ public class PrestadorHomePageDoUsuarioDTO {
     @Schema(description = "Identificador único do prestador", example = "1")
     private String nome;
 
-    @Schema(description = "Imagem de perfil do prestador", example = "api/usuario/1/imagem")
+    @Schema(description = "Imagem de perfil do prestador", example = "api/usuarios/1/imagem")
     private String imagemPerfil;
 
     @Schema(description = "Tags do prestador")
@@ -37,7 +37,7 @@ public class PrestadorHomePageDoUsuarioDTO {
         PrestadorHomePageDoUsuarioDTO dto = new PrestadorHomePageDoUsuarioDTO();
         dto.setId(prestador.getId());
         dto.setNome(prestador.getUsuario().getNome());
-        dto.setImagemPerfil("api/usuario/" + prestador.getUsuario().getId() + "/imagem");
+        dto.setImagemPerfil("api/usuarios/" + prestador.getUsuario().getId() + "/imagem");
         dto.setTags(prestador.getTags().stream().map(TagDTO::fromEntity).toList());
         dto.setMediaAvaliacoes(prestadorService.mediaNotaPrestador(prestador.getId()));
         return dto;
