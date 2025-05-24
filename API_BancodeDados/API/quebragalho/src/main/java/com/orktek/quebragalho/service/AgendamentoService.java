@@ -73,6 +73,9 @@ public class AgendamentoService {
         return agendamentoRepository.findAll();
     }
 
+    public List<Agendamento> listarPorServicoAgoraEFuturo(Long servicoId) {
+        return agendamentoRepository.findByServico_IdAndDataHoraBetween(servicoId, LocalDateTime.now(), LocalDateTime.now().plusDays(30));
+    }
 
     public List<Agendamento> listarAgendamentosPendentesDoPrestador(Long prestadorId) {
         List<Agendamento> getLista = agendamentoRepository.findByStatusAceitoIsNull();
@@ -120,7 +123,7 @@ public class AgendamentoService {
     public CriarAgendamentoDTO criarAgendamento(CriarAgendamentoDTO agendamentoDTO) {
         try {
             // Validações básicas do DTO
-            if (agendamentoDTO.getData_hora() == null) {
+            if (agendamentoDTO.getHorario() == null) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Data e hora são obrigatórias");
             }
 
@@ -132,13 +135,13 @@ public class AgendamentoService {
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Serviço não encontrado"));
 
             // Validação adicional da data (exemplo)
-            if (agendamentoDTO.getData_hora().isBefore(LocalDateTime.now())) {
+            if (agendamentoDTO.getHorario().isBefore(LocalDateTime.now())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Data não pode ser no passado");
             }
 
             // Cria e salva o agendamento
             Agendamento agendamento = new Agendamento();
-            agendamento.setDataHora(agendamentoDTO.getData_hora());
+            agendamento.setDataHora(agendamentoDTO.getHorario());
             agendamento.setStatus(false);
             agendamento.setUsuario(usuario);
             agendamento.setServico(servico);
@@ -191,7 +194,7 @@ public class AgendamentoService {
         CriarAgendamentoDTO retornoCriarAgendamentoDTO = new CriarAgendamentoDTO();
         retornoCriarAgendamentoDTO.setId_usuario(agendamento.getUsuario().getId());
         retornoCriarAgendamentoDTO.setId_servico(agendamento.getServico().getId());
-        retornoCriarAgendamentoDTO.setData_hora(agendamento.getDataHora());
+        retornoCriarAgendamentoDTO.setHorario(agendamento.getDataHora());
         return retornoCriarAgendamentoDTO;
     }
 
@@ -242,7 +245,6 @@ public class AgendamentoService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Agendamento nao encontrado"));
     }
 
-    
     /**
      * Atualiza o status de um agendamento (aceito/não aceito)
      * 

@@ -4,30 +4,36 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import com.orktek.quebragalho.model.Agendamento;
+import com.orktek.quebragalho.model.Prestador;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
-@Schema(description = "DTO para criar um agendamento")
-public class CriarAgendamentoDTO {
-    
-    @Schema(description = "Id do usuário que irá solicitar o agendamento", example = "1")
-    private Long id_usuario;
+@Schema(description = "DTO para enviar informações de um agendamento")
+public class AgendamentoMinhasSolicitacoesDTO {
+
     @Schema(description = "Id do prestador que irá realizar o agendamento", example = "1")
     private Long id_servico;
     @Schema(description = "Data e hora do agendamento", example = "2023-10-01T10:00:00")
     private String horario;
+    @Schema(description = "Data e hora do agendamento", example = "2023-10-01T10:00:00")
+    private Boolean status_servico;
+    @Schema(description = "Data e hora do agendamento", example = "2023-10-01T10:00:00")
+    private Boolean status_aceito;
+    @Schema(description = "Nome do prestador", example = "João Silva")
+    private String nome_prestador;
 
-    public static CriarAgendamentoDTO fromEntity(Agendamento agendamento) {
-        CriarAgendamentoDTO dto = new CriarAgendamentoDTO();
-        dto.setId_usuario(agendamento.getUsuario().getId());
-        dto.setId_servico(agendamento.getServico().getId());
+    public static AgendamentoMinhasSolicitacoesDTO fromEntity(Agendamento agendamento, Prestador prestador) {
+        AgendamentoMinhasSolicitacoesDTO dto = new AgendamentoMinhasSolicitacoesDTO();
+        dto.setId_servico(agendamento.getServico().getPrestador().getId());
         dto.setHorario(agendamento.getDataHora());
+        dto.setStatus_servico(agendamento.getStatus());
+        dto.setStatus_aceito(agendamento.getStatusAceito());
+        dto.setNome_prestador(prestador.getUsuario().getNome());
         return dto;
     }
 
-    
     public LocalDateTime getHorario() {
         if (this.horario == null || this.horario.isEmpty()) {
             return null;

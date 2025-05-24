@@ -20,6 +20,7 @@ import com.orktek.quebragalho.dto.PrestadorDTO.PrestadorGenericoDTO;
 import com.orktek.quebragalho.dto.UsuarioDTO.UsuarioGenericoDTO;
 import com.orktek.quebragalho.model.Prestador;
 import com.orktek.quebragalho.model.Usuario;
+import com.orktek.quebragalho.repository.AvaliacaoRepository;
 import com.orktek.quebragalho.repository.PrestadorRepository;
 import com.orktek.quebragalho.repository.UsuarioRepository;
 
@@ -29,6 +30,9 @@ import jakarta.transaction.Transactional;
 public class PrestadorService {
 
     @Autowired
+    private final AvaliacaoRepository avaliacaoRepository;
+
+    @Autowired
     private FileStorageService fileStorageService; // Para manipulação de arquivos
 
     @Autowired
@@ -36,6 +40,10 @@ public class PrestadorService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    PrestadorService(AvaliacaoRepository avaliacaoRepository) {
+        this.avaliacaoRepository = avaliacaoRepository;
+    }
 
     // TODO UTILIZAR NA CONTROLLER DE CRIAÇÃO DE USUÁRIOS
     /**
@@ -139,7 +147,7 @@ public class PrestadorService {
         }
         prestadorRepository.save(prestador);
     }
-
+    
     /**
      * Remove um prestador do sistema
      * 
@@ -148,6 +156,10 @@ public class PrestadorService {
     @Transactional
     public void deletarPrestador(Long id) {
         prestadorRepository.deleteById(id);
+    }
+
+    public double mediaNotaPrestador(Long prestadorId) {
+        return avaliacaoRepository.calcularMediaAvaliacoesPorPrestador(prestadorId);
     }
 
     /**

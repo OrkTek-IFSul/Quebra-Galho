@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.orktek.quebragalho.dto.UsuarioDTO.AtualizarUsuarioDTO;
 import com.orktek.quebragalho.dto.UsuarioDTO.CriarUsuarioDTO;
 import com.orktek.quebragalho.dto.UsuarioDTO.UsuarioGenericoDTO;
 import com.orktek.quebragalho.model.Usuario;
@@ -105,7 +106,7 @@ public class UsuarioService {
      *                                 por outro usuário (HttpStatus.CONFLICT).
      */
     @Transactional
-    public UsuarioGenericoDTO alterarUsuario(Long id, CriarUsuarioDTO usuarioDTO) {
+    public UsuarioGenericoDTO alterarUsuario(Long id, AtualizarUsuarioDTO usuarioDTO) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
@@ -114,22 +115,16 @@ public class UsuarioService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já está em uso por outro usuário");
         }
 
-        // Verifica se documento já está cadastrado por OUTRO usuário (ignorando o
-        // atual)
-        if (usuarioRepository.existsByDocumentoAndIdNot(usuarioDTO.getDocumento(), id)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Documento já está em uso por outro usuário");
-        }
-
         // Atualiza os dados do usuário
         usuario.setNome(usuarioDTO.getNome());
         usuario.setEmail(usuarioDTO.getEmail());
         usuario.setTelefone(usuarioDTO.getTelefone());
-        usuario.setDocumento(usuarioDTO.getDocumento());
 
-        // Só atualiza a senha se foi fornecida no DTO
-        if (usuarioDTO.getSenha() != null && !usuarioDTO.getSenha().isBlank()) {
-            usuario.setSenha(passwordEncoder.encode(usuarioDTO.getSenha()));
-        }
+        // // Só atualiza a senha se foi fornecida no DTO
+        // if (usuarioDTO.getSenha() != null && !usuarioDTO.getSenha().isBlank()) {
+        //     usuario.setSenha(passwordEncoder.encode(usuarioDTO.getSenha()));
+        // }
+        
         // Salva o usuário no banco de dados
         usuarioRepository.save(usuario);
         // Cria um novo DTO com os dados do usuário
@@ -167,37 +162,37 @@ public class UsuarioService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
     }
 
-    /**
-     * Atualiza os dados de um usuário existente
-     * 
-     * @param id                ID do usuário a ser atualizado
-     * @param usuarioAtualizado Objeto com os novos dados
-     * @return Usuario atualizado
-     * @throws ResponseStatusException se usuário não for encontrado ou email já
-     *                                 estiver em uso
-     */
-    @Transactional
-    public Usuario atualizarUsuario(Long id, Usuario usuarioAtualizado) {
-        return usuarioRepository.findById(id)
-                .map(usuario -> {
-                    // Verifica se está tentando mudar o email
-                    if (!usuario.getEmail().equals(usuarioAtualizado.getEmail())) {
-                        // Verifica se novo email já está em uso
-                        if (usuarioRepository.existsByEmail(usuarioAtualizado.getEmail())) {
-                            throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já está em uso");
-                        }
-                    }
+    // /**
+    //  * Atualiza os dados de um usuário existente
+    //  * 
+    //  * @param id                ID do usuário a ser atualizado
+    //  * @param usuarioAtualizado Objeto com os novos dados
+    //  * @return Usuario atualizado
+    //  * @throws ResponseStatusException se usuário não for encontrado ou email já
+    //  *                                 estiver em uso
+    //  */
+    // @Transactional
+    // public Usuario atualizarUsuario(Long id, Usuario usuarioAtualizado) {
+    //     return usuarioRepository.findById(id)
+    //             .map(usuario -> {
+    //                 // Verifica se está tentando mudar o email
+    //                 if (!usuario.getEmail().equals(usuarioAtualizado.getEmail())) {
+    //                     // Verifica se novo email já está em uso
+    //                     if (usuarioRepository.existsByEmail(usuarioAtualizado.getEmail())) {
+    //                         throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já está em uso");
+    //                     }
+    //                 }
 
-                    // Atualiza apenas os campos permitidos
-                    usuario.setNome(usuarioAtualizado.getNome());
-                    usuario.setEmail(usuarioAtualizado.getEmail());
-                    usuario.setTelefone(usuarioAtualizado.getTelefone());
-                    usuario.setImgPerfil(usuarioAtualizado.getImgPerfil());
+    //                 // Atualiza apenas os campos permitidos
+    //                 usuario.setNome(usuarioAtualizado.getNome());
+    //                 usuario.setEmail(usuarioAtualizado.getEmail());
+    //                 usuario.setTelefone(usuarioAtualizado.getTelefone());
+    //                 usuario.setImgPerfil(usuarioAtualizado.getImgPerfil());
 
-                    return usuarioRepository.save(usuario);
-                })
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
-    }
+    //                 return usuarioRepository.save(usuario);
+    //             })
+    //             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+    // }
 
     /**
      * Remove um usuário do sistema
