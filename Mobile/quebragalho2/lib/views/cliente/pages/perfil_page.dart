@@ -53,7 +53,7 @@ class PerfilPage extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: () {
                 // navegar pra tela de solicitações
-                 // navegar pra edição
+                // navegar pra edição
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -79,7 +79,7 @@ class PerfilPage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const EditarDadosPage(),
+                    builder: (context) => EditarDadosPage(usuarioId: 1),
                   ),
                 );
               },
