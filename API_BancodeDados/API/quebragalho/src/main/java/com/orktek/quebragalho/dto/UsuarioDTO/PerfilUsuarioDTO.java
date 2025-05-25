@@ -24,7 +24,7 @@ public class PerfilUsuarioDTO {
     @Schema(description = "Documento do usuário (CPF ou CNPJ)", example = "123.456.789-00")
     private String documento;
 
-    @Schema(description = "URL da imagem de perfil", example = "api/usuario/1/imagem")
+    @Schema(description = "URL da imagem de perfil", example = "api/usuarios/1/imagem")
     private String imagemPerfil;
 
     // Método de conversão opcional (não interfere na desserialização)
@@ -35,7 +35,7 @@ public class PerfilUsuarioDTO {
         dto.setEmail(usuario.getEmail());
         dto.setTelefone(usuario.getTelefone());
         dto.setDocumento(usuario.getDocumento());
-        dto.setImagemPerfil("api/usuario/" + usuario.getId() + "/imagem");
+        dto.setImagemPerfil("api/usuarios/" + usuario.getId() + "/imagem");
         return dto;
     }
 }

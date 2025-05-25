@@ -12,9 +12,9 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 -- -----------------------------------------------------
 
 -- -----------------------------------------------------
--- Schema quebragalhodb
+-- Schema quebragalhodb - CHARSET CORRIGIDO
 -- -----------------------------------------------------
-CREATE SCHEMA IF NOT EXISTS `quebragalhodb` DEFAULT CHARACTER SET utf8 ;
+CREATE SCHEMA IF NOT EXISTS `quebragalhodb` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `quebragalhodb` ;
 
 -- -----------------------------------------------------
@@ -33,7 +33,9 @@ CREATE TABLE IF NOT EXISTS `quebragalhodb`.`usuario` (
   `is_admin` BIT NOT NULL,
   `is_moderador` BIT NOT NULL,
   PRIMARY KEY (`id_usuario`))
-ENGINE = InnoDB;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_unicode_ci;
 
 
 -- -----------------------------------------------------
@@ -53,7 +55,9 @@ CREATE TABLE IF NOT EXISTS `quebragalhodb`.`prestador` (
     REFERENCES `quebragalhodb`.`usuario` (`id_usuario`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_unicode_ci;
 
 
 -- -----------------------------------------------------
@@ -78,7 +82,9 @@ CREATE TABLE IF NOT EXISTS `quebragalhodb`.`chat` (
     REFERENCES `quebragalhodb`.`usuario` (`id_usuario`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_unicode_ci;
 
 
 -- -----------------------------------------------------
@@ -89,7 +95,9 @@ CREATE TABLE IF NOT EXISTS `quebragalhodb`.`tag` (
   `nome` VARCHAR(45) NOT NULL,
   `status` VARCHAR(100) NOT NULL,
   PRIMARY KEY (`id_tag`))
-ENGINE = InnoDB;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_unicode_ci;
 
 
 -- -----------------------------------------------------
@@ -109,7 +117,9 @@ CREATE TABLE IF NOT EXISTS `quebragalhodb`.`servico` (
     REFERENCES `quebragalhodb`.`prestador` (`id_prestador`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_unicode_ci;
 
 
 -- -----------------------------------------------------
@@ -126,7 +136,9 @@ CREATE TABLE IF NOT EXISTS `quebragalhodb`.`portfolio` (
     REFERENCES `quebragalhodb`.`prestador` (`id_prestador`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_unicode_ci;
 
 
 -- -----------------------------------------------------
@@ -152,7 +164,9 @@ CREATE TABLE IF NOT EXISTS `quebragalhodb`.`agendamento` (
     REFERENCES `quebragalhodb`.`usuario` (`id_usuario`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_unicode_ci;
 
 
 -- -----------------------------------------------------
@@ -171,7 +185,9 @@ CREATE TABLE IF NOT EXISTS `quebragalhodb`.`avaliacao` (
     REFERENCES `quebragalhodb`.`agendamento` (`id_agendamento`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_unicode_ci;
 
 
 -- -----------------------------------------------------
@@ -189,7 +205,9 @@ CREATE TABLE IF NOT EXISTS `quebragalhodb`.`resposta` (
     REFERENCES `quebragalhodb`.`avaliacao` (`id_avaliacao`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_unicode_ci;
 
 
 -- -----------------------------------------------------
@@ -216,7 +234,9 @@ CREATE TABLE IF NOT EXISTS `quebragalhodb`.`denuncia` (
     REFERENCES `quebragalhodb`.`usuario` (`id_usuario`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_unicode_ci;
 
 
 -- -----------------------------------------------------
@@ -234,7 +254,9 @@ CREATE TABLE IF NOT EXISTS `quebragalhodb`.`apelo` (
     REFERENCES `quebragalhodb`.`denuncia` (`id_denuncia`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_unicode_ci;
 
 
 -- -----------------------------------------------------
@@ -256,7 +278,9 @@ CREATE TABLE IF NOT EXISTS `quebragalhodb`.`tag_prestador` (
     REFERENCES `quebragalhodb`.`prestador` (`id_prestador`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_unicode_ci;
 
 
 -- -----------------------------------------------------
@@ -278,12 +302,31 @@ CREATE TABLE IF NOT EXISTS `quebragalhodb`.`tag_servico` (
     REFERENCES `quebragalhodb`.`servico` (`id_servico`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_unicode_ci;
 
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+
+ALTER DATABASE quebragalhodb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- ALTERAR CHARSET DAS TABELAS EXISTENTES POR GARANTIA
+ALTER TABLE usuario CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE prestador CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE chat CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE tag CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE servico CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE portfolio CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE agendamento CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE avaliacao CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE resposta CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE denuncia CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE apelo CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE tag_prestador CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE tag_servico CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- =============================================
 -- USUÁRIOS (20 registros)
