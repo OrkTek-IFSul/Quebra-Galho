@@ -8,7 +8,7 @@ class SolicitacaoClienteCard extends StatefulWidget {
   final int idAgendamento;
   final Function() onConfirm;
   final bool isConfirmed;
-
+  final bool isCanceled;
 
   const SolicitacaoClienteCard({
     super.key,
@@ -18,7 +18,7 @@ class SolicitacaoClienteCard extends StatefulWidget {
     required this.idAgendamento,
     required this.onConfirm,
     required this.isConfirmed,
-   
+    required this.isCanceled,
   });
 
   @override
@@ -73,44 +73,80 @@ class _SolicitacaoClienteCardState extends State<SolicitacaoClienteCard> {
     }
   }
 
+  Future<void> _cancelarSolicitacao() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final response = await http.put(
+        Uri.parse('http://192.168.0.155:8080/api/prestador/pedidoservico/${widget.idAgendamento}/rejeitar'),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Solicitação de ${widget.nome} cancelada com sucesso!'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } else {
+        throw Exception('Falha ao cancelar solicitação');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao cancelar solicitação: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: InkWell(
-        onTap: widget.onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              // Foto de perfil
-              CircleAvatar(
-                backgroundImage: NetworkImage(widget.fotoUrl),
-                radius: 25,
-              ),
-              const SizedBox(width: 12),
-              
-              // Informações do cliente
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.nome,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                  
-                  ],
+    return Opacity(
+      opacity: widget.isCanceled ? 0.3 : 1.0,
+      child: Card(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: InkWell(
+          onTap: widget.onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                // Foto de perfil
+                CircleAvatar(
+                  backgroundImage: NetworkImage(widget.fotoUrl),
+                  radius: 25,
                 ),
-              ),
+                const SizedBox(width: 12),
+                
+                // Informações do cliente
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.nome,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                    
+                    ],
+                  ),
+                ),
 
-              // Status ou botões de ação
-              _isConfirmed 
-                ? Container(
+                // Status ou botões de ação
+                if (widget.isConfirmed)
+                  Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.green.shade100,
@@ -133,31 +169,56 @@ class _SolicitacaoClienteCardState extends State<SolicitacaoClienteCard> {
                       ],
                     ),
                   )
-                : Row(
+                else if (widget.isCanceled)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.cancel, 
+                            color: Colors.grey.shade700, 
+                            size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Cancelado',
+                          style: TextStyle(
+                            color: Colors.grey.shade700,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       isLoading
-                        ? SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.green,
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.green,
+                              ),
+                            )
+                          : IconButton(
+                              icon: const Icon(Icons.check_circle, 
+                                  color: Colors.green),
+                              onPressed: _confirmarSolicitacao,
                             ),
-                          )
-                        : IconButton(
-                            icon: const Icon(Icons.check_circle, color: Colors.green),
-                            onPressed: _confirmarSolicitacao,
-                          ),
                       IconButton(
                         icon: const Icon(Icons.cancel, color: Colors.red),
-                        onPressed: () {
-                          // Implementar rejeição aqui
-                        },
+                        onPressed: _cancelarSolicitacao,
                       ),
                     ],
                   ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

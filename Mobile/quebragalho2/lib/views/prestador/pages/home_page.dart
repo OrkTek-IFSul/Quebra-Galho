@@ -70,14 +70,16 @@ class _HomePageState extends State<HomePage> {
                   final String dataHoraFormatada =
                       '${dataHora.day}/${dataHora.month}/${dataHora.year} das ${dataHora.hour}:${dataHora.minute.toString().padLeft(2, '0')}';
 
+                  // In the ListView.builder, update the SolicitacaoClienteCard
                   return SolicitacaoClienteCard(
                     nome: solicitacao['nomeDoUsuario'],
                     fotoUrl:
                         'http://192.168.0.155:8080${solicitacao['fotoPerfilUsuario']}',
+                 
                     idAgendamento: solicitacao['idAgendamento'],
                     isConfirmed: solicitacao['statusPedidoAgendamento'] == true,
+                    isCanceled: solicitacao['statusPedidoAgendamento'] == false,
                     onConfirm: () {
-                      // Apenas atualiza a lista para refletir a mudança de status
                       fetchSolicitacoes();
                     },
                     onTap: () {
