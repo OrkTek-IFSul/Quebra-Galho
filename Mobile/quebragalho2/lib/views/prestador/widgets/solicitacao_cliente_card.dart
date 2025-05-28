@@ -49,7 +49,7 @@ class _SolicitacaoClienteCardState extends State<SolicitacaoClienteCard> {
         setState(() {
           _isConfirmed = true;
         });
-        widget.onConfirm();
+        widget.onConfirm(); // Callback to update parent
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Solicitação de ${widget.nome} confirmada com sucesso!'),
@@ -109,54 +109,54 @@ class _SolicitacaoClienteCardState extends State<SolicitacaoClienteCard> {
               ),
 
               // Status ou botões de ação
-              if (widget.isConfirmed)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade100,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
+              _isConfirmed 
+                ? Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade100,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.check_circle, 
+                            color: Colors.green.shade700, 
+                            size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Confirmado',
+                          style: TextStyle(
+                            color: Colors.green.shade700,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check_circle, 
-                          color: Colors.green.shade700, 
-                          size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Confirmado',
-                        style: TextStyle(
-                          color: Colors.green.shade700,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      isLoading
+                        ? SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.green,
+                            ),
+                          )
+                        : IconButton(
+                            icon: const Icon(Icons.check_circle, color: Colors.green),
+                            onPressed: _confirmarSolicitacao,
+                          ),
+                      IconButton(
+                        icon: const Icon(Icons.cancel, color: Colors.red),
+                        onPressed: () {
+                          // Implementar rejeição aqui
+                        },
                       ),
                     ],
                   ),
-                )
-              else
-                Row(
-                  children: [
-                    isLoading
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.green,
-                          ),
-                        )
-                      : IconButton(
-                          icon: const Icon(Icons.check_circle, color: Colors.green),
-                          onPressed: _confirmarSolicitacao,
-                        ),
-                    IconButton(
-                      icon: const Icon(Icons.cancel, color: Colors.red),
-                      onPressed: () {
-                        // Implementar rejeição aqui
-                      },
-                    ),
-                  ],
-                ),
             ],
           ),
         ),

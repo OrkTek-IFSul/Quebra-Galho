@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:quebragalho2/views/prestador/pages/home_page.dart';
 import 'package:quebragalho2/views/prestador/pages/pagina_de_navegacao.dart';
 
 void main() {

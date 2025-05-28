@@ -75,7 +75,7 @@ class _HomePageState extends State<HomePage> {
                     fotoUrl:
                         'http://192.168.0.155:8080${solicitacao['fotoPerfilUsuario']}',
                     idAgendamento: solicitacao['idAgendamento'],
-                    isConfirmed: solicitacao['statusPedidoAgendamento'] == 'ACEITO',
+                    isConfirmed: solicitacao['statusPedidoAgendamento'] == true,
                     onConfirm: () {
                       // Apenas atualiza a lista para refletir a mudança de status
                       fetchSolicitacoes();
