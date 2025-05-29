@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:quebragalho2/views/cliente/pages/home_page.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -50,7 +51,10 @@ class WelcomePage extends StatelessWidget {
                     ),
                   ),
                   onPressed: () {
-                    // Navega para as opções do Cliente
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const HomePage()),
+                );
                   },
                   icon: const Icon(Icons.person, color: Colors.white),
                   label: const Text(
