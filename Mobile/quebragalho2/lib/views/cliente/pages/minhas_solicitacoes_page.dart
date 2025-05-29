@@ -75,14 +75,8 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder:
-                            (_) => DetalhesSolicitacaoPage(
-                              nome: "Fulano",
-                              horario: "10h às 11h",
-                              status: "Confirmado",
-                              imagemUrl: "https://via.placeholder.com/150",
-                              valor: "150.00",
-                            ),
+                        //AO SELECIONAR UMA SOLICITACAO DEVE ENVIAR O ID DO SERVICO
+                        builder: (_) => DetalhesSolicitacaoPage(agendamentoId: 1),
                       ),
                     );
                   },
