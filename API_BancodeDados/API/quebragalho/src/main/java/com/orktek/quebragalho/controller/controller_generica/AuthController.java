@@ -1,4 +1,4 @@
-package com.orktek.quebragalho.controller;
+package com.orktek.quebragalho.controller.controller_generica;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
