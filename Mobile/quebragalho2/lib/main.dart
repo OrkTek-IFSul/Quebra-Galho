@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:quebragalho2/views/cliente/pages/pagina_navegacao.dart';
-import 'package:quebragalho2/views/cliente/pages/tela_selecao_tipo.dart';
+import 'views/cliente/pages/cadastro_page.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(const MyApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: WelcomePage()
+      title: 'Test Cadastro Page',
+      home: CadastroPage(), // <- Aquí cargas solo esa página
     );
   }
 }
