@@ -1,0 +1,22 @@
+{"properties": [
+  {
+    "name": "app.upload.dir",
+    "type": "java.lang.String",
+    "description": "Diretório para upload de arquivos"
+  },
+  {
+    "name": "springdoc.title",
+    "type": "java.lang.String",
+    "description": "A description for 'springdoc.title'"
+  },
+  {
+    "name": "springdoc.version",
+    "type": "java.lang.String",
+    "description": "A description for 'springdoc.version'"
+  },
+  {
+    "name": "springdoc.description",
+    "type": "java.lang.String",
+    "description": "A description for 'springdoc.description'"
+  }
+]}

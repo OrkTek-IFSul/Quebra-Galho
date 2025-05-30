@@ -97,7 +97,7 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
                         horario: _formatarData(item['horario']),
                         status: item['status_aceito'] == null
                             ? 'Pendente'
-                            : item['status_servico']
+                            : item['status_aceito']
                                 ? 'Confirmado'
                                 : 'Cancelado',
                         imagemUrl:'https://i.pravatar.cc/150?img=${index + 1}',
