@@ -1,19 +1,13 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class DetalhesSolicitacaoPage extends StatefulWidget {
-  final String nome;
-  final String horario;
-  final String status;
-  final String imagemUrl;
-  final String valor;
+  final int agendamentoId;
 
   const DetalhesSolicitacaoPage({
     super.key,
-    required this.nome,
-    required this.horario,
-    required this.status,
-    required this.imagemUrl,
-    required this.valor,
+    required this.agendamentoId,
   });
 
   @override
@@ -23,23 +17,57 @@ class DetalhesSolicitacaoPage extends StatefulWidget {
 class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
   int _avaliacaoEstrelas = 0;
   final TextEditingController _comentarioController = TextEditingController();
+  bool _isLoading = true;
+  Map<String, dynamic>? _servicoData;
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'confirmado':
-        return Colors.green;
-      case 'pendente':
-        return Colors.orange;
-      case 'cancelado':
-        return Colors.red;
-      default:
-        return Colors.grey;
+  @override
+  void initState() {
+    super.initState();
+    _carregarDados();
+  }
+
+  Future<void> _carregarDados() async {
+    try {
+      // Substitua pela sua URL real
+      final response = await http.get(
+        //ALTERAR ID DO SERVICO AGENDADO
+        Uri.parse('http://192.168.0.155:8080/api/usuario/solicitacoes/agendamento/${widget.agendamentoId}'),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _servicoData = json.decode(response.body);
+          _isLoading = false;
+        });
+      } else {
+        throw Exception('Falha ao carregar dados do serviço');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao carregar dados: $e')),
+      );
     }
+  }
+
+  Color _getStatusColor(bool status) {
+    return status ? Colors.green : Colors.red;
+  }
+
+  String _getStatusText(bool status) {
+    return status ? 'Confirmado' : 'Cancelado';
   }
 
   @override
   Widget build(BuildContext context) {
     final larguraTela = MediaQuery.of(context).size.width;
+
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -49,8 +77,6 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-
-            /// 1. Linha com imagem + nome + horário
             Row(
               children: [
                 Container(
@@ -58,10 +84,7 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
                   height: larguraTela * 0.3,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
-                    image: DecorationImage(
-                      image: NetworkImage(widget.imagemUrl),
-                      fit: BoxFit.cover,
-                    ),
+                    color: Colors.grey[300], // Placeholder para imagem
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -70,11 +93,11 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.nome,
+                        _servicoData?['nome_prestador'] ?? '',
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
-                      Text("Horário: ${widget.horario}"),
+                      Text("Horário: ${_servicoData?['horario'] ?? ''}"),
                     ],
                   ),
                 ),
@@ -83,22 +106,21 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
 
             const SizedBox(height: 24),
 
-            /// 2. Linha com valor + status
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  "Valor: R\$ ${widget.valor}",
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                const Text(
+                  "Status do Serviço:",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(widget.status),
+                    color: _getStatusColor(_servicoData?['status_servico'] ?? false),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    widget.status,
+                    _getStatusText(_servicoData?['status_servico'] ?? false),
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                 ),
