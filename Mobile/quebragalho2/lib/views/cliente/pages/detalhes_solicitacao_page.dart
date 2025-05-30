@@ -99,6 +99,16 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
     }
   }
 
+  // First, add a helper method to get the message based on status
+  String _getMessageBasedOnStatus(bool? status) {
+    if (status == null) {
+      return "Seu serviço está pendente de aprovação, aguarde o retorno do prestador.";
+    } else if (!status) {
+      return "Seu serviço foi negado, dessa forma você não pode avaliar esse serviço";
+    }
+    return "";
+  }
+
   @override
   Widget build(BuildContext context) {
     final larguraTela = MediaQuery.of(context).size.width;
@@ -171,7 +181,7 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
 
             const SizedBox(height: 24),
 
-            /// 3. Rating com estrelas
+            // Rating section
             if (_servicoAvaliado) ...[
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24.0),
@@ -185,7 +195,8 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
                   textAlign: TextAlign.center,
                 ),
               ),
-            ] else ...[
+            ] else if (_servicoData?['status_aceito'] == true) ...[
+              // Show rating UI only for confirmed services
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(5, (index) {
@@ -203,10 +214,7 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
                   );
                 }),
               ),
-
               const SizedBox(height: 16),
-
-              /// 4. Campo de comentário
               TextField(
                 controller: _comentarioController,
                 maxLines: 4,
@@ -215,16 +223,13 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
-
               const SizedBox(height: 32),
-
-              /// 5. Botão de Avaliar
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: _enviarAvaliacao,
-                  icon: const Icon(Icons.check_circle_outline, color: Colors.white,),
-                  label: const Text("Avaliar", style:TextStyle(color: Colors.white),),
+                  icon: const Icon(Icons.check_circle_outline, color: Colors.white),
+                  label: const Text("Avaliar", style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     backgroundColor: Colors.blueAccent,
@@ -232,6 +237,20 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
+                ),
+              ),
+            ] else ...[
+              // Show message for pending or canceled services
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24.0),
+                child: Text(
+                  _getMessageBasedOnStatus(_servicoData?['status_aceito']),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.orange,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ),
             ],
