@@ -153,8 +153,8 @@ class _PerfilPageState extends State<PerfilPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                   builder: (context) => const AdicionarServicoScreen(),
-
+                        //ALTERAR PARA ID DO PRESTADOR QUE ESTÁ LOGADO
+                        builder: (context) => AdicionarServico(idPrestador: 1),
                       ),
                     );
                   },

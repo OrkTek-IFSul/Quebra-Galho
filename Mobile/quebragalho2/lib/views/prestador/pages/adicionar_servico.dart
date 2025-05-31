@@ -1,47 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-// Tu pantalla principal, desde donde navegarás a AdicionarServicoScreen
-class PerfilPage extends StatefulWidget {
-  const PerfilPage({super.key});
+class AdicionarServico extends StatefulWidget {
+  final int idPrestador; // Add this parameter
 
-  @override
-  State<PerfilPage> createState() => _PerfilPageState();
-}
-
-class _PerfilPageState extends State<PerfilPage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Perfil')),
-      body: Center(
-        child: ElevatedButton(
-          child: const Text('Ir a Adicionar Serviço'),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const AdicionarServicoScreen()),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-// Tu pantalla AdicionarServicoScreen 
-class AdicionarServicoScreen extends StatefulWidget {
-  const AdicionarServicoScreen({super.key});
+  const AdicionarServico({
+    super.key,
+    required this.idPrestador,
+  });
 
   @override
-  State<AdicionarServicoScreen> createState() => _AdicionarServicoScreenState();
+  State<AdicionarServico> createState() => _AdicionarServicoState();
 }
 
-class _AdicionarServicoScreenState extends State<AdicionarServicoScreen> {
+class _AdicionarServicoState extends State<AdicionarServico> {
   final TextEditingController nomeController = TextEditingController();
   final TextEditingController descricaoController = TextEditingController();
   final TextEditingController valorController = TextEditingController();
 
-  void _salvarServico() {
+  bool _isLoading = false;
+
+  Future<void> _salvarServico() async {
     final nome = nomeController.text.trim();
     final descricao = descricaoController.text.trim();
     final valor = int.tryParse(valorController.text.trim());
@@ -53,18 +33,47 @@ class _AdicionarServicoScreenState extends State<AdicionarServicoScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Serviço "$nome" adicionado com sucesso!')),
-    );
-    Navigator.pop(context);
-  }
+    setState(() => _isLoading = true);
 
-  @override
-  void dispose() {
-    nomeController.dispose();
-    descricaoController.dispose();
-    valorController.dispose();
-    super.dispose();
+    try {
+      final response = await http.post(
+        Uri.parse(
+            'http://localhost:8080/api/prestador/servico/${widget.idPrestador}'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'nome': nome,
+          'descricao': descricao,
+          'preco': valor,
+          'prestador': {
+            'id': widget.idPrestador,
+          },
+          'tags': []
+        }),
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Serviço "$nome" adicionado com sucesso!')),
+          );
+          Navigator.pop(context);
+        }
+      } else {
+        throw Exception('Falha ao adicionar serviço');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao adicionar serviço: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -107,18 +116,16 @@ class _AdicionarServicoScreenState extends State<AdicionarServicoScreen> {
             ),
             const SizedBox(height: 32),
             Center(
-              child: ElevatedButton(
-                onPressed: _salvarServico,
-                child: const Text('Adicionar'),
-              ),
+              child: _isLoading
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _salvarServico,
+                      child: const Text('Adicionar'),
+                    ),
             ),
           ],
         ),
       ),
     );
   }
-}
-
-void main() {
-  runApp(const MaterialApp(home: PerfilPage()));
 }
