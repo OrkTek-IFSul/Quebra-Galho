@@ -1,3 +1,10 @@
+///
+/// Perfil View - Quebra Galho App
+/// By Jean Carlo | Orktek
+/// github.com/jeankeitwo16
+/// Descrição: Página de edição de serviços, onde o prestador pode atualizar os detalhes de um serviço específico, como nome, descrição e valor.
+/// Versão: 1.0.0
+///
 import 'package:flutter/material.dart';
 import 'package:quebragalho2/services/editar_servico_services.dart';
 

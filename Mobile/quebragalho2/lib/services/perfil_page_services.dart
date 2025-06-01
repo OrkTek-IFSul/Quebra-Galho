@@ -1,3 +1,10 @@
+///
+/// Perfil Service - Quebra Galho App
+/// By Jean Carlo | Orktek
+/// github.com/jeankeitwo16
+/// Descrição: Serviço de perfil do usuário, onde é possível buscar, atualizar e gerenciar a imagem de perfil do usuário.
+/// Versão: 1.0.0
+///
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;

@@ -13,20 +13,20 @@ import lombok.Data;
 @Schema(description = "DTO para enviar informações de um agendamento")
 public class AgendamentoMinhasSolicitacoesDTO {
 
-    @Schema(description = "Id do prestador que irá realizar o agendamento", example = "1")
-    private Long id_servico;
+    @Schema(description = "Id do agendamento", example = "1")
+    private Long id_agendamento;
     @Schema(description = "Data e hora do agendamento", example = "2023-10-01T10:00:00")
     private String horario;
-    @Schema(description = "Data e hora do agendamento", example = "2023-10-01T10:00:00")
+    @Schema(description = "Status de pedido completo", example = "false")
     private Boolean status_servico;
-    @Schema(description = "Data e hora do agendamento", example = "2023-10-01T10:00:00")
+    @Schema(description = "Status de pedido aceito", example = "true")
     private Boolean status_aceito;
     @Schema(description = "Nome do prestador", example = "João Silva")
     private String nome_prestador;
 
     public static AgendamentoMinhasSolicitacoesDTO fromEntity(Agendamento agendamento, Prestador prestador) {
         AgendamentoMinhasSolicitacoesDTO dto = new AgendamentoMinhasSolicitacoesDTO();
-        dto.setId_servico(agendamento.getServico().getPrestador().getId());
+        dto.setId_agendamento(agendamento.getId());
         dto.setHorario(agendamento.getDataHora());
         dto.setStatus_servico(agendamento.getStatus());
         dto.setStatus_aceito(agendamento.getStatusAceito());

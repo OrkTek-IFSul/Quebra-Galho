@@ -101,7 +101,9 @@ class PrestadorDetalhesPage extends StatelessWidget {
                       MaterialPageRoute(
                         builder:
                             (_) => AgendamentoPage(
-                              servico: servicos[index]['nome'],
+                              servico: 'Instalação Elétrica',
+                              servicoId: 1,
+                              usuarioId: 1,
                             ),
                       ),
                     );
