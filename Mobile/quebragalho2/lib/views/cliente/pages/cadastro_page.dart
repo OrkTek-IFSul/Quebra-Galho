@@ -226,14 +226,14 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
   }
 
   Widget _formClienteWidget() {
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: _formularioBase(_formCliente),
     );
   }
 
   Widget _formPrestadorWidget() {
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
@@ -278,6 +278,7 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        resizeToAvoidBottomInset: true,
         appBar: AppBar(
           title: Text("Cadastro"),
           bottom: TabBar(

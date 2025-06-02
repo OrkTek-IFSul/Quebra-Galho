@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:quebragalho2/views/cliente/pages/cadastro_page.dart';
 import 'package:quebragalho2/views/cliente/pages/tela_selecao_tipo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -147,10 +148,28 @@ class _LoginPageState extends State<LoginPage> {
               ],
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: fazerLogin,
-              child: const Text('Entrar'),
-            ),
+            Row(
+  children: [
+    Expanded(
+      child: ElevatedButton(
+        onPressed: fazerLogin,
+        child: const Text('Entrar'),
+      ),
+    ),
+    const SizedBox(width: 10),
+    Expanded(
+      child: OutlinedButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const CadastroPage()),
+          );
+        },
+        child: const Text('Fazer Cadastro'),
+      ),
+    ),
+  ],
+),
           ],
         ),
       ),
