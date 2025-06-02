@@ -1,5 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:quebragalho2/views/cliente/pages/cadastro_page.dart';
+import 'package:http/http.dart' as http;
+import 'package:quebragalho2/views/cliente/pages/tela_selecao_tipo.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -9,68 +13,145 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _senhaController = TextEditingController();
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final emailController = TextEditingController();
+  final senhaController = TextEditingController();
+  bool manterLogado = false;
+  bool carregando = true;
+
+  @override
+  void initState() {
+    super.initState();
+    verificarLoginAutomatico();
+  }
+
+  Future<void> verificarLoginAutomatico() async {
+    final prefs = await SharedPreferences.getInstance();
+    final manter = prefs.getBool('manter_logado') ?? false;
+
+    if (!manter) {
+      setState(() => carregando = false);
+      return;
+    }
+
+    final token = prefs.getString('token');
+    final criadoEm = prefs.getString('token_criado_em');
+
+    if (token != null && criadoEm != null) {
+      final timestamp = DateTime.parse(criadoEm);
+      final duracao = DateTime.now().difference(timestamp);
+      const expiracao = Duration(hours: 1);
+
+      if (duracao <= expiracao) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const WelcomePage()),
+        );
+        return;
+      } else {
+        await prefs.remove('token');
+        await prefs.remove('token_criado_em');
+        await prefs.setBool('manter_logado', false);
+      }
+    }
+
+    setState(() => carregando = false);
+  }
+
+  Future<void> salvarPreferencias(String token, int id) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (manterLogado) {
+      await prefs.setBool('manter_logado', true);
+      await prefs.setString('token', token);
+      await prefs.setInt('usuario_id', id); // salvando o id do usuário
+      await prefs.setString('token_criado_em', DateTime.now().toIso8601String());
+    } else {
+      await prefs.setBool('manter_logado', false);
+    }
+
+    print('Token salvo: $token');
+    print('ID do usuário salvo: $id');
+  }
+
+  Future<void> fazerLogin() async {
+    final email = emailController.text;
+    final senha = senhaController.text;
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://192.168.1.24:8080/auth/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'senha': senha}),
+      );
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        final token = body['token'];
+        final id = body['id_usuario'];
+        
+
+        await salvarPreferencias(token, id);
+
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const WelcomePage()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Email ou senha inválidos')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao conectar: $e')),
+        
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (carregando) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(title: Text("Login")),
+      appBar: AppBar(title: const Text('Login')),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              /// E-mail
-              TextFormField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  labelText: "E-mail",
-                  border: OutlineInputBorder(),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(labelText: 'E-mail'),
+            ),
+            TextField(
+              controller: senhaController,
+              decoration: const InputDecoration(labelText: 'Senha'),
+              obscureText: true,
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Checkbox(
+                  value: manterLogado,
+                  onChanged: (value) {
+                    setState(() {
+                      manterLogado = value ?? false;
+                    });
+                  },
                 ),
-              ),
-              SizedBox(height: 16),
-
-              /// Senha
-              TextFormField(
-                controller: _senhaController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: "Senha",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 24),
-
-              /// Texto clicável
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => CadastroPage()),
-                  );
-                },
-                child: Text(
-                  "Ainda não tem conta?",
-                  style: TextStyle(
-                    color: Colors.blue,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-              ),
-              SizedBox(height: 12),
-
-              /// Botão Login
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(onPressed: () {}, child: Text("Entrar")),
-              ),
-            ],
-          ),
+                const Text('Continuar logado'),
+              ],
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: fazerLogin,
+              child: const Text('Entrar'),
+            ),
+          ],
         ),
       ),
     );
