@@ -12,13 +12,13 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const int usuarioIdTeste = 1;
-    const int servicoIdTeste = 1;
+    const int servicoIdTeste = 2;
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: AgendamentoPage(
         servico: 'Serviço de Teste',
-        servicoId: usuarioIdTeste,
+        servicoId: servicoIdTeste,
         usuarioId: usuarioIdTeste,
       ),
     );

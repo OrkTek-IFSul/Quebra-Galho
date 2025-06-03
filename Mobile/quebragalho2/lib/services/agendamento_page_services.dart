@@ -28,25 +28,30 @@ class AgendamentoPageService {
     }
   }
 
-  Future<bool> cadastrarAgendamento({
-    required int usuarioId,
-    required int servicoId,
-    required DateTime horario,
-  }) async {
-    try {
-      final response = await http.post(
-        Uri.parse(_baseUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'id_usuario': usuarioId,
-          'id_servico': servicoId,
-          'horario': horario.toIso8601String(),
-        }),
-      );
+  Future<Map<String, dynamic>> cadastrarAgendamento({
+  required int usuarioId,
+  required int servicoId,
+  required DateTime horario,
+}) async {
+  try {
+    final response = await http.post(
+      Uri.parse(_baseUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'id_usuario': usuarioId,
+        'id_servico': servicoId,
+        'horario': horario.toIso8601String(),
+      }),
+    );
 
-      return response.statusCode == 201;
-    } catch (e) {
-      throw Exception('Erro ao cadastrar agendamento: $e');
+    if (response.statusCode == 201) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception('Falha ao confirmar agendamento');
     }
+  } catch (e) {
+    throw Exception('Erro ao cadastrar agendamento: $e');
   }
+}
+
 }

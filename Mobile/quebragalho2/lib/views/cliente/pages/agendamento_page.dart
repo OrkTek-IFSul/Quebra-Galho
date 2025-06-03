@@ -6,6 +6,7 @@
 /// Versão: 1.0.0
 ///
 import 'package:flutter/material.dart';
+import 'package:quebragalho2/views/cliente/pages/tela_confirmacao_solicitacao.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import '../../../services/agendamento_page_services.dart';
@@ -78,48 +79,63 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
     );
   }
 
-  Future<void> _solicitarAgendamento() async {
-    if (_selectedTime == null) return;
+Future<void> _solicitarAgendamento() async {
+  if (_selectedTime == null) return;
 
-    setState(() => _loading = true);
-    try {
-      final dataHora = _criarDateTime(_selectedDay, _selectedTime!);
+  setState(() => _loading = true);
+  try {
+    final dataHora = _criarDateTime(_selectedDay, _selectedTime!);
 
-      if (_isHorarioIndisponivel(_selectedTime!)) {
-        throw Exception('Este horário já está reservado');
-      }
-
-      final sucesso = await _service.cadastrarAgendamento(
-        usuarioId: widget.usuarioId,
-        servicoId: widget.servicoId,
-        horario: dataHora,
-      );
-
-      if (sucesso) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Agendado para ${DateFormat('dd/MM/yyyy').format(dataHora)} às $_selectedTime'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        setState(() {
-          _horariosIndisponiveis.add(dataHora);
-          _selectedTime = null;
-        });
-      } else {
-        throw Exception('Falha ao confirmar agendamento');
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      setState(() => _loading = false);
+    if (_isHorarioIndisponivel(_selectedTime!)) {
+      throw Exception('Este horário já está reservado');
     }
+
+    final agendamento = await _service.cadastrarAgendamento(
+      usuarioId: widget.usuarioId,
+      servicoId: widget.servicoId,
+      horario: dataHora,
+    );
+
+    // Extrai os dados diretamente do response
+    final nomePrestador = agendamento['prestador'];
+    final nomeServico = agendamento['servico'];
+    final preco = (agendamento['preco_servico'] as num).toDouble();
+    final horarioConfirmado = DateTime.parse(agendamento['horario']);
+
+    // Vai para tela de confirmação
+    // Vai para tela de confirmação com a dataHora selecionada, ignorando o JSON bugado
+Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => ConfirmacaoPage(
+      nomePrestador: nomePrestador,
+      nomeServico: nomeServico,
+      data: dataHora,  // data e hora selecionadas
+      hora: DateFormat('HH:mm').format(dataHora),
+      valor: preco,
+    ),
+  ),
+);
+
+
+    setState(() {
+      _horariosIndisponiveis.add(dataHora);
+      _selectedTime = null;
+    });
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Erro: ${e.toString()}'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  } finally {
+    setState(() => _loading = false);
   }
+}
+
+
+
 
   @override
   Widget build(BuildContext context) {
