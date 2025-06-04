@@ -36,16 +36,20 @@ class _PerfilPageState extends State<PerfilPage> {
       debugPrint('Corpo da resposta: ${response.body}');
 
       if (response.statusCode == 200) {
+        // Se sucesso, atualiza o estado com os dados do prestador
         setState(() {
           prestador = jsonDecode(response.body);
           carregando = false;
         });
       } else {
+        
         throw Exception(
           'Erro ao carregar perfil. Status: ${response.statusCode}, Corpo: ${response.body}',
         );
       }
     } catch (e, stacktrace) {
+
+      // Em caso de exceção, exibe mensagem de erro
       debugPrint('Exceção ao carregar perfil: $e');
       debugPrint('Stacktrace: $stacktrace');
       setState(() {
@@ -59,18 +63,20 @@ class _PerfilPageState extends State<PerfilPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Enquanto os dados estão sendo carregados
     if (carregando) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
-
+    // Caso prestador seja nulo
     if (prestador == null) {
       return const Scaffold(
         body: Center(child: Text('Erro desconhecido ao carregar perfil.')),
       );
     }
 
+    // Caso ocorra erro ao carregar os dados
     if (prestador!.containsKey('erro')) {
       return Scaffold(
         body: Padding(
@@ -121,6 +127,8 @@ class _PerfilPageState extends State<PerfilPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Nome
+
                       Text(
                         nome,
                         style: const TextStyle(
@@ -128,11 +136,14 @@ class _PerfilPageState extends State<PerfilPage> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      // Descrição se houver
                       if (descricao.isNotEmpty) ...[
                         const SizedBox(height: 4),
                         Text(descricao),
                       ],
                       const SizedBox(height: 8),
+
+                      // Tags do prestador
                       Wrap(
                         spacing: 8,
                         children: tags
@@ -142,6 +153,8 @@ class _PerfilPageState extends State<PerfilPage> {
                             .toList(),
                       ),
                       const SizedBox(height: 8),
+
+                      // Botão que leva à tela de edição dos dados do prestador
                       ElevatedButton.icon(
                         onPressed: () {
                           Navigator.push(
@@ -186,7 +199,8 @@ class _PerfilPageState extends State<PerfilPage> {
             ),
             const SizedBox(height: 8),
 
-            // Lista de serviços
+
+            // Lista de serviços do prestador
             Expanded(
               child: servicos.isEmpty
                   ? const Center(child: Text('Nenhum serviço cadastrado.'))
@@ -196,6 +210,7 @@ class _PerfilPageState extends State<PerfilPage> {
                         final servico = servicos[index];
                         return ServicoCard(
                           nome: servico['nome'] ?? '',
+
                           valor: 0, // Atualize com valor real se necessário
                           onDelete: () {
                             setState(() {
@@ -203,6 +218,7 @@ class _PerfilPageState extends State<PerfilPage> {
                             });
                           },
                           onTap: () {
+                            // Navega para a tela de edição do serviço
                             Navigator.push(
                               context,
                               MaterialPageRoute(
