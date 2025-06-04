@@ -86,35 +86,27 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
             ),
           ),
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    itemCount: _solicitacoesFiltradas.length,
-                    itemBuilder: (context, index) {
-                      final item = _solicitacoesFiltradas[index];
-                      return SolicitacaoWidget(
-                        nome: item['nome_prestador'],
-                        horario: _formatarData(item['horario']),
-                        status: item['status_aceito'] == null
-                            ? 'Pendente'
-                            : item['status_aceito']
-                                ? 'Confirmado'
-                                : 'Cancelado',
-                        imagemUrl:'https://i.pravatar.cc/150?img=${index + 1}',
-          
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => DetalhesSolicitacaoPage(
-                                agendamentoId: item['id_agendamento'],
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
+            child: ListView.builder(
+              itemCount: solicitacoes.length,
+              itemBuilder: (context, index) {
+                final item = solicitacoes[index];
+                return SolicitacaoWidget(
+                  nome: item['nome']!,
+                  horario: item['horario']!,
+                  status: item['status']!,
+                  imagemUrl: item['imagem']!,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        //AO SELECIONAR UMA SOLICITACAO DEVE ENVIAR O ID DO SERVICO
+                        builder: (_) => DetalhesSolicitacaoPage(agendamentoId: 1),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),

@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+
+import 'package:quebragalho2/views/cliente/pages/detalhes_solicitacao_page.dart';
+import 'package:quebragalho2/views/cliente/pages/editar_dados_page.dart';
+import 'package:quebragalho2/views/cliente/pages/minhas_solicitacoes_page.dart';
+
 import 'package:quebragalho2/views/cliente/pages/pagina_navegacao.dart';
 
 

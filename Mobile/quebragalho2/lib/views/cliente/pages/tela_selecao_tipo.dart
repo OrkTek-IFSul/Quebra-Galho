@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:quebragalho2/views/cliente/navegacao_cliente.dart';
-import 'package:quebragalho2/views/prestador/navegacao_prestador.dart';
+import 'package:quebragalho2/views/cliente/pages/navegacao_cliente.dart';
+import 'package:quebragalho2/views/prestador/pages/navegacao_prestador.dart';
+
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -54,7 +55,7 @@ class WelcomePage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const NavegacaoCliente(),
+                        builder: (_) => NavegacaoCliente(),
                       ),
                     );
                   },
@@ -83,7 +84,7 @@ class WelcomePage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const NavegacaoPrestador(),
+                        builder: (_) => NavegacaoPrestador(),
                       ),
                     );
                   },
