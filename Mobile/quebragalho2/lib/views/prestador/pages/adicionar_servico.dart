@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class AdicionarServico extends StatefulWidget {
-  const AdicionarServico({super.key});
+  final int idPrestador; // Add this parameter
+
+  const AdicionarServico({
+    super.key,
+    required this.idPrestador,
+  });
 
   @override
   State<AdicionarServico> createState() => _AdicionarServicoState();
@@ -12,7 +19,9 @@ class _AdicionarServicoState extends State<AdicionarServico> {
   final TextEditingController descricaoController = TextEditingController();
   final TextEditingController valorController = TextEditingController();
 
-  void _salvarServico() {
+  bool _isLoading = false;
+
+  Future<void> _salvarServico() async {
     final nome = nomeController.text.trim();
     final descricao = descricaoController.text.trim();
     final valor = int.tryParse(valorController.text.trim());
@@ -24,11 +33,47 @@ class _AdicionarServicoState extends State<AdicionarServico> {
       return;
     }
 
-    // Aqui poderia adicionar ao backend, state, banco etc
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Serviço "$nome" adicionado com sucesso!')),
-    );
-    Navigator.pop(context); // volta pra tela anterior
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await http.post(
+        Uri.parse(
+            'http://localhost:8080/api/prestador/servico/${widget.idPrestador}'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'nome': nome,
+          'descricao': descricao,
+          'preco': valor,
+          'prestador': {
+            'id': widget.idPrestador,
+          },
+          'tags': []
+        }),
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Serviço "$nome" adicionado com sucesso!')),
+          );
+          Navigator.pop(context);
+        }
+      } else {
+        throw Exception('Falha ao adicionar serviço');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao adicionar serviço: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -71,10 +116,12 @@ class _AdicionarServicoState extends State<AdicionarServico> {
             ),
             const SizedBox(height: 32),
             Center(
-              child: ElevatedButton(
-                onPressed: _salvarServico,
-                child: const Text('Adicionar'),
-              ),
+              child: _isLoading
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _salvarServico,
+                      child: const Text('Adicionar'),
+                    ),
             ),
           ],
         ),

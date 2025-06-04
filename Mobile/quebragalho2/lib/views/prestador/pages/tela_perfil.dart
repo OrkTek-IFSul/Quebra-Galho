@@ -24,12 +24,12 @@ class _PerfilPageState extends State<PerfilPage> {
   @override
   void initState() {
     super.initState();
-    carregarPerfil(); // Carrega os dados do prestador ao iniciar a tela
+    carregarPerfil();
   }
 
   // Faz requisição HTTP para obter os dados do prestador
   Future<void> carregarPerfil() async {
-    final url = 'http://192.168.1.8:8080/api/prestadores/${widget.idPrestador}';
+    final url = 'http://192.168.1.24:8080/api/prestador/perfil/${widget.idPrestador}';
     try {
       final response = await http.get(Uri.parse(url));
       debugPrint('Resposta status: ${response.statusCode}');
@@ -42,12 +42,13 @@ class _PerfilPageState extends State<PerfilPage> {
           carregando = false;
         });
       } else {
-        // Erro no status da resposta
+        
         throw Exception(
           'Erro ao carregar perfil. Status: ${response.statusCode}, Corpo: ${response.body}',
         );
       }
     } catch (e, stacktrace) {
+
       // Em caso de exceção, exibe mensagem de erro
       debugPrint('Exceção ao carregar perfil: $e');
       debugPrint('Stacktrace: $stacktrace');
@@ -68,7 +69,6 @@ class _PerfilPageState extends State<PerfilPage> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-
     // Caso prestador seja nulo
     if (prestador == null) {
       return const Scaffold(
@@ -91,10 +91,15 @@ class _PerfilPageState extends State<PerfilPage> {
       );
     }
 
-    // Extrai os dados do prestador
+    // Dados do prestador
     final nome = prestador?['nome'] ?? 'Sem nome';
     final descricao = prestador?['descricao'] ?? '';
-    final imagemPerfil = prestador?['imagemPerfilUrl'] ?? '';
+    final usuario = prestador?['usuario'];
+    final idUsuario = usuario?['id'];
+    final imagemPerfil = (usuario != null && usuario['id'] != null)
+    ? 'http://192.168.1.24:8080/api/usuarios/${usuario['id']}/imagem'
+    : '';
+
     final List servicos = prestador?['servicos'] ?? [];
     final List tags = prestador?['tags'] ?? [];
 
@@ -123,6 +128,7 @@ class _PerfilPageState extends State<PerfilPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Nome
+
                       Text(
                         nome,
                         style: const TextStyle(
@@ -136,6 +142,7 @@ class _PerfilPageState extends State<PerfilPage> {
                         Text(descricao),
                       ],
                       const SizedBox(height: 8),
+
                       // Tags do prestador
                       Wrap(
                         spacing: 8,
@@ -146,6 +153,7 @@ class _PerfilPageState extends State<PerfilPage> {
                             .toList(),
                       ),
                       const SizedBox(height: 8),
+
                       // Botão que leva à tela de edição dos dados do prestador
                       ElevatedButton.icon(
                         onPressed: () {
@@ -179,7 +187,8 @@ class _PerfilPageState extends State<PerfilPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => AdicionarServico(),
+                        //ALTERAR PARA ID DO PRESTADOR QUE ESTÁ LOGADO
+                        builder: (context) => AdicionarServico(idPrestador: 1),
                       ),
                     );
                   },
@@ -189,6 +198,7 @@ class _PerfilPageState extends State<PerfilPage> {
               ],
             ),
             const SizedBox(height: 8),
+
 
             // Lista de serviços do prestador
             Expanded(
@@ -200,9 +210,9 @@ class _PerfilPageState extends State<PerfilPage> {
                         final servico = servicos[index];
                         return ServicoCard(
                           nome: servico['nome'] ?? '',
-                          valor: 0, // Substitua se o valor vier da API
+
+                          valor: 0, // Atualize com valor real se necessário
                           onDelete: () {
-                            // Remove da lista local
                             setState(() {
                               servicos.removeAt(index);
                             });
