@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:quebragalho2/views/cliente/pages/detalhes_solicitacao_page.dart';
@@ -13,6 +14,7 @@ class MinhasSolicitacoesPage extends StatefulWidget {
 
 class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
   final TextEditingController _searchController = TextEditingController();
+  
   bool _isLoading = true;
   List<dynamic> _solicitacoes = [];
   List<dynamic> _solicitacoesFiltradas = [];
@@ -71,6 +73,8 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
       appBar: AppBar(title: const Text("Minhas Solicitações")),
       body: Column(
         children: [
+
+          /// Barra de Pesquisa
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: TextField(
@@ -82,6 +86,7 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
+
               onChanged: _filtrarSolicitacoes,
             ),
           ),

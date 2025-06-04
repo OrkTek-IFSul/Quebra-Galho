@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -17,6 +18,7 @@ class DetalhesSolicitacaoPage extends StatefulWidget {
 class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
   int _avaliacaoEstrelas = 0;
   final TextEditingController _comentarioController = TextEditingController();
+
   bool _isLoading = true;
   Map<String, dynamic>? _servicoData;
   bool _servicoAvaliado = false;
@@ -170,11 +172,13 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
 
   String _getStatusText(bool status) {
     return status ? 'Confirmado' : 'Cancelado';
+
   }
 
   @override
   Widget build(BuildContext context) {
     final larguraTela = MediaQuery.of(context).size.width;
+
 
     if (_isLoading) {
       return const Scaffold(
@@ -194,7 +198,6 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
       );
     }
 
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("Detalhes da Solicitação"),
@@ -203,6 +206,10 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+
+
+            /// 1. Linha com imagem + nome + horário
+
             Row(
               children: [
                 Container(
@@ -210,7 +217,14 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
                   height: larguraTela * 0.3,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
+
+                    image: DecorationImage(
+                      image: NetworkImage(widget.imagemUrl),
+                      fit: BoxFit.cover,
+                    ),
+
                     color: Colors.grey[300], // Placeholder para imagem
+
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -219,6 +233,13 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
+
+                        widget.nome,
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text("Horário: ${widget.horario}"),
+
                         _servicoData?['nome_prestador'] ?? 'N/A',
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
@@ -233,6 +254,14 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
 
             const SizedBox(height: 24),
 
+            /// 2. Linha com valor + status
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Valor: R\$ ${widget.valor}",
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -243,6 +272,12 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
+                    color: _getStatusColor(widget.status),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    widget.status,
+
                     color: _getStatusColor(_servicoData?['status_servico'] ?? false),
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -262,6 +297,36 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
             ),
 
             const SizedBox(height: 24),
+
+            /// 3. Rating com estrelas
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(5, (index) {
+                return IconButton(
+                  icon: Icon(
+                    index < _avaliacaoEstrelas ? Icons.star : Icons.star_border,
+                    color: Colors.amber,
+                    size: 32,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _avaliacaoEstrelas = index + 1;
+                    });
+                  },
+                );
+              }),
+            ),
+
+            const SizedBox(height: 16),
+
+            /// 4. Campo de comentário
+            TextField(
+              controller: _comentarioController,
+              maxLines: 4,
+              decoration: InputDecoration(
+                hintText: "Escreva um comentário...",
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
 
             // Rating section
             if (_servicoAvaliado) ...[
@@ -287,6 +352,7 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: _enviarAvaliacao,
+
                 icon: const Icon(Icons.check_circle_outline),
                 label: const Text("Avaliar"),
                 style: ElevatedButton.styleFrom(
@@ -294,6 +360,18 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
                   backgroundColor: Colors.blueAccent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
+
+                  ),
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 
             ] else if (_servicoData?['status_aceito'] == true) ...[
               // Show rating UI only for confirmed services
@@ -360,3 +438,4 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
     );
   }
 }
+

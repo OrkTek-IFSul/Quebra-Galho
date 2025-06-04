@@ -15,6 +15,7 @@ class EditarDadosPage extends StatefulWidget {
 }
 
 class _EditarDadosPageState extends State<EditarDadosPage> {
+
   final TextEditingController _nomeController = TextEditingController(
     text: "João da Silva",
   );
@@ -145,6 +146,7 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -166,6 +168,7 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
+            /// Nome
             TextField(
               controller: _nomeController,
               decoration: const InputDecoration(
@@ -174,6 +177,9 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
               ),
             ),
             const SizedBox(height: 16),
+
+
+            /// Telefone
             TextField(
               controller: _telefoneController,
               keyboardType: TextInputType.phone,
@@ -183,6 +189,7 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
               ),
             ),
             const SizedBox(height: 16),
+            /// Email
             TextField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
@@ -192,6 +199,7 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
               ),
             ),
             const SizedBox(height: 16),
+            /// CPF fixo
             TextField(
               controller: TextEditingController(text: _cpf),
               enabled: false,
