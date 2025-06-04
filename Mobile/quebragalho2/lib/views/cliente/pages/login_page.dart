@@ -1,10 +1,10 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:quebragalho2/views/cliente/pages/cadastro_page.dart';
+import 'dart:convert';
 import 'package:quebragalho2/views/cliente/pages/tela_selecao_tipo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -59,6 +59,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> salvarPreferencias(String token, int id) async {
+
     final prefs = await SharedPreferences.getInstance();
     if (manterLogado) {
       await prefs.setBool('manter_logado', true);
@@ -71,6 +72,7 @@ class _LoginPageState extends State<LoginPage> {
 
     print('Token salvo: $token');
     print('ID do usuário salvo: $id');
+
   }
 
   Future<void> fazerLogin() async {
@@ -88,8 +90,6 @@ class _LoginPageState extends State<LoginPage> {
         final body = jsonDecode(response.body);
         final token = body['token'];
         final id = body['id_usuario'];
-        
-
         await salvarPreferencias(token, id);
 
         if (!mounted) return;
@@ -105,7 +105,6 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro ao conectar: $e')),
-        
       );
     }
   }
@@ -148,6 +147,7 @@ class _LoginPageState extends State<LoginPage> {
               ],
             ),
             const SizedBox(height: 20),
+
             Row(
   children: [
     Expanded(
@@ -170,6 +170,7 @@ class _LoginPageState extends State<LoginPage> {
     ),
   ],
 ),
+
           ],
         ),
       ),

@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:quebragalho2/views/cliente/navegacao_cliente.dart';
-import 'package:quebragalho2/views/prestador/navegacao_prestador.dart';
+
+import 'package:quebragalho2/views/cliente/pages/home_page.dart';
+import 'package:quebragalho2/views/cliente/pages/navegacao_cliente.dart';
+import 'package:quebragalho2/views/prestador/pages/navegacao_prestador.dart';
+
+
+
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -16,6 +21,7 @@ class WelcomePage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+
               /// Lottie Animation no topo
               Lottie.asset(
                 'assets/welcome.json',
@@ -51,10 +57,13 @@ class WelcomePage extends StatelessWidget {
                     ),
                   ),
                   onPressed: () {
+
+                    // Navega para as opções do Cliente
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const NavegacaoCliente(),
+                        builder: (_) => NavegacaoCliente(),
                       ),
                     );
                   },
@@ -80,10 +89,13 @@ class WelcomePage extends StatelessWidget {
                     ),
                   ),
                   onPressed: () {
+
+                    // Navega para as opções do Prestador
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const NavegacaoPrestador(),
+                        builder: (_) => NavegacaoPrestador(),
                       ),
                     );
                   },

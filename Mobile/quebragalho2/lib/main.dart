@@ -1,5 +1,16 @@
 import 'package:flutter/material.dart';
+
+import 'package:quebragalho2/views/cliente/pages/agendamento_page.dart';
+import 'package:quebragalho2/views/cliente/pages/perfil_page.dart';
+
+
+import 'package:quebragalho2/views/cliente/pages/detalhes_solicitacao_page.dart';
 import 'package:quebragalho2/views/cliente/pages/editar_dados_page.dart';
+import 'package:quebragalho2/views/cliente/pages/minhas_solicitacoes_page.dart';
+
+import 'package:quebragalho2/views/cliente/pages/pagina_navegacao.dart';
+
+
 
 void main() {
   runApp(const MainApp());
@@ -10,9 +21,18 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    const int usuarioIdTeste = 1;
+    const int servicoIdTeste = 2;
+
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: EditarDadosPage(),
+
+      home: AgendamentoPage(
+        servico: 'Serviço de Teste',
+        servicoId: servicoIdTeste,
+        usuarioId: usuarioIdTeste,
+      ),
+
     );
   }
 }
