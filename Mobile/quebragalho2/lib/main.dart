@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quebragalho2/views/cliente/pages/home_page.dart';
+import 'package:quebragalho2/views/splash_screen.dart';
 
 
 void main() {
@@ -17,7 +18,7 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: HomePage()
+      home: SplashScreen()
 
     );
   }
