@@ -4,7 +4,7 @@ import 'package:quebragalho2/views/cliente/pages/cadastro_page.dart';
 import 'dart:convert';
 import 'package:quebragalho2/views/cliente/pages/tela_selecao_tipo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:quebragalho2/api_config.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -43,9 +43,10 @@ class _LoginPageState extends State<LoginPage> {
       const expiracao = Duration(hours: 1);
 
       if (duracao <= expiracao) {
+        if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const WelcomePage()),
+          MaterialPageRoute(builder: (_) => const WelcomePage()), // Ajuste se necessário
         );
         return;
       } else {
@@ -59,12 +60,11 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> salvarPreferencias(String token, int id) async {
-
     final prefs = await SharedPreferences.getInstance();
     if (manterLogado) {
       await prefs.setBool('manter_logado', true);
       await prefs.setString('token', token);
-      await prefs.setInt('usuario_id', id); // salvando o id do usuário
+      await prefs.setInt('usuario_id', id);   // salva id do usuário aqui
       await prefs.setString('token_criado_em', DateTime.now().toIso8601String());
     } else {
       await prefs.setBool('manter_logado', false);
@@ -72,16 +72,24 @@ class _LoginPageState extends State<LoginPage> {
 
     print('Token salvo: $token');
     print('ID do usuário salvo: $id');
-
   }
 
   Future<void> fazerLogin() async {
-    final email = emailController.text;
-    final senha = senhaController.text;
+    final email = emailController.text.trim();
+    final senha = senhaController.text.trim();
+
+    if (email.isEmpty || senha.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preencha todos os campos')),
+      );
+      return;
+    }
 
     try {
+      final url = Uri.parse('http://${ApiConfig.baseUrl}/auth/login');
+
       final response = await http.post(
-        Uri.parse('http://192.168.1.24:8080/auth/login'),
+        url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'senha': senha}),
       );
@@ -89,13 +97,14 @@ class _LoginPageState extends State<LoginPage> {
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
         final token = body['token'];
-        final id = body['id_usuario'];
+        final id = body['id_usuario'];  // Confirme que a API retorna esse campo
+
         await salvarPreferencias(token, id);
 
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const WelcomePage()),
+          MaterialPageRoute(builder: (_) => const WelcomePage()),  // Ajuste a tela que vai após o login
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -147,33 +156,37 @@ class _LoginPageState extends State<LoginPage> {
               ],
             ),
             const SizedBox(height: 20),
-
             Row(
-  children: [
-    Expanded(
-      child: ElevatedButton(
-        onPressed: fazerLogin,
-        child: const Text('Entrar'),
-      ),
-    ),
-    const SizedBox(width: 10),
-    Expanded(
-      child: OutlinedButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const CadastroPage()),
-          );
-        },
-        child: const Text('Fazer Cadastro'),
-      ),
-    ),
-  ],
-),
-
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: fazerLogin,
+                    child: const Text('Entrar'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const CadastroPage()),
+                      );
+                    },
+                    child: const Text('Fazer Cadastro'),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
+}
+
+// Função que as outras telas vão usar para obter o ID do usuário
+Future<int?> obterIdUsuario() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getInt('usuario_id');
 }

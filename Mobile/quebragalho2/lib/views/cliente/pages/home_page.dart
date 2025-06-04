@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:quebragalho2/views/cliente/pages/login_page.dart';
+
+import 'package:quebragalho2/views/cliente/pages/login_page.dart'; // onde está o obterIdUsuario()
 import 'package:quebragalho2/views/cliente/pages/prestador_detalhes_page.dart';
 import 'package:quebragalho2/views/cliente/widgets/prestador_home_card.dart';
 
@@ -10,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:http/http.dart' as http;
 
+import 'package:quebragalho2/api_config.dart'; // nova importação para a baseUrl
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -27,11 +29,25 @@ class _HomePageState extends State<HomePage> {
 
   Timer? _debounce;
 
+  int? usuarioId;
+
   @override
   void initState() {
     super.initState();
-    _loadInitialData();
+    carregarDados();
     searchController.addListener(_debouncedSearch);
+  }
+
+  Future<void> carregarDados() async {
+    await carregarUsuarioId();
+    await _loadInitialData();
+  }
+
+  Future<void> carregarUsuarioId() async {
+    final id = await obterIdUsuario();
+    setState(() {
+      usuarioId = id;
+    });
   }
 
   void _debouncedSearch() {
@@ -43,7 +59,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadInitialData() async {
     await fetchCategorias();
-    await fetchPrestadores(); // Atualiza direto a lista
+    await fetchPrestadores();
   }
 
   Future<List> _searchPrestadores() async {
@@ -59,15 +75,13 @@ class _HomePageState extends State<HomePage> {
         'size': '10',
       };
 
+      // Se só tem 'page' e 'size', chama fetchPrestadores direto
       if (queryParams.length == 2) {
         return await fetchPrestadores();
       }
 
-      final uri = Uri.http(
-        'localhost:8080',
-        '/api/usuario/homepage/buscar',
-        queryParams,
-      );
+      final uri = Uri.parse('${ApiConfig.baseUrl}/api/usuario/homepage/buscar')
+          .replace(queryParameters: queryParams);
 
       final response = await http.get(uri);
 
@@ -99,9 +113,8 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> fetchCategorias() async {
     try {
-      final response = await http.get(
-        Uri.parse('http://192.168.0.155:8080/api/usuario/homepage/tags'),
-      );
+      final uri = Uri.parse('${ApiConfig.baseUrl}/api/usuario/homepage/tags');
+      final response = await http.get(uri);
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -125,9 +138,8 @@ class _HomePageState extends State<HomePage> {
     });
 
     try {
-      final response = await http.get(
-        Uri.parse('http://localhost:8080/api/usuario/homepage'),
-      );
+      final uri = Uri.parse('${ApiConfig.baseUrl}/api/usuario/homepage');
+      final response = await http.get(uri);
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -191,28 +203,27 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
+        title: const Text('Home'),
         actions: [
-          IconButton(icon: Icon(Icons.notifications_none), onPressed: () {}),
+          IconButton(icon: const Icon(Icons.notifications_none), onPressed: () {}),
           IconButton(
-  icon: Icon(Icons.logout),
-  tooltip: 'Sair',
-  onPressed: () async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
-    await prefs.remove('token_criado_em');
-    await prefs.remove('manter_logado');
+            icon: const Icon(Icons.logout),
+            tooltip: 'Sair',
+            onPressed: () async {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.remove('token');
+              await prefs.remove('token_criado_em');
+              await prefs.remove('manter_logado');
 
-    if (context.mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginPage()),
-        (route) => false,
-      );
-    }
-  },
-),
-
+              if (context.mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                  (route) => false,
+                );
+              }
+            },
+          ),
         ],
       ),
       body: Padding(
@@ -222,31 +233,31 @@ class _HomePageState extends State<HomePage> {
           children: [
             TextField(
               controller: searchController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Buscar prestador...',
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
                 ),
               ),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             SizedBox(
               height: 40,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: categories.length,
-                separatorBuilder: (_, __) => SizedBox(width: 8),
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (context, index) =>
                     _buildCategoryChip(categories[index]),
               ),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Expanded(
               child: isLoading
-                  ? Center(child: CircularProgressIndicator())
+                  ? const Center(child: CircularProgressIndicator())
                   : _prestadoresFiltrados.isEmpty
-                      ? Center(child: Text('Nenhum prestador encontrado'))
+                      ? const Center(child: Text('Nenhum prestador encontrado'))
                       : ListView.builder(
                           itemCount: _prestadoresFiltrados.length,
                           itemBuilder: (context, index) {

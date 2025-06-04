@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quebragalho2/views/cliente/pages/home_page.dart';
+import 'package:quebragalho2/views/splash_screen.dart';
 
 
 void main() {
@@ -12,12 +13,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-    int usuarioIdTeste = 1;
-    int servicoIdTeste = 2;
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: HomePage()
+      home: SplashScreen()
 
     );
   }

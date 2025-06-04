@@ -10,9 +10,10 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
+import 'package:quebragalho2/api_config.dart';
 
 class PerfilPageService {
-  final String baseUrl = 'http://10.0.2.2:8080/api/usuario/perfil'; // ajuste conforme necessário
+  final String baseUrl = 'http://${ApiConfig.baseUrl}/api/usuario/perfil'; // ajuste conforme necessário
 
   Future<Map<String, dynamic>> buscarPerfilUsuario(int usuarioId) async {
   final response = await http.get(

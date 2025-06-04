@@ -7,13 +7,14 @@
 ///
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:quebragalho2/api_config.dart';
 
 class EditarServicoService {
   static final EditarServicoService _instance = EditarServicoService._internal();
   factory EditarServicoService() => _instance;
   EditarServicoService._internal();
 
-  static const String _baseUrl = 'http://10.0.0.167:8080';
+  static const String _baseUrl = 'http://${ApiConfig.baseUrl}';
   Future<bool> atualizarServico({
     required int idPrestador,
     required int idServico,

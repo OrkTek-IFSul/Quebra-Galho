@@ -25,3 +25,4 @@ flutter:
   assets:
     - assets/confetti.json
     - assets/welcome.json
+    - assets/images/ # Adicione esta linha
