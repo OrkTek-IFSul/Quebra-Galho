@@ -33,10 +33,9 @@ public class AvaliacaoService {
      * @throws ResponseStatusException se agendamento não existir, não estiver concluído ou já tiver avaliação
      */
     @Transactional
-    public Avaliacao criarAvaliacao(Avaliacao avaliacao, Long agendamentoId) {
+    public Avaliacao criarAvaliacao(Avaliacao avaliacao) {
         // Verifica se agendamento existe
-        Agendamento agendamento = agendamentoRepository.findById(agendamentoId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Agendamento nao encontrado"));
+        Agendamento agendamento = avaliacao.getAgendamento();
         
         // Verifica se agendamento foi concluído
         if (!agendamento.getStatus()) {
@@ -47,10 +46,6 @@ public class AvaliacaoService {
         if (avaliacaoRepository.existsByAgendamento(agendamento)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Agendamento ja foi avaliado");
         }
-        
-        // Configura os relacionamentos e data
-        avaliacao.setAgendamento(agendamento);
-        avaliacao.setData(LocalDate.now());
         
         return avaliacaoRepository.save(avaliacao);
     }

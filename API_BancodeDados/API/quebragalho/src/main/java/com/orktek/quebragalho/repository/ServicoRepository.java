@@ -11,4 +11,5 @@ public interface ServicoRepository extends JpaRepository<Servico, Long> {
     List<Servico> findByPrestadorId(Long prestadorId);
     List<Servico> findByPrecoBetween(Double precoMin, Double precoMax);
     Optional<Servico> findByIdAndPrestadorId(Long idServico, Long idPrestador);
+    List<Servico> findByPrestadorIdAndAtivo(Long prestadorId, boolean ativo);
 }

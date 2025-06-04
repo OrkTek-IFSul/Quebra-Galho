@@ -1,6 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:quebragalho2/views/prestador/pages/editar_meus_dados.dart';
 
 class MeusDados extends StatefulWidget {
@@ -11,30 +11,64 @@ class MeusDados extends StatefulWidget {
 }
 
 class _MeusDadosState extends State<MeusDados> {
-  bool isLoading = true;
+  
   Map<String, dynamic>? prestadorData;
+
+  Map<String, dynamic>? usuario;
+  Map<String, dynamic>? prestador;
+  List<String> tags = [];
+  bool isLoading = true;
+
+  final int usuarioId = 1;
+  final int prestadorId = 1;
+
 
   @override
   void initState() {
     super.initState();
-    _fetchPrestadorData();
+     carregarDados();
   }
 
-  Future<void> _fetchPrestadorData() async {
+
+  Future<void> carregarDados() async {
     try {
-      final response = await http.get(
-        //Alterar id no final da URL de acordo com o usuário
-        Uri.parse('http://localhost:8080/api/prestador/perfil/2'),
+      final usuarioResp = await http.get(
+        Uri.parse('http://10.0.2.2:8080/api/usuario/perfil/$usuarioId'),
       );
 
-      if (response.statusCode == 200) {
-        setState(() {
-          prestadorData = jsonDecode(response.body);
-          isLoading = false;
-        });
-      } else {
-        throw Exception('Falha ao carregar dados do prestador');
+      final prestadorResp = await http.get(
+        Uri.parse('http://10.0.2.2:8080/api/prestador/perfil/$prestadorId'),
+      );
+
+      final tagPrestadorResp = await http.get(
+        Uri.parse(
+          'http://10.0.2.2:8080/api/tag-prestador/prestador/$prestadorId',
+        ),
+      );
+
+      List<String> tagNomes = [];
+
+      if (tagPrestadorResp.statusCode == 200) {
+        final List tagIds = jsonDecode(tagPrestadorResp.body); // [1, 2, 3]
+
+        for (var idTag in tagIds) {
+          final tagResp = await http.get(
+            Uri.parse('http://10.0.2.2:8080/api/tags/$idTag'),
+          );
+
+          if (tagResp.statusCode == 200) {
+            final tagData = jsonDecode(tagResp.body);
+            tagNomes.add(tagData['nome']);
+          }
+        }
       }
+
+      setState(() {
+        usuario = jsonDecode(usuarioResp.body);
+        prestador = jsonDecode(prestadorResp.body);
+        tags = tagNomes;
+        isLoading = false;
+      });
     } catch (e) {
       print('Erro ao carregar dados: $e');
       setState(() {
@@ -46,28 +80,19 @@ class _MeusDadosState extends State<MeusDados> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Meus Dados')),
-        body: const Center(child: CircularProgressIndicator()),
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (usuario == null || prestador == null) {
+      return const Scaffold(
+        body: Center(child: Text('Erro ao carregar dados.')),
       );
     }
 
-    if (prestadorData == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Meus Dados')),
-        body: const Center(child: Text('Erro ao carregar dados')),
-      );
-    }
-
-    final usuario = prestadorData!['usuario'];
-    final tags = (prestadorData!['tags'] as List)
-        .map((tag) => tag['nome'].toString())
-        .toList();
-
-    // Format working hours
-    final horarioInicio = DateTime.parse(prestadorData!['horarioInicio']);
-    final horarioFim = DateTime.parse(prestadorData!['horarioFim']);
-    final horarios = '${horarioInicio.hour}:00 às ${horarioFim.hour}:00';
+    final horarios = [
+      prestador!['data_hora_inicio'],
+      prestador!['data_hora_fim'],
+    ];
 
     return Scaffold(
       appBar: AppBar(
@@ -76,6 +101,7 @@ class _MeusDadosState extends State<MeusDados> {
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
+
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -83,6 +109,7 @@ class _MeusDadosState extends State<MeusDados> {
                   ),
                 ),
               ).then((_) => _fetchPrestadorData());
+              // Navegar para edição
             },
           ),
         ],
@@ -92,39 +119,39 @@ class _MeusDadosState extends State<MeusDados> {
         child: ListView(
           children: [
             const Text('Nome', style: TextStyle(fontWeight: FontWeight.bold)),
-            Text(usuario['nome']),
-            const SizedBox(height: 12),
 
-            const Text('Telefone', style: TextStyle(fontWeight: FontWeight.bold)),
-            Text(usuario['telefone']),
+            Text(usuario!['nome']),
+            const SizedBox(height: 12),
+            
+            const Text(
+              'Telefone',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            Text(usuario!['telefone']),
             const SizedBox(height: 12),
 
             const Text('Email', style: TextStyle(fontWeight: FontWeight.bold)),
-            Text(usuario['email']),
+            Text(usuario!['email']),
             const SizedBox(height: 12),
 
             const Text('CPF', style: TextStyle(fontWeight: FontWeight.bold)),
-            Text(usuario['documento']),
-            const SizedBox(height: 12),
-
-            const Text('Descrição', style: TextStyle(fontWeight: FontWeight.bold)),
-            Text(prestadorData!['descricao']),
+            Text(usuario!['documento']),
             const SizedBox(height: 12),
 
             const Text('Tags', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
-              children: tags
-                  .map((tag) => Chip(label: Text(tag)))
-                  .toList(),
+              children: tags.map((nome) => Chip(label: Text(nome))).toList(),
             ),
             const SizedBox(height: 16),
 
-            const Text('Horário de Trabalho', 
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Horários Disponibilizados',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
-            Text('• $horarios'),
+            ...horarios.map((h) => Text('• $h')),
           ],
         ),
       ),

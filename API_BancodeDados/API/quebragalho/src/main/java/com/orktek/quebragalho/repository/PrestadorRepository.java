@@ -20,9 +20,9 @@ public interface PrestadorRepository extends JpaRepository<Prestador, Long> {
         Optional<Prestador> findByUsuarioId(Long usuarioId);
 
         @Query("SELECT p FROM Prestador p JOIN p.usuario u LEFT JOIN p.tags t " +
-                        "WHERE LOWER(u.nome) LIKE LOWER(CONCAT('%', :nome, '%')) " +
+                        "WHERE (:nome IS NULL OR :nome = '' OR LOWER(u.nome) LIKE LOWER(CONCAT('%', :nome, '%'))) " +
                         "AND (:tags IS NULL OR LOWER(t.nome) IN :tags) " +
-                        "GROUP BY p.id") // Removido u.nome do GROUP BY se não for necessário
+                        "GROUP BY p.id")
         Page<Prestador> buscarPorNomeEPorTags(
                         @Param("nome") String nome,
                         @Param("tags") List<String> tags,
