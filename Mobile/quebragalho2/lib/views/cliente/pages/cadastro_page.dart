@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -16,7 +15,6 @@ class CadastroPage extends StatefulWidget {
 
 class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-
   final _formCliente = GlobalKey<FormState>();
   final _formPrestador = GlobalKey<FormState>();
 
@@ -39,6 +37,7 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
   }
 
   Future<void> _selecionarImagemDocumento() async {
+
     final XFile? imagem = await _picker.pickImage(source: ImageSource.gallery);
     if (imagem != null) {
       setState(() {
@@ -159,6 +158,7 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
   }
 
   Widget _formularioBase(GlobalKey<FormState> formKey, {bool prestador = false}) {
+
     return Form(
       key: formKey,
       child: Column(
@@ -227,13 +227,16 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
 
   Widget _formClienteWidget() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      child:Padding(
+         padding: const EdgeInsets.all(16.0),
       child: _formularioBase(_formCliente),
+      ),
     );
   }
 
   Widget _formPrestadorWidget() {
     return SingleChildScrollView(
+
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
@@ -254,8 +257,58 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
                   ? Center(child: Text("Clique para selecionar imagem do documento"))
                   : Image.file(_documentoImagem!, fit: BoxFit.cover),
             ),
-          ),
-        ],
+            SizedBox(height: 30),
+            _formularioBase(_formPrestador),
+            SizedBox(height: 20),
+            Text(
+              "Documento (CPF ou CNPJ)",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 12),
+            GestureDetector(
+              onTap: _selecionarImagem,
+              child: Container(
+                height: 180,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: _documentoImagem == null
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.cloud_upload, size: 50, color: Colors.grey),
+                          SizedBox(height: 10),
+                          Text(
+                            "Toque para selecionar o documento",
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      )
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(_documentoImagem!, fit: BoxFit.cover),
+                      ),
+              ),
+            ),
+            SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _mostrarErro(String mensagem) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(mensagem),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
       ),
     );
   }
@@ -275,6 +328,7 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -292,10 +346,55 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
         body: TabBarView(
           controller: _tabController,
           children: [
-            _formClienteWidget(),
-            _formPrestadorWidget(),
+            Container(
+              color: Theme.of(context).primaryColor,
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        "Crie sua conta",
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    TabBar(
+                      controller: _tabController,
+                      labelColor: Colors.white,
+                      unselectedLabelColor: Colors.white70,
+                      indicatorColor: Colors.white,
+                      indicatorWeight: 4,
+                      tabs: [
+                        Tab(
+                          icon: Icon(Icons.person_outline),
+                          text: "Cliente",
+                        ),
+                        Tab(
+                          icon: Icon(Icons.business_outlined),
+                          text: "Prestador",
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _formClienteWidget(),
+                  _formPrestadorWidget(),
+                ],
+              ),
+            ),
           ],
         ),
+
         bottomNavigationBar: Padding(
           padding: const EdgeInsets.all(16.0),
           child: ElevatedButton(
@@ -310,8 +409,25 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
                   _cadastrarPrestador();
                 }
               }
-            },
-            child: Text("Cadastrar"),
+              if (_formPrestador.currentState!.validate()) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Prestador cadastrado com sucesso!"),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } else {
+                _mostrarErro("Por favor, preencha todos os campos corretamente");
+              }
+            }
+          },
+          child: Text(
+            "CADASTRAR",
+            style: TextStyle(
+              fontSize: 22, 
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2, 
+            ),
           ),
         ),
       ),
