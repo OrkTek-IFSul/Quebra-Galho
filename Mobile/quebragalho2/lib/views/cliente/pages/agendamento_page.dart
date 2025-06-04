@@ -240,6 +240,7 @@ Navigator.push(
                 width: 1.5,
               ),
             ),
+
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -265,6 +266,30 @@ Navigator.push(
                       ),
                     ),
                 ],
+                
+            Spacer(),
+
+            /// Botão Solicitar
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _selectedTime == null
+                    ? null
+                    : () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ConfirmacaoPage(
+                              nomePrestador: 'João da Barbearia', // pode trocar por dinâmico depois
+                              nomeServico: widget.servico,
+                              data: _selectedDay,
+                              hora: _selectedTime!,
+                              valor: 79.90, // valor fixo exemplo
+                            ),
+                          ),
+                        );
+                      },
+                child: Text('Solicitar'),
               ),
             ),
           ),

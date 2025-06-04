@@ -1,25 +1,75 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:quebragalho2/views/cliente/pages/agendamento_page.dart';
 
-class PrestadorDetalhesPage extends StatelessWidget {
-  final String name;
-  final List<String> categories;
-  final String imageUrl;
-  final String descricao;
-  final List<Map<String, dynamic>> servicos; // nome e preço
+class PrestadorDetalhesPage extends StatefulWidget {
+  final int id;
 
   const PrestadorDetalhesPage({
-    required this.name,
-    required this.categories,
-    required this.imageUrl,
-    required this.descricao,
-    required this.servicos,
+    super.key,
+    required this.id,
   });
 
   @override
+  State<PrestadorDetalhesPage> createState() => _PrestadorDetalhesPageState();
+}
+
+class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
+  Map<String, dynamic>? prestadorData;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPrestadorDetails();
+  }
+
+  Future<void> _fetchPrestadorDetails() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:8080/api/usuario/homepage/prestador/${widget.id}'),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          prestadorData = jsonDecode(response.body);
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Falha ao carregar dados do prestador');
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      print('Erro ao carregar detalhes do prestador: $e');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: Text('Carregando...')),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (prestadorData == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text('Erro')),
+        body: Center(child: Text('Erro ao carregar dados do prestador')),
+      );
+    }
+
+    final List<dynamic> tags = prestadorData!['tags'] ?? [];
+    final List<dynamic> servicos = prestadorData!['servicos'] ?? [];
+    final String name = prestadorData!['nome'] ?? '';
+    final String descricao = prestadorData!['descricao'] ?? '';
+
     return Scaffold(
-      appBar: AppBar(title: Text(name)),
+      appBar: AppBar(title: Text('Detalhes')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -29,7 +79,7 @@ class PrestadorDetalhesPage extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.network(
-                imageUrl,
+                'http://localhost:8080/${prestadorData!['imagemPerfil']}',
                 height: 180,
                 width: double.infinity,
                 fit: BoxFit.cover,
@@ -48,25 +98,22 @@ class PrestadorDetalhesPage extends StatelessWidget {
             // Tags
             Wrap(
               spacing: 8,
-              children:
-                  categories
-                      .map(
-                        (cat) => Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            cat,
-                            style: TextStyle(color: Colors.green.shade800),
-                          ),
+              children: tags
+                  .map((tag) => Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
                         ),
-                      )
-                      .toList(),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          tag['nome'] ?? '',
+                          style: TextStyle(color: Colors.green.shade800),
+                        ),
+                      ))
+                  .toList(),
             ),
 
             SizedBox(height: 16),
@@ -80,6 +127,20 @@ class PrestadorDetalhesPage extends StatelessWidget {
             Text(descricao, style: TextStyle(fontSize: 14)),
             SizedBox(height: 16),
 
+            // Avaliação média
+            Row(
+              children: [
+                Icon(Icons.star, color: Colors.amber),
+                SizedBox(width: 4),
+                Text(
+                  '${prestadorData!['mediaAvaliacoes']?.toStringAsFixed(1) ?? '0.0'}',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+
+            SizedBox(height: 16),
+
             // Serviços
             Text(
               'Serviços oferecidos:',
@@ -88,20 +149,21 @@ class PrestadorDetalhesPage extends StatelessWidget {
             SizedBox(height: 8),
 
             ListView.builder(
-              physics:
-                  NeverScrollableScrollPhysics(), // pra scroll não bugar com SingleChildScrollView
+              physics: NeverScrollableScrollPhysics(),
               shrinkWrap: true,
               itemCount: servicos.length,
               itemBuilder: (_, index) {
+                final servico = servicos[index];
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text(servicos[index]['nome']),
+                  title: Text(servico['nome'] ?? ''),
+                  subtitle: Text(servico['descricao'] ?? ''),
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder:
                             (_) => AgendamentoPage(
-                              servico: 'Instalação Elétrica',
+                              servico: servico['nome'],
                               servicoId: 1,
                               usuarioId: 1,
                             ),
@@ -109,7 +171,7 @@ class PrestadorDetalhesPage extends StatelessWidget {
                     );
                   },
                   trailing: Text(
-                    'R\$ ${servicos[index]['preco'].toStringAsFixed(2)}',
+                    'R\$ ${servico['preco']?.toStringAsFixed(2) ?? '0.00'}',
                     style: TextStyle(fontSize: 18, color: Colors.green),
                   ),
                 );

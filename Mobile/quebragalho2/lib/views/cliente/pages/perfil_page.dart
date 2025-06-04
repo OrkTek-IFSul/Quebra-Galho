@@ -63,6 +63,7 @@ class _PerfilPageState extends State<PerfilPage> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -162,7 +163,7 @@ class _PerfilPageState extends State<PerfilPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const EditarDadosPage(),
+                        builder: (context) => EditarDadosPage(),
                       ),
                     );
                   },
@@ -181,6 +182,8 @@ class _PerfilPageState extends State<PerfilPage> {
             ),
           );
         },
+
+
       ),
     );
   }
