@@ -6,6 +6,7 @@ class DetalhesSolicitacaoPage extends StatelessWidget {
   final String servico;
   final String dataHora;
   final double valorTotal;
+  final int idAgendamento;
 
   const DetalhesSolicitacaoPage({
     super.key,
@@ -14,6 +15,7 @@ class DetalhesSolicitacaoPage extends StatelessWidget {
     required this.servico,
     required this.dataHora,
     required this.valorTotal,
+    required this.idAgendamento,
   });
 
   @override
@@ -25,44 +27,34 @@ class DetalhesSolicitacaoPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Nome do cliente: $nome', style: const TextStyle(fontSize: 18)),
+            // Foto do cliente
+            Center(
+              child: CircleAvatar(
+                radius: 50,
+                backgroundImage: NetworkImage(fotoUrl),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Informações do serviço
+            Text(
+              'Nome do cliente: $nome',
+              style: const TextStyle(fontSize: 18),
+            ),
             const SizedBox(height: 10),
-            Text('Serviço: $servico', style: const TextStyle(fontSize: 18)),
+            Text(
+              'Serviço: $servico',
+              style: const TextStyle(fontSize: 18),
+            ),
             const SizedBox(height: 10),
-            Text('Data e hora: $dataHora', style: const TextStyle(fontSize: 18)),
+            Text(
+              'Data e hora: $dataHora',
+              style: const TextStyle(fontSize: 18),
+            ),
             const SizedBox(height: 10),
-            Text('Valor total: R\$ $valorTotal', style: const TextStyle(fontSize: 18)),
-            const Spacer(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Solicitação confirmada')),
-                    );
-                    Navigator.pop(context);
-                  },
-                  icon: const Icon(Icons.check),
-                  label: const Text('Confirmar'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                  ),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Solicitação recusada')),
-                    );
-                    Navigator.pop(context);
-                  },
-                  icon: const Icon(Icons.cancel),
-                  label: const Text('Recusar'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                  ),
-                ),
-              ],
+            Text(
+              'Valor total: R\$ ${valorTotal.toStringAsFixed(2)}',
+              style: const TextStyle(fontSize: 18),
             ),
           ],
         ),

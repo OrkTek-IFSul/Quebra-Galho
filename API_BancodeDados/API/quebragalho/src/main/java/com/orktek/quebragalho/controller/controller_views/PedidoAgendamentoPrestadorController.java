@@ -31,7 +31,7 @@ public class PedidoAgendamentoPrestadorController {
         public ResponseEntity<List<PedidoAgendamentoServicoDTO>> listarPedidosAtivos(
                         @Parameter(description = "Id do prestador que abrirá esta tela") @PathVariable Long idPrestador) {
                 List<PedidoAgendamentoServicoDTO> agendamentos = agendamentoService
-                                .listarAgendamentosPendentesDoPrestador(idPrestador)
+                                .listarPorPrestador(idPrestador)
                                 .stream().map(PedidoAgendamentoServicoDTO::fromEntity)
                                 .collect(Collectors.toList());
                 return ResponseEntity.ok(agendamentos);

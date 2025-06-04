@@ -1,51 +1,112 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:quebragalho2/views/prestador/pages/detalhes_solicitacao.dart';
 import 'package:quebragalho2/views/prestador/widgets/solicitacao_cliente_card.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
-  final List<Map<String, String>> clientes = const [
-    {'nome': 'João da Silva', 'foto': 'https://i.pravatar.cc/150?img=1'},
-    {'nome': 'Maria Oliveira', 'foto': 'https://i.pravatar.cc/150?img=2'},
-    {'nome': 'Carlos Pereira', 'foto': 'https://i.pravatar.cc/150?img=3'},
-    {'nome': 'Ana Souza', 'foto': 'https://i.pravatar.cc/150?img=4'},
-    // Pode colocar quantos quiser, fera
-  ];
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  //Variaveis para listagem de solicitacoes
+  List<dynamic> solicitacoes = [];
+  bool isLoading = true;
+
+  //inicializar estado e executar carregamento do JSON
+  @override
+  void initState() {
+    super.initState();
+    fetchSolicitacoes();
+  }
+
+  //Método para carregar dados da API JSON
+  Future<void> fetchSolicitacoes() async {
+    try {
+      final response = await http.get(
+        // Modifique a URL para buscar todas as solicitações, incluindo as confirmadas
+        Uri.parse('http://192.168.0.155:8080/api/prestador/pedidoservico/2'),
+        headers: {
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          solicitacoes = data;
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Falha ao carregar solicitações');
+      }
+    } catch (e) {
+      print('Erro ao carregar solicitações: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Lista de Solicitações')),
-      body: ListView.builder(
-        itemCount: clientes.length,
-        itemBuilder: (context, index) {
-          final cliente = clientes[index];
-          return SolicitacaoClienteCard(
-            nome: cliente['nome']!,
-            fotoUrl: cliente['foto']!,
-            onTap: () {
-              //Navegando para a página de detalhes da solicitação
-              // Enviando os detalhes da solicitação para tela de solicitação
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder:
-                      (_) => DetalhesSolicitacaoPage(
-                        nome: cliente['nome']!,
-                        fotoUrl: cliente['foto']!,
-                        servico: 'Corte de Cabela',
-                        dataHora: '09/05/2025 das 14:00 às 15:00',
-                        valorTotal: 50,
-                      ),
-                ),
-              );
-              // Aqui você pode adicionar a lógica para navegar para a página de detalhes do cliente
-              // Navigator.push(context, MaterialPageRoute(builder: (context) => DetalhesClientePage(cliente: cliente)));
-            },
-          );
-        },
-      ),
+      body:
+          isLoading
+              ? Center(child: CircularProgressIndicator())
+              : ListView.builder(
+                itemCount: solicitacoes.length,
+                itemBuilder: (context, index) {
+                  final solicitacao = solicitacoes[index];
+
+                  // Formatar a data e hora
+                  final DateTime dataHora = DateTime.parse(
+                    solicitacao['dataHoraAgendamento'],
+                  );
+                  final String dataHoraFormatada =
+                      '${dataHora.day}/${dataHora.month}/${dataHora.year} das ${dataHora.hour}:${dataHora.minute.toString().padLeft(2, '0')}';
+
+                  // In the ListView.builder, update the SolicitacaoClienteCard
+                  return SolicitacaoClienteCard(
+                    nome: solicitacao['nomeDoUsuario'],
+                    fotoUrl:
+                        'http://192.168.0.155:8080${solicitacao['fotoPerfilUsuario']}',
+                 
+                    idAgendamento: solicitacao['idAgendamento'],
+                    isConfirmed: solicitacao['statusPedidoAgendamento'] == true,
+                    isCanceled: solicitacao['statusPedidoAgendamento'] == false,
+                    onConfirm: () {
+                      fetchSolicitacoes();
+                    },
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (_) => DetalhesSolicitacaoPage(
+                                nome: solicitacao['nomeDoUsuario'],
+                                fotoUrl:
+                                    'http://192.168.0.155:8080${solicitacao['fotoPerfilUsuario']}',
+                                servico: solicitacao['nomeServico'],
+                                dataHora: dataHoraFormatada,
+                                valorTotal:
+                                    solicitacao['precoServico'].toDouble(),
+                                idAgendamento: solicitacao['idAgendamento'],
+                              ),
+                        ),
+                      ).then((_) {
+                       
+                          fetchSolicitacoes();
+                        
+                      });
+                    },
+                  );
+                },
+              ),
     );
   }
 }
