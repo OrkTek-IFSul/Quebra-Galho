@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:quebragalho2/views/prestador/pages/editar_meus_dados.dart';
 
 class MeusDados extends StatefulWidget {
   const MeusDados({super.key});
@@ -10,6 +11,9 @@ class MeusDados extends StatefulWidget {
 }
 
 class _MeusDadosState extends State<MeusDados> {
+  
+  Map<String, dynamic>? prestadorData;
+
   Map<String, dynamic>? usuario;
   Map<String, dynamic>? prestador;
   List<String> tags = [];
@@ -18,11 +22,13 @@ class _MeusDadosState extends State<MeusDados> {
   final int usuarioId = 1;
   final int prestadorId = 1;
 
+
   @override
   void initState() {
     super.initState();
-    carregarDados();
+     carregarDados();
   }
+
 
   Future<void> carregarDados() async {
     try {
@@ -95,6 +101,14 @@ class _MeusDadosState extends State<MeusDados> {
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditarMeusDados(
+                  ),
+                ),
+              ).then((_) => _fetchPrestadorData());
               // Navegar para edição
             },
           ),
@@ -105,9 +119,10 @@ class _MeusDadosState extends State<MeusDados> {
         child: ListView(
           children: [
             const Text('Nome', style: TextStyle(fontWeight: FontWeight.bold)),
+
             Text(usuario!['nome']),
             const SizedBox(height: 12),
-
+            
             const Text(
               'Telefone',
               style: TextStyle(fontWeight: FontWeight.bold),

@@ -11,6 +11,8 @@ import 'package:quebragalho2/views/cliente/pages/minhas_solicitacoes_page.dart';
 
 import 'package:quebragalho2/views/cliente/pages/pagina_navegacao.dart';
 
+import 'package:quebragalho2/views/cliente/pages/tela_selecao_tipo.dart';
+import 'package:quebragalho2/views/prestador/pages/meus_dados.dart';
 
 
 void main() {
@@ -28,7 +30,6 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: PaginaDeNavegacao()
-
     );
   }
 }
