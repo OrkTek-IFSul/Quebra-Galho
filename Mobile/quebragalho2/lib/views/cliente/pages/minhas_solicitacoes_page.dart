@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:quebragalho2/views/cliente/pages/detalhes_solicitacao_page.dart';
 import 'package:quebragalho2/views/cliente/widgets/solicitacao_card.dart';
 
@@ -11,28 +13,57 @@ class MinhasSolicitacoesPage extends StatefulWidget {
 
 class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
   final TextEditingController _searchController = TextEditingController();
+  bool _isLoading = true;
+  List<dynamic> _solicitacoes = [];
+  List<dynamic> _solicitacoesFiltradas = [];
 
-  //LISTA DE DADOS PARA SIMULAÇÃO
-  List<Map<String, String>> solicitacoes = [
-    {
-      'nome': 'Maria dos Anjos',
-      'horario': '10:00 - 11:00',
-      'status': 'Confirmado',
-      'imagem': 'https://i.pravatar.cc/150?img=10', // só uma imagem fake
-    },
-    {
-      'nome': 'João Mecânico',
-      'horario': '14:00 - 15:00',
-      'status': 'Pendente',
-      'imagem': 'https://i.pravatar.cc/150?img=12',
-    },
-    {
-      'nome': 'Cláudia Manicure',
-      'horario': '16:00 - 17:00',
-      'status': 'Cancelado',
-      'imagem': 'https://i.pravatar.cc/150?img=18',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _carregarSolicitacoes();
+  }
+
+  String _formatarData(String dataString) {
+    final data = DateTime.parse(dataString);
+    return '${data.hour.toString().padLeft(2, '0')}:${data.minute.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _carregarSolicitacoes() async {
+    try {
+      final response = await http.get(
+        //ALTERAR ID DO USUARIO NO FINAL DA URL
+        Uri.parse('http://192.168.0.155:8080/api/usuario/solicitacoes/2'),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _solicitacoes = json.decode(response.body);
+          _solicitacoesFiltradas = _solicitacoes;
+          _isLoading = false;
+        });
+      } else {
+        throw Exception('Falha ao carregar solicitações');
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao carregar dados: $e')),
+      );
+    }
+  }
+
+  void _filtrarSolicitacoes(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _solicitacoesFiltradas = _solicitacoes;
+      } else {
+        _solicitacoesFiltradas = _solicitacoes.where((item) {
+          final nomePrestador = item['nome_prestador'].toString().toLowerCase();
+          return nomePrestador.contains(query.toLowerCase());
+        }).toList();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +71,6 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
       appBar: AppBar(title: const Text("Minhas Solicitações")),
       body: Column(
         children: [
-          /// Barra de Pesquisa
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: TextField(
@@ -52,15 +82,9 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              onChanged: (value) {
-                setState(() {
-                  // aqui daria pra filtrar a lista
-                });
-              },
+              onChanged: _filtrarSolicitacoes,
             ),
           ),
-
-          /// Lista de Prestadores
           Expanded(
             child: ListView.builder(
               itemCount: solicitacoes.length,
@@ -75,14 +99,8 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder:
-                            (_) => DetalhesSolicitacaoPage(
-                              nome: "Fulano",
-                              horario: "10h às 11h",
-                              status: "Confirmado",
-                              imagemUrl: "https://via.placeholder.com/150",
-                              valor: "150.00",
-                            ),
+                        //AO SELECIONAR UMA SOLICITACAO DEVE ENVIAR O ID DO SERVICO
+                        builder: (_) => DetalhesSolicitacaoPage(agendamentoId: 1),
                       ),
                     );
                   },
@@ -93,5 +111,11 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 }

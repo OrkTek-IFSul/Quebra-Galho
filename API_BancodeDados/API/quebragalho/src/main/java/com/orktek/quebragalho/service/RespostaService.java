@@ -6,12 +6,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.orktek.quebragalho.model.Avaliacao;
 import com.orktek.quebragalho.model.Resposta;
-import com.orktek.quebragalho.repository.AvaliacaoRepository;
 import com.orktek.quebragalho.repository.RespostaRepository;
 
-import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
@@ -19,9 +16,6 @@ public class RespostaService {
 
     @Autowired
     private RespostaRepository respostaRepository;
-
-    @Autowired
-    private AvaliacaoRepository avaliacaoRepository;
 
     /**
      * Cria uma resposta para uma avaliação
@@ -32,17 +26,11 @@ public class RespostaService {
      * @throws ResponseStatusException se avaliação não for encontrada
      */
     @Transactional
-    public Resposta criarResposta(Resposta resposta, Long avaliacaoId) {
-        Avaliacao avaliacao = avaliacaoRepository.findById(avaliacaoId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Avaliacao nao encontrada"));
-
+    public Resposta criarResposta(Resposta resposta) {
         // Verifica se já existe resposta para esta avaliação
-        if (respostaRepository.existsByAvaliacao(avaliacao)) {
+        if (respostaRepository.existsByAvaliacao(resposta.getAvaliacao())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Já existe uma resposta para esta avaliacao");
         }
-
-        resposta.setAvaliacao(avaliacao);
-        resposta.setData(LocalDate.now());
 
         return respostaRepository.save(resposta);
     }
