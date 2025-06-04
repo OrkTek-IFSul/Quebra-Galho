@@ -92,9 +92,9 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
           ),
           Expanded(
             child: ListView.builder(
-              itemCount: solicitacoes.length,
+              itemCount: _solicitacoes.length,
               itemBuilder: (context, index) {
-                final item = solicitacoes[index];
+                final item = _solicitacoes[index];
                 return SolicitacaoWidget(
                   nome: item['nome']!,
                   horario: item['horario']!,

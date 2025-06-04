@@ -6,10 +6,10 @@
 /// Versão: 1.0.0
 ///
 import 'package:flutter/material.dart';
-import 'package:quebragalho2/views/cliente/pages/tela_confirmacao_solicitacao.dart';
+import 'package:quebragalho2/views/cliente/pages/tela_confirmacao_solicitacao.dart'; // Verifique este arquivo também
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
-import '../../../services/agendamento_page_services.dart';
+import '../../../services/agendamento_page_services.dart'; // Verifique este arquivo também
 
 class AgendamentoPage extends StatefulWidget {
   final String servico;
@@ -51,21 +51,24 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
       final result = await _service.listarHorariosIndisponiveis(widget.servicoId);
       setState(() => _horariosIndisponiveis = result);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao carregar horários: $e')),
-      );
+      if (mounted) { // Boa prática verificar se o widget ainda está montado
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar horários: $e')),
+        );
+      }
     } finally {
-      setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
   bool _isHorarioIndisponivel(String hora) {
     final dataHora = _criarDateTime(_selectedDay, hora);
     return _horariosIndisponiveis.any((indisponivel) =>
-      isSameDay(indisponivel, dataHora) &&
-      indisponivel.hour == dataHora.hour &&
-      indisponivel.minute == dataHora.minute
-    );
+        isSameDay(indisponivel, dataHora) &&
+        indisponivel.hour == dataHora.hour &&
+        indisponivel.minute == dataHora.minute);
   }
 
   DateTime _criarDateTime(DateTime data, String hora) {
@@ -79,63 +82,64 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
     );
   }
 
-Future<void> _solicitarAgendamento() async {
-  if (_selectedTime == null) return;
+  Future<void> _solicitarAgendamento() async {
+    if (_selectedTime == null) return;
 
-  setState(() => _loading = true);
-  try {
-    final dataHora = _criarDateTime(_selectedDay, _selectedTime!);
+    setState(() => _loading = true);
+    try {
+      final dataHora = _criarDateTime(_selectedDay, _selectedTime!);
 
-    if (_isHorarioIndisponivel(_selectedTime!)) {
-      throw Exception('Este horário já está reservado');
+      if (_isHorarioIndisponivel(_selectedTime!)) {
+        throw Exception('Este horário já está reservado');
+      }
+
+      final agendamento = await _service.cadastrarAgendamento(
+        usuarioId: widget.usuarioId,
+        servicoId: widget.servicoId,
+        horario: dataHora,
+      );
+
+      // Extrai os dados diretamente do response
+      final nomePrestador = agendamento['prestador'];
+      final nomeServico = agendamento['servico'];
+      final preco = (agendamento['preco_servico'] as num).toDouble();
+      // final horarioConfirmado = DateTime.parse(agendamento['horario']); // Linha comentada, sem problemas aqui
+
+      // Vai para tela de confirmação
+      if (mounted) { // Boa prática verificar antes de navegar
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ConfirmacaoPage(
+              nomePrestador: nomePrestador,
+              nomeServico: nomeServico,
+              data: dataHora, // data e hora selecionadas
+              hora: DateFormat('HH:mm').format(dataHora),
+              valor: preco,
+            ),
+          ),
+        );
+      }
+
+      setState(() {
+        _horariosIndisponiveis.add(dataHora);
+        _selectedTime = null;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
-
-    final agendamento = await _service.cadastrarAgendamento(
-      usuarioId: widget.usuarioId,
-      servicoId: widget.servicoId,
-      horario: dataHora,
-    );
-
-    // Extrai os dados diretamente do response
-    final nomePrestador = agendamento['prestador'];
-    final nomeServico = agendamento['servico'];
-    final preco = (agendamento['preco_servico'] as num).toDouble();
-    final horarioConfirmado = DateTime.parse(agendamento['horario']);
-
-    // Vai para tela de confirmação
-    // Vai para tela de confirmação com a dataHora selecionada, ignorando o JSON bugado
-Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (context) => ConfirmacaoPage(
-      nomePrestador: nomePrestador,
-      nomeServico: nomeServico,
-      data: dataHora,  // data e hora selecionadas
-      hora: DateFormat('HH:mm').format(dataHora),
-      valor: preco,
-    ),
-  ),
-);
-
-
-    setState(() {
-      _horariosIndisponiveis.add(dataHora);
-      _selectedTime = null;
-    });
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Erro: ${e.toString()}'),
-        backgroundColor: Colors.red,
-      ),
-    );
-  } finally {
-    setState(() => _loading = false);
   }
-}
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -155,10 +159,11 @@ Navigator.push(
                     firstDay: DateTime.now(),
                     lastDay: DateTime.now().add(const Duration(days: 60)),
                     selectedDayPredicate: (day) => isSameDay(day, _selectedDay),
-                    onDaySelected: (selectedDay, _) {
+                    onDaySelected: (selectedDay, focusedDay) { // focusedDay é o segundo parâmetro
                       setState(() {
                         _selectedDay = selectedDay;
                         _selectedTime = null;
+                        // _focusedDay = focusedDay; // Você pode querer atualizar o focusedDay também se usar
                       });
                       _carregarHorariosIndisponiveis();
                     },
@@ -213,7 +218,7 @@ Navigator.push(
         crossAxisCount: 4,
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
-        childAspectRatio: 1.5,
+        childAspectRatio: 1.5, // Ajuste conforme necessário para o conteúdo
       ),
       itemCount: _horariosDisponiveis.length,
       itemBuilder: (context, index) {
@@ -240,9 +245,8 @@ Navigator.push(
                 width: 1.5,
               ),
             ),
-
             child: Center(
-              child: Column(
+              child: Column( // Usar Column para permitir texto adicional
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
@@ -258,38 +262,17 @@ Navigator.push(
                   ),
                   if (indisponivel)
                     const Text(
-                      'INDISPONÍVEL',
+                      'INDISPONÍVEL', // Pode ser muito grande para o espaço
                       style: TextStyle(
                         color: Colors.red,
-                        fontSize: 10,
+                        fontSize: 8, // Reduzido para caber melhor
                         fontWeight: FontWeight.bold,
                       ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                 ],
-                
-            Spacer(),
-
-            /// Botão Solicitar
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _selectedTime == null
-                    ? null
-                    : () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ConfirmacaoPage(
-                              nomePrestador: 'João da Barbearia', // pode trocar por dinâmico depois
-                              nomeServico: widget.servico,
-                              data: _selectedDay,
-                              hora: _selectedTime!,
-                              valor: 79.90, // valor fixo exemplo
-                            ),
-                          ),
-                        );
-                      },
-                child: Text('Solicitar'),
               ),
             ),
           ),

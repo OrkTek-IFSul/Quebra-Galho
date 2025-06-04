@@ -37,7 +37,6 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
   }
 
   Future<void> _selecionarImagemDocumento() async {
-
     final XFile? imagem = await _picker.pickImage(source: ImageSource.gallery);
     if (imagem != null) {
       setState(() {
@@ -65,9 +64,9 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
 
     final response = await request.send();
 
-    if (response.statusCode != 200) {
+    if (response.statusCode != 200 && mounted) { // Adicionado 'mounted' para segurança
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text("Erro ao enviar imagem de perfil"),
+        content: Text("Erro ao enviar imagem de perfil: ${response.reasonPhrase}"),
         backgroundColor: Colors.red,
       ));
     }
@@ -87,6 +86,8 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
         "telefone": _telefoneController.text,
       }),
     );
+
+    if (!mounted) return; // Verificar se o widget ainda está montado
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       final usuario = json.decode(response.body);
@@ -109,10 +110,12 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
 
   Future<void> _cadastrarPrestador() async {
     if (_documentoImagem == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text("Selecione uma imagem do documento"),
-        backgroundColor: Colors.orange,
-      ));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Selecione uma imagem do documento"),
+          backgroundColor: Colors.orange,
+        ));
+      }
       return;
     }
 
@@ -137,6 +140,8 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
 
     final response = await request.send();
 
+    if (!mounted) return; // Verificar se o widget ainda está montado
+
     if (response.statusCode == 200 || response.statusCode == 201) {
       final respStr = await response.stream.bytesToString();
       final prestador = json.decode(respStr);
@@ -150,15 +155,15 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
 
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginPage()));
     } else {
+      final errorBody = await response.stream.bytesToString();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text("Erro ao cadastrar prestador"),
+        content: Text("Erro ao cadastrar prestador: $errorBody"),
         backgroundColor: Colors.red,
       ));
     }
   }
 
   Widget _formularioBase(GlobalKey<FormState> formKey, {bool prestador = false}) {
-
     return Form(
       key: formKey,
       child: Column(
@@ -227,80 +232,80 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
 
   Widget _formClienteWidget() {
     return SingleChildScrollView(
-      child:Padding(
-         padding: const EdgeInsets.all(16.0),
-      child: _formularioBase(_formCliente),
+      child: Padding( // CORRIGIDO: Espaço adicionado -> child: Padding
+        padding: const EdgeInsets.all(16.0),
+        child: _formularioBase(_formCliente),
       ),
     );
   }
 
   Widget _formPrestadorWidget() {
     return SingleChildScrollView(
-
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16.0), // padding para o SingleChildScrollView
       child: Column(
         children: [
           _formularioBase(_formPrestador, prestador: true),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Align(
             alignment: Alignment.centerLeft,
-            child: Text("Documento (CPF ou CNPJ)", style: TextStyle(fontWeight: FontWeight.bold)),
+            // Título para a seção de imagem de documento
+            child: Text("Imagem do Documento (Selfie com Doc. ou Doc. Oficial)", style: TextStyle(fontWeight: FontWeight.bold)),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           GestureDetector(
-            onTap: _selecionarImagemDocumento,
+            onTap: _selecionarImagemDocumento, // Função correta para imagem do documento
             child: Container(
-              height: 150,
+              height: 180, // Altura ajustada
               width: double.infinity,
-              color: Colors.grey[200],
-              child: _documentoImagem == null
-                  ? Center(child: Text("Clique para selecionar imagem do documento"))
-                  : Image.file(_documentoImagem!, fit: BoxFit.cover),
-            ),
-            SizedBox(height: 30),
-            _formularioBase(_formPrestador),
-            SizedBox(height: 20),
-            Text(
-              "Documento (CPF ou CNPJ)",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 12),
-            GestureDetector(
-              onTap: _selecionarImagem,
-              child: Container(
-                height: 180,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: _documentoImagem == null
-                    ? Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.cloud_upload, size: 50, color: Colors.grey),
-                          SizedBox(height: 10),
-                          Text(
-                            "Toque para selecionar o documento",
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.file(_documentoImagem!, fit: BoxFit.cover),
-                      ),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[300]!),
               ),
+              child: _documentoImagem == null
+                  ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.cloud_upload, size: 50, color: Colors.grey),
+                        SizedBox(height: 10),
+                        Text(
+                          "Toque para selecionar a imagem do documento",
+                          style: TextStyle(color: Colors.grey),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    )
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(_documentoImagem!, fit: BoxFit.cover),
+                    ),
             ),
-            SizedBox(height: 20),
-          ],
-        ),
+          ), // Fecha GestureDetector para imagem do documento
+          // SizedBox(height: 30), // Removido ou ajustado conforme necessidade de espaçamento
+          // _formularioBase(_formPrestador), // Removido - Chamada duplicada do formulário base
+          // SizedBox(height: 20),
+          // Text( // Removido - Label duplicado
+          //   "Documento (CPF ou CNPJ)",
+          //   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          // ),
+          // SizedBox(height: 12),
+          // O GestureDetector abaixo parecia ser uma duplicação ou confusão
+          // com a foto de perfil que já está no _formularioBase.
+          // Se for um campo adicional específico para prestador, precisaria ser clarificado.
+          // Por ora, vou remover para evitar redundância e o erro de parêntese.
+
+          // O PARÊNTESE EXTRA ESTAVA AQUI. FOI REMOVIDO.
+          // O CÓDIGO ORIGINAL TINHA UM '),' ISOLADO AQUI, QUE QUEBRAVA A ESTRUTURA.
+
+          SizedBox(height: 20), // Este SizedBox agora é corretamente filho do Column
+        ],
       ),
     );
   }
 
+
   void _mostrarErro(String mensagem) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(mensagem),
@@ -328,106 +333,80 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-
+    // A estrutura do TabBar e TabBarView foi simplificada para um padrão mais comum.
+    // Se a intenção era ter um header customizado dentro de cada aba,
+    // esse header deveria ser parte do _formClienteWidget() e _formPrestadorWidget().
     return DefaultTabController(
-      length: 2,
+      length: 2, // Deve ser igual ao número de abas
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
           title: Text("Cadastro"),
-          bottom: TabBar(
-            controller: _tabController,
+          bottom: TabBar( // TabBar principal no AppBar
+            controller: _tabController, // Usar o controller inicializado
             tabs: const [
               Tab(text: "Cliente"),
               Tab(text: "Prestador"),
             ],
           ),
         ),
-        body: TabBarView(
-          controller: _tabController,
+        body: TabBarView( // TabBarView principal
+          controller: _tabController, // Usar o controller inicializado
           children: [
-            Container(
-              color: Theme.of(context).primaryColor,
-              child: SafeArea(
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        "Crie sua conta",
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    TabBar(
-                      controller: _tabController,
-                      labelColor: Colors.white,
-                      unselectedLabelColor: Colors.white70,
-                      indicatorColor: Colors.white,
-                      indicatorWeight: 4,
-                      tabs: [
-                        Tab(
-                          icon: Icon(Icons.person_outline),
-                          text: "Cliente",
-                        ),
-                        Tab(
-                          icon: Icon(Icons.business_outlined),
-                          text: "Prestador",
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _formClienteWidget(),
-                  _formPrestadorWidget(),
-                ],
-              ),
-            ),
+            _formClienteWidget(), // Conteúdo da primeira aba
+            _formPrestadorWidget(), // Conteúdo da segunda aba
           ],
         ),
-
         bottomNavigationBar: Padding(
           padding: const EdgeInsets.all(16.0),
           child: ElevatedButton(
             onPressed: () {
               final abaAtual = _tabController.index;
-              if (abaAtual == 0) {
+              bool formValido = false;
+
+              if (abaAtual == 0) { // Aba Cliente
                 if (_formCliente.currentState!.validate()) {
+                  formValido = true;
                   _cadastrarCliente();
                 }
-              } else {
+              } else { // Aba Prestador
                 if (_formPrestador.currentState!.validate()) {
+                  formValido = true;
                   _cadastrarPrestador();
                 }
               }
-              if (_formPrestador.currentState!.validate()) {
+
+              // A lógica de exibir SnackBar de sucesso foi movida para dentro dos métodos de cadastro
+              // para ser mostrada após a conclusão da API.
+              // A lógica abaixo de mostrar erro se o form não for válido pode ser útil.
+              if (!formValido) {
+                 _mostrarErro("Por favor, preencha todos os campos corretamente.");
+              }
+              // A lógica de SnackBar de sucesso imediato aqui foi removida, pois
+              // os métodos de cadastro já cuidam disso após a resposta da API.
+              // O if/else abaixo estava validando _formPrestador independentemente da aba atual.
+              /*
+              if (_formPrestador.currentState!.validate()) { // Esta validação aqui é redundante ou mal colocada
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text("Prestador cadastrado com sucesso!"),
+                    content: Text("Prestador cadastrado com sucesso!"), // Mensagem prematura
                     backgroundColor: Colors.green,
                   ),
                 );
               } else {
                 _mostrarErro("Por favor, preencha todos os campos corretamente");
               }
-            }
-          },
-          child: Text(
-            "CADASTRAR",
-            style: TextStyle(
-              fontSize: 22, 
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2, 
+              */
+            },
+            style: ElevatedButton.styleFrom(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              textStyle: TextStyle(
+                fontSize: 18, // Ajustado para um bom tamanho
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              )
             ),
+            child: Text("CADASTRAR"), // Removido o TextStyle daqui, definido no style do ElevatedButton
           ),
         ),
       ),

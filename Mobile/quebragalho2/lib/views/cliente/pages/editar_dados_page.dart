@@ -16,15 +16,6 @@ class EditarDadosPage extends StatefulWidget {
 
 class _EditarDadosPageState extends State<EditarDadosPage> {
 
-  final TextEditingController _nomeController = TextEditingController(
-    text: "João da Silva",
-  );
-  final TextEditingController _telefoneController = TextEditingController(
-    text: "(11) 91234-5678",
-  );
-  final TextEditingController _emailController = TextEditingController(
-    text: "joao@gmail.com",
-  );
 
   final String _cpf = "123.456.789-00";
 
@@ -75,7 +66,6 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _telefoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  String _cpf = '';
 
   final int idUsuario = 1; // Substitua pelo ID real
 
@@ -98,7 +88,6 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
           _nomeController.text = data['nome'] ?? '';
           _telefoneController.text = data['telefone'] ?? '';
           _emailController.text = data['email'] ?? '';
-          _cpf = data['documento'] ?? '';
         });
       } else {
         throw Exception('Erro ao buscar dados do usuário');
@@ -132,7 +121,7 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => PerfilPage(),
+            builder: (_) => PerfilPage(idPrestador: 1,),
           ), // Volta para a tela de perfil
         );
       } else {
@@ -156,7 +145,7 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
           icon: const Icon(Icons.arrow_back),
           onPressed:
               () => MaterialPageRoute(
-                builder: (_) => PerfilPage(),
+                builder: (_) => PerfilPage(idPrestador: 1,),
               ), // Volta para a tela de perfil
         ),
         actions: [

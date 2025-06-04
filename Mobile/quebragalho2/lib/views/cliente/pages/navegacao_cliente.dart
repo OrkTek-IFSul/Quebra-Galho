@@ -17,7 +17,7 @@ class _NavegacaoClienteState extends State<NavegacaoCliente> {
 //Lista de páginas da navegação
   final List<Widget> paginas = [
     HomePage(),
-    PerfilPage(),
+    PerfilPage(usuarioId: 1,),
     
   ];
 

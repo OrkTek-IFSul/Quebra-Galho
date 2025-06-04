@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:quebragalho2/views/prestador/pages/home_page.dart';
 import 'package:quebragalho2/views/prestador/pages/tela_perfil.dart';
 
-
-
 class NavegacaoPrestador extends StatefulWidget {
   const NavegacaoPrestador({super.key});
 
@@ -18,7 +16,7 @@ class _NavegacaoPrestadorState extends State<NavegacaoPrestador> {
 //Lista de páginas da navegação
   final List<Widget> paginas = [
     const HomePage(),
-    PerfilPage(),
+    PerfilPage(idPrestador: 1),
   ];
 
   void _onTabTapped(int index) {

@@ -1,10 +1,4 @@
-///
-/// Perfil View - Quebra Galho App
-/// By Jean Carlo | Orktek
-/// github.com/jeankeitwo16
-/// Descrição: Página de perfil do usuário, onde é possível visualizar e editar os dados do usuário, como nome, telefone, email e CPF. Também permite o upload de uma imagem de perfil e visualização das solicitações feitas pelo usuário. 
-/// Versão: 1.0.0
-///
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -163,7 +157,7 @@ class _PerfilPageState extends State<PerfilPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => EditarDadosPage(),
+                        builder: (context) => EditarDadosPage(usuarioId: 1,),
                       ),
                     );
                   },

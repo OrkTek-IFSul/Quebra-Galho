@@ -108,7 +108,7 @@ class _MeusDadosState extends State<MeusDados> {
                   builder: (context) => EditarMeusDados(
                   ),
                 ),
-              ).then((_) => _fetchPrestadorData());
+              );
               // Navegar para edição
             },
           ),
