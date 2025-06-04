@@ -1,9 +1,7 @@
-
-import 'package:flutter/material.dart';
-import 'package:quebragalho2/views/cliente/pages/cadastro_page.dart';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:quebragalho2/views/cliente/pages/cadastro_page.dart';
+import 'dart:convert';
 import 'package:quebragalho2/views/cliente/pages/tela_selecao_tipo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,7 +14,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-
   final emailController = TextEditingController();
   final senhaController = TextEditingController();
   bool manterLogado = false;
@@ -61,15 +58,21 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => carregando = false);
   }
 
-  Future<void> salvarPreferencias(String token) async {
+  Future<void> salvarPreferencias(String token, int id) async {
+
     final prefs = await SharedPreferences.getInstance();
     if (manterLogado) {
       await prefs.setBool('manter_logado', true);
       await prefs.setString('token', token);
+      await prefs.setInt('usuario_id', id); // salvando o id do usuário
       await prefs.setString('token_criado_em', DateTime.now().toIso8601String());
     } else {
       await prefs.setBool('manter_logado', false);
     }
+
+    print('Token salvo: $token');
+    print('ID do usuário salvo: $id');
+
   }
 
   Future<void> fazerLogin() async {
@@ -86,8 +89,8 @@ class _LoginPageState extends State<LoginPage> {
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
         final token = body['token'];
-
-        await salvarPreferencias(token);
+        final id = body['id_usuario'];
+        await salvarPreferencias(token, id);
 
         if (!mounted) return;
         Navigator.pushReplacement(
@@ -144,10 +147,30 @@ class _LoginPageState extends State<LoginPage> {
               ],
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: fazerLogin,
-              child: const Text('Entrar'),
-            ),
+
+            Row(
+  children: [
+    Expanded(
+      child: ElevatedButton(
+        onPressed: fazerLogin,
+        child: const Text('Entrar'),
+      ),
+    ),
+    const SizedBox(width: 10),
+    Expanded(
+      child: OutlinedButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const CadastroPage()),
+          );
+        },
+        child: const Text('Fazer Cadastro'),
+      ),
+    ),
+  ],
+),
+
           ],
         ),
       ),
