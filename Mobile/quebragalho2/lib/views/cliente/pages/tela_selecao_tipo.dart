@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:quebragalho2/views/cliente/pages/home_page.dart';
 import 'package:quebragalho2/views/cliente/pages/navegacao_cliente.dart';
 import 'package:quebragalho2/views/prestador/pages/navegacao_prestador.dart';
+
 
 
 class WelcomePage extends StatelessWidget {
