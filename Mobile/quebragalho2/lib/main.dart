@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:quebragalho2/views/prestador/pages/pagina_de_navegacao.dart';
+
 import 'package:quebragalho2/views/cliente/pages/agendamento_page.dart';
 import 'package:quebragalho2/views/cliente/pages/perfil_page.dart';
-
 
 import 'package:quebragalho2/views/cliente/pages/detalhes_solicitacao_page.dart';
 import 'package:quebragalho2/views/cliente/pages/editar_dados_page.dart';
@@ -26,12 +27,7 @@ class MainApp extends StatelessWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-
-      home: AgendamentoPage(
-        servico: 'Serviço de Teste',
-        servicoId: servicoIdTeste,
-        usuarioId: usuarioIdTeste,
-      ),
+      home: PaginaDeNavegacao()
 
     );
   }
