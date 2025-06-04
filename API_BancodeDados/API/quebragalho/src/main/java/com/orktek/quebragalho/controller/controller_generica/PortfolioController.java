@@ -1,4 +1,4 @@
-package com.orktek.quebragalho.controller;
+package com.orktek.quebragalho.controller.controller_generica;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
