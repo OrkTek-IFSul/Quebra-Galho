@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:quebragalho2/views/cliente/navegacao_cliente.dart';
+import 'package:quebragalho2/views/prestador/navegacao_prestador.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -14,7 +16,6 @@ class WelcomePage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-
               /// Lottie Animation no topo
               Lottie.asset(
                 'assets/welcome.json',
@@ -50,7 +51,12 @@ class WelcomePage extends StatelessWidget {
                     ),
                   ),
                   onPressed: () {
-                    // Navega para as opções do Cliente
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const NavegacaoCliente(),
+                      ),
+                    );
                   },
                   icon: const Icon(Icons.person, color: Colors.white),
                   label: const Text(
@@ -74,12 +80,20 @@ class WelcomePage extends StatelessWidget {
                     ),
                   ),
                   onPressed: () {
-                    // Navega para as opções do Prestador
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const NavegacaoPrestador(),
+                      ),
+                    );
                   },
                   icon: Icon(Icons.handyman, color: Colors.blue.shade600),
                   label: Text(
                     "Sou Prestador",
-                    style: TextStyle(color: Colors.blue.shade600, fontSize: 16),
+                    style: TextStyle(
+                      color: Colors.blue.shade600,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ),
