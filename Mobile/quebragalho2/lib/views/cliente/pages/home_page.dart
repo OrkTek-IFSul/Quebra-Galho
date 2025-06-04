@@ -2,14 +2,11 @@ import 'dart:convert';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+// Certifique-se de que os caminhos de importação estão corretos para o seu projeto
 import 'package:quebragalho2/views/cliente/pages/login_page.dart';
 import 'package:quebragalho2/views/cliente/pages/prestador_detalhes_page.dart';
 import 'package:quebragalho2/views/cliente/widgets/prestador_home_card.dart';
-
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:http/http.dart' as http;
-
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -42,11 +39,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadInitialData() async {
+    // Mostra o loading ao iniciar
+    setState(() {
+      isLoading = true;
+    });
     await fetchCategorias();
-    await fetchPrestadores(); // Atualiza direto a lista
+    await fetchPrestadores(); // Atualiza direto a lista e controla isLoading internamente
   }
 
-  Future<List> _searchPrestadores() async {
+  Future<List<dynamic>> _searchPrestadores() async {
     setState(() {
       isLoading = true;
     });
@@ -59,12 +60,15 @@ class _HomePageState extends State<HomePage> {
         'size': '10',
       };
 
-      if (queryParams.length == 2) {
-        return await fetchPrestadores();
+      // Se não houver texto de busca e nenhuma tag selecionada, busca todos os prestadores.
+      // A verificação de queryParams.length == 2 (apenas 'page' e 'size')
+      // cobre o caso de searchController.text estar vazio E selectedTags estar vazia.
+      if (searchController.text.isEmpty && selectedTags.isEmpty) {
+        return await fetchPrestadores(); // fetchPrestadores já lida com isLoading e setState
       }
 
       final uri = Uri.http(
-        'localhost:8080',
+        '192.168.0.155:8080', // Seu IP e porta
         '/api/usuario/homepage/buscar',
         queryParams,
       );
@@ -79,20 +83,30 @@ class _HomePageState extends State<HomePage> {
         });
         return _prestadoresFiltrados;
       } else {
-        throw Exception('Falha ao buscar prestadores');
+        print('Falha ao buscar prestadores: ${response.statusCode} ${response.body}');
+        setState(() {
+          _prestadoresFiltrados = []; // Limpa a lista em caso de erro
+          isLoading = false;
+        });
+        // Lançar exceção pode ser útil se você tiver um Error Handler global
+        // throw Exception('Falha ao buscar prestadores');
+        return []; // Retorna lista vazia em caso de erro
       }
     } catch (e) {
       print('Erro na busca: $e');
       setState(() {
+        _prestadoresFiltrados = []; // Limpa a lista em caso de erro
         isLoading = false;
       });
-      throw Exception('Erro na busca: $e');
+      // throw Exception('Erro na busca: $e');
+      return []; // Retorna lista vazia em caso de erro
     }
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
+    searchController.removeListener(_debouncedSearch); // Boa prática remover o listener
     searchController.dispose();
     super.dispose();
   }
@@ -100,7 +114,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> fetchCategorias() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.0.155:8080/api/usuario/homepage/tags'),
+        Uri.parse('http://192.168.0.155:8080/api/usuario/homepage/tags'), // Seu IP e porta
       );
 
       if (response.statusCode == 200) {
@@ -112,7 +126,8 @@ class _HomePageState extends State<HomePage> {
           ];
         });
       } else {
-        throw Exception('Falha ao carregar categorias');
+        print('Falha ao carregar categorias: ${response.statusCode} ${response.body}');
+        // throw Exception('Falha ao carregar categorias');
       }
     } catch (e) {
       print('Erro ao carregar categorias: $e');
@@ -120,13 +135,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<List<dynamic>> fetchPrestadores() async {
+    // Esta função é chamada quando não há filtros (texto de busca ou tags)
+    // ou na carga inicial.
     setState(() {
       isLoading = true;
     });
 
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8080/api/usuario/homepage'),
+        Uri.parse('http://192.168.0.155:8080/api/usuario/homepage'), // Seu IP e porta
       );
 
       if (response.statusCode == 200) {
@@ -137,11 +154,18 @@ class _HomePageState extends State<HomePage> {
         });
         return data;
       } else {
-        throw Exception('Falha ao carregar prestadores');
+        print('Falha ao carregar prestadores: ${response.statusCode} ${response.body}');
+        setState(() {
+          _prestadoresFiltrados = [];
+          isLoading = false;
+        });
+        // throw Exception('Falha ao carregar prestadores');
+        return [];
       }
     } catch (e) {
       print('Erro ao carregar prestadores: $e');
       setState(() {
+        _prestadoresFiltrados = [];
         isLoading = false;
       });
       return [];
@@ -155,33 +179,27 @@ class _HomePageState extends State<HomePage> {
 
     return ChoiceChip(
       label: Text(category),
+      selectedColor: Theme.of(context).primaryColor.withOpacity(0.3),
       selected: isSelected,
       onSelected: (bool selected) {
         setState(() {
           if (category == 'Todos') {
             selectedTags.clear();
-            if (searchController.text.isEmpty) {
-              fetchPrestadores();
-            } else {
-              _searchPrestadores();
-            }
           } else {
+            // Se "Todos" estava selecionado e outra tag é selecionada,
+            // não há necessidade de remover "Todos" explicitamente, pois selectedTags já estaria vazia
+            // ou o comportamento de adicionar/remover a tag específica cuidará disso.
             if (selected) {
               selectedTags.add(category);
             } else {
               selectedTags.remove(category);
             }
-
-            if (selectedTags.isEmpty) {
-              if (searchController.text.isEmpty) {
-                fetchPrestadores();
-              } else {
-                _searchPrestadores();
-              }
-            } else {
-              _searchPrestadores();
-            }
           }
+          // Sempre chame _searchPrestadores.
+          // Esta função já lida com o caso de nenhum filtro estar ativo
+          // (searchController.text.isEmpty && selectedTags.isEmpty)
+          // chamando fetchPrestadores() internamente.
+          _searchPrestadores();
         });
       },
     );
@@ -193,26 +211,18 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: Text('Home'),
         actions: [
-          IconButton(icon: Icon(Icons.notifications_none), onPressed: () {}),
+          IconButton(icon: Icon(Icons.notifications_none), onPressed: () {
+            // TODO: Implementar navegação ou ação para notificações
+          }),
           IconButton(
-  icon: Icon(Icons.logout),
-  tooltip: 'Sair',
-  onPressed: () async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
-    await prefs.remove('token_criado_em');
-    await prefs.remove('manter_logado');
-
-    if (context.mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginPage()),
-        (route) => false,
-      );
-    }
-  },
-),
-
+            icon: Icon(Icons.person_outline),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => LoginPage()), // Verifique se LoginPage está corretamente importada e definida
+              );
+            },
+          ),
         ],
       ),
       body: Padding(
@@ -227,7 +237,10 @@ class _HomePageState extends State<HomePage> {
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none, // Para um visual mais clean se preenchido
                 ),
+                filled: true, // Adicionar um preenchimento
+                fillColor: Colors.grey[200], // Cor do preenchimento
               ),
             ),
             SizedBox(height: 12),
@@ -246,31 +259,48 @@ class _HomePageState extends State<HomePage> {
               child: isLoading
                   ? Center(child: CircularProgressIndicator())
                   : _prestadoresFiltrados.isEmpty
-                      ? Center(child: Text('Nenhum prestador encontrado'))
+                      ? Center(
+                          child: Text(
+                            'Nenhum prestador encontrado.\nTente ajustar sua busca ou filtros.',
+                            textAlign: TextAlign.center,
+                          )
+                        )
                       : ListView.builder(
                           itemCount: _prestadoresFiltrados.length,
                           itemBuilder: (context, index) {
                             final prestador = _prestadoresFiltrados[index];
-                            List<String> tags = (prestador['tags'] as List)
-                                .map((tag) => tag['nome'].toString())
-                                .toList();
+                            // Validação defensiva para os dados do prestador
+                            final String imageUrl = prestador['imagemPerfil'] as String? ?? ''; // Exemplo de como garantir string
+                            final String nome = prestador['nome'] as String? ?? 'Nome Indisponível';
+                            final List<String> tags = (prestador['tags'] as List?)
+                                    ?.map((tag) => (tag is Map && tag['nome'] != null) ? tag['nome'].toString() : '')
+                                    .where((tagNome) => tagNome.isNotEmpty) // Remove tags vazias se houver erro no map
+                                    .toList() ??
+                                [];
+                            final double rating = (prestador['mediaAvaliacoes'] as num?)?.toDouble() ?? 0.0;
+                            final int? prestadorId = prestador['id'] as int?;
+
 
                             return PrestadorHomeCard(
-                              imageUrl: prestador['imagemPerfil'] ?? '',
-                              name: prestador['nome'] ?? '',
+                              imageUrl: imageUrl,
+                              name: nome,
                               categories: tags,
-                              rating: (prestador['mediaAvaliacoes'] ?? 0.0)
-                                  .toDouble(),
+                              rating: rating,
                               onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        PrestadorDetalhesPage(
-                                      id: prestador['id'],
+                                if (prestadorId != null) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          PrestadorDetalhesPage(id: prestadorId), // Verifique se PrestadorDetalhesPage está ok
                                     ),
-                                  ),
-                                );
+                                  );
+                                } else {
+                                  // Opcional: mostrar um snackbar ou log se o ID for nulo
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('ID do prestador indisponível.'))
+                                  );
+                                }
                               },
                             );
                           },

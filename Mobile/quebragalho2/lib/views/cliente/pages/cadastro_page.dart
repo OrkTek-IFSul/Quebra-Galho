@@ -57,7 +57,7 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
   Future<void> _uploadImagemPerfil(int usuarioId) async {
     if (_imagemPerfil == null) return;
 
-    final url = Uri.parse('http://192.168.1.24:8080/api/usuario/perfil/$usuarioId/imagem');
+    final url = Uri.parse('http://192.168.0.155:8080/api/usuario/perfil/$usuarioId/imagem');
 
     final request = http.MultipartRequest('POST', url)
       ..files.add(await http.MultipartFile.fromPath('file', _imagemPerfil!.path));
@@ -73,7 +73,7 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
   }
 
   Future<void> _cadastrarCliente() async {
-    final url = Uri.parse('http://192.168.1.24:8080/api/cadastro/usuario');
+    final url = Uri.parse('http://192.168.0.155:8080/api/cadastro/usuario');
 
     final response = await http.post(
       url,
@@ -119,7 +119,7 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
       return;
     }
 
-    final url = Uri.parse('http://192.168.1.24:8080/api/cadastro/prestador');
+    final url = Uri.parse('http://192.168.0.155:8080/api/cadastro/prestador');
 
     final usuario = {
       "nome": _nomeController.text,

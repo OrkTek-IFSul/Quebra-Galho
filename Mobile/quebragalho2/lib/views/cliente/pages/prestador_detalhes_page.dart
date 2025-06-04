@@ -28,7 +28,7 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
   Future<void> _fetchPrestadorDetails() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8080/api/usuario/homepage/prestador/${widget.id}'),
+        Uri.parse('http://192.168.0.155:8080/api/usuario/homepage/prestador/${widget.id}'),
       );
 
       if (response.statusCode == 200) {
@@ -79,7 +79,7 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.network(
-                'http://localhost:8080/${prestadorData!['imagemPerfil']}',
+                'http://192.168.0.155:8080/${prestadorData!['imagemPerfil']}',
                 height: 180,
                 width: double.infinity,
                 fit: BoxFit.cover,
@@ -164,8 +164,8 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
                         builder:
                             (_) => AgendamentoPage(
                               servico: servico['nome'],
-                              servicoId: 1,
-                              usuarioId: 1,
+                              servicoId: servico['id'],
+                              usuarioId: widget.id, //ID DO USUARIO QUE ESTÁ SOLICITANDO
                             ),
                       ),
                     );

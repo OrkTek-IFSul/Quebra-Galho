@@ -1,4 +1,3 @@
-
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -57,11 +56,13 @@ class _PerfilPageState extends State<PerfilPage> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Meu Perfil')),
+      appBar: AppBar(
+        title: const Text('Meu Perfil'),
+        automaticallyImplyLeading: false,
+      ),
       body: FutureBuilder<Map<String, dynamic>>(
         future: _dadosUsuario,
         builder: (context, snapshot) {
@@ -81,10 +82,10 @@ class _PerfilPageState extends State<PerfilPage> {
           final email = dados['email'] ?? '';
           final cpf = dados['documento'] ?? '';
           final imagemPerfil = dados['imagemPerfil'];
-          final imagemUrl = imagemPerfil != null && imagemPerfil != ''
-    ? 'http://10.0.2.2:8080/$imagemPerfil?ts=${DateTime.now().millisecondsSinceEpoch}'
-    : null;
-
+          final imagemUrl =
+              imagemPerfil != null && imagemPerfil != ''
+                  ? 'http://10.0.2.2:8080/$imagemPerfil?ts=${DateTime.now().millisecondsSinceEpoch}'
+                  : null;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -157,7 +158,7 @@ class _PerfilPageState extends State<PerfilPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => EditarDadosPage(usuarioId: 1,),
+                        builder: (context) => EditarDadosPage(usuarioId: 1),
                       ),
                     );
                   },
@@ -176,8 +177,6 @@ class _PerfilPageState extends State<PerfilPage> {
             ),
           );
         },
-
-
       ),
     );
   }

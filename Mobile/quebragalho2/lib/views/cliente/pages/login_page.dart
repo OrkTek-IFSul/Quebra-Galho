@@ -45,7 +45,7 @@ class _LoginPageState extends State<LoginPage> {
       if (duracao <= expiracao) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const WelcomePage()),
+          MaterialPageRoute(builder: (_) => WelcomePage()),
         );
         return;
       } else {
@@ -81,7 +81,7 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.1.24:8080/auth/login'),
+        Uri.parse('http://192.168.0.155:8080/auth/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'senha': senha}),
       );
@@ -95,7 +95,7 @@ class _LoginPageState extends State<LoginPage> {
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const WelcomePage()),
+          MaterialPageRoute(builder: (_) => WelcomePage()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
