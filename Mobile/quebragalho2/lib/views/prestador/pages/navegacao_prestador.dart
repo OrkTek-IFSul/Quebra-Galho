@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:quebragalho2/views/cliente/pages/home_page.dart';
-import 'package:quebragalho2/views/cliente/pages/perfil_page.dart';
+import 'package:quebragalho2/views/prestador/pages/home_page.dart';
+import 'package:quebragalho2/views/prestador/pages/tela_perfil.dart';
 
 
-class PaginaDeNavegacao extends StatefulWidget {
-  const PaginaDeNavegacao({super.key});
+
+class NavegacaoPrestador extends StatefulWidget {
+  const NavegacaoPrestador({super.key});
 
   @override
-  State<PaginaDeNavegacao> createState() => _PaginaDeNavegacaoState();
+  State<NavegacaoPrestador> createState() => _NavegacaoPrestadorState();
 }
 
-class _PaginaDeNavegacaoState extends State<PaginaDeNavegacao> {
+class _NavegacaoPrestadorState extends State<NavegacaoPrestador> {
   // Index da página selecionada
   int _selectedIndex = 0;
 
 //Lista de páginas da navegação
   final List<Widget> paginas = [
-    HomePage(),
+    const HomePage(),
     PerfilPage(),
-    
   ];
 
   void _onTabTapped(int index) {
