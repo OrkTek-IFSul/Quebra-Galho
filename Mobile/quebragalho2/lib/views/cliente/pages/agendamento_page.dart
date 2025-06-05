@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:quebragalho2/views/cliente/pages/tela_confirmacao_solicitacao.dart'; // Verifique este arquivo também
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
+import 'package:quebragalho2/api_config.dart'; // Importa a config da API
 import '../../../services/agendamento_page_services.dart'; // Verifique este arquivo também
 
 class AgendamentoPage extends StatefulWidget {
@@ -51,7 +52,7 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
       final result = await _service.listarHorariosIndisponiveis(widget.servicoId);
       setState(() => _horariosIndisponiveis = result);
     } catch (e) {
-      if (mounted) { // Boa prática verificar se o widget ainda está montado
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao carregar horários: $e')),
         );
@@ -66,9 +67,9 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
   bool _isHorarioIndisponivel(String hora) {
     final dataHora = _criarDateTime(_selectedDay, hora);
     return _horariosIndisponiveis.any((indisponivel) =>
-        isSameDay(indisponivel, dataHora) &&
-        indisponivel.hour == dataHora.hour &&
-        indisponivel.minute == dataHora.minute);
+      isSameDay(indisponivel, dataHora) &&
+      indisponivel.hour == dataHora.hour &&
+      indisponivel.minute == dataHora.minute);
   }
 
   DateTime _criarDateTime(DateTime data, String hora) {
@@ -99,21 +100,18 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
         horario: dataHora,
       );
 
-      // Extrai os dados diretamente do response
       final nomePrestador = agendamento['prestador'];
       final nomeServico = agendamento['servico'];
       final preco = (agendamento['preco_servico'] as num).toDouble();
-      // final horarioConfirmado = DateTime.parse(agendamento['horario']); // Linha comentada, sem problemas aqui
 
-      // Vai para tela de confirmação
-      if (mounted) { // Boa prática verificar antes de navegar
+      if (mounted) {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => ConfirmacaoPage(
               nomePrestador: nomePrestador,
               nomeServico: nomeServico,
-              data: dataHora, // data e hora selecionadas
+              data: dataHora,
               hora: DateFormat('HH:mm').format(dataHora),
               valor: preco,
             ),
@@ -159,11 +157,10 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
                     firstDay: DateTime.now(),
                     lastDay: DateTime.now().add(const Duration(days: 60)),
                     selectedDayPredicate: (day) => isSameDay(day, _selectedDay),
-                    onDaySelected: (selectedDay, focusedDay) { // focusedDay é o segundo parâmetro
+                    onDaySelected: (selectedDay, focusedDay) {
                       setState(() {
                         _selectedDay = selectedDay;
                         _selectedTime = null;
-                        // _focusedDay = focusedDay; // Você pode querer atualizar o focusedDay também se usar
                       });
                       _carregarHorariosIndisponiveis();
                     },
@@ -218,7 +215,7 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
         crossAxisCount: 4,
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
-        childAspectRatio: 1.5, // Ajuste conforme necessário para o conteúdo
+        childAspectRatio: 1.5,
       ),
       itemCount: _horariosDisponiveis.length,
       itemBuilder: (context, index) {
@@ -246,7 +243,7 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
               ),
             ),
             child: Center(
-              child: Column( // Usar Column para permitir texto adicional
+              child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
@@ -262,10 +259,10 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
                   ),
                   if (indisponivel)
                     const Text(
-                      'INDISPONÍVEL', // Pode ser muito grande para o espaço
+                      'INDISPONÍVEL',
                       style: TextStyle(
                         color: Colors.red,
-                        fontSize: 8, // Reduzido para caber melhor
+                        fontSize: 8,
                         fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,

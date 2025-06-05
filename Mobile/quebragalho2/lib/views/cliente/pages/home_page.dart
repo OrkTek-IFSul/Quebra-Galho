@@ -2,11 +2,14 @@ import 'dart:convert';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-// Certifique-se de que os caminhos de importação estão corretos para o seu projeto
-import 'package:quebragalho2/views/cliente/pages/login_page.dart';
+
+import 'package:quebragalho2/views/cliente/pages/login_page.dart'; // onde está o obterIdUsuario()
+
 import 'package:quebragalho2/views/cliente/pages/prestador_detalhes_page.dart';
 import 'package:quebragalho2/views/cliente/widgets/prestador_home_card.dart';
 import 'package:http/http.dart' as http;
+
+import 'package:quebragalho2/api_config.dart'; // nova importação para a baseUrl
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -24,11 +27,25 @@ class _HomePageState extends State<HomePage> {
 
   Timer? _debounce;
 
+  int? usuarioId;
+
   @override
   void initState() {
     super.initState();
-    _loadInitialData();
+    carregarDados();
     searchController.addListener(_debouncedSearch);
+  }
+
+  Future<void> carregarDados() async {
+    await carregarUsuarioId();
+    await _loadInitialData();
+  }
+
+  Future<void> carregarUsuarioId() async {
+    final id = await obterIdUsuario();
+    setState(() {
+      usuarioId = id;
+    });
   }
 
   void _debouncedSearch() {
@@ -44,7 +61,8 @@ class _HomePageState extends State<HomePage> {
       isLoading = true;
     });
     await fetchCategorias();
-    await fetchPrestadores(); // Atualiza direto a lista e controla isLoading internamente
+    await fetchPrestadores();
+
   }
 
   Future<List<dynamic>> _searchPrestadores() async {
@@ -60,6 +78,11 @@ class _HomePageState extends State<HomePage> {
         'size': '10',
       };
 
+      // Se só tem 'page' e 'size', chama fetchPrestadores direto
+      if (queryParams.length == 2) {
+        return await fetchPrestadores();
+      }
+
       // Se não houver texto de busca e nenhuma tag selecionada, busca todos os prestadores.
       // A verificação de queryParams.length == 2 (apenas 'page' e 'size')
       // cobre o caso de searchController.text estar vazio E selectedTags estar vazia.
@@ -67,11 +90,9 @@ class _HomePageState extends State<HomePage> {
         return await fetchPrestadores(); // fetchPrestadores já lida com isLoading e setState
       }
 
-      final uri = Uri.http(
-        '192.168.0.155:8080', // Seu IP e porta
-        '/api/usuario/homepage/buscar',
-        queryParams,
-      );
+     final uri = Uri.parse('${ApiConfig.baseUrl}/api/usuario/homepage/buscar')
+          .replace(queryParameters: queryParams);
+      
 
       final response = await http.get(uri);
 
@@ -113,9 +134,9 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> fetchCategorias() async {
     try {
-      final response = await http.get(
-        Uri.parse('http://192.168.0.155:8080/api/usuario/homepage/tags'), // Seu IP e porta
-      );
+
+      final uri = Uri.parse('${ApiConfig.baseUrl}/api/usuario/homepage/tags');
+      final response = await http.get(uri);
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -142,9 +163,9 @@ class _HomePageState extends State<HomePage> {
     });
 
     try {
-      final response = await http.get(
-        Uri.parse('http://192.168.0.155:8080/api/usuario/homepage'), // Seu IP e porta
-      );
+
+      final uri = Uri.parse('${ApiConfig.baseUrl}/api/usuario/homepage');
+      final response = await http.get(uri);
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -209,18 +230,26 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
+        title: const Text('Home'),
         actions: [
-          IconButton(icon: Icon(Icons.notifications_none), onPressed: () {
-            // TODO: Implementar navegação ou ação para notificações
-          }),
+
+          IconButton(icon: const Icon(Icons.notifications_none), onPressed: () {}),
           IconButton(
-            icon: Icon(Icons.person_outline),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => LoginPage()), // Verifique se LoginPage está corretamente importada e definida
-              );
+            icon: const Icon(Icons.logout),
+            tooltip: 'Sair',
+            onPressed: () async {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.remove('token');
+              await prefs.remove('token_criado_em');
+              await prefs.remove('manter_logado');
+
+              if (context.mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                  (route) => false,
+                );
+              }
             },
           ),
         ],
@@ -232,7 +261,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             TextField(
               controller: searchController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Buscar prestador...',
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(
@@ -243,21 +272,21 @@ class _HomePageState extends State<HomePage> {
                 fillColor: Colors.grey[200], // Cor do preenchimento
               ),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             SizedBox(
               height: 40,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: categories.length,
-                separatorBuilder: (_, __) => SizedBox(width: 8),
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (context, index) =>
                     _buildCategoryChip(categories[index]),
               ),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Expanded(
               child: isLoading
-                  ? Center(child: CircularProgressIndicator())
+                  ? const Center(child: CircularProgressIndicator())
                   : _prestadoresFiltrados.isEmpty
                       ? Center(
                           child: Text(
@@ -265,6 +294,7 @@ class _HomePageState extends State<HomePage> {
                             textAlign: TextAlign.center,
                           )
                         )
+
                       : ListView.builder(
                           itemCount: _prestadoresFiltrados.length,
                           itemBuilder: (context, index) {

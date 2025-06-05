@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 
-import 'login_page.dart'; // substitua pelo caminho real do LoginPage
+import 'login_page.dart';
+import 'package:quebragalho2/api_config.dart';
 
 class CadastroPage extends StatefulWidget {
   const CadastroPage({super.key});
@@ -57,14 +58,14 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
   Future<void> _uploadImagemPerfil(int usuarioId) async {
     if (_imagemPerfil == null) return;
 
-    final url = Uri.parse('http://192.168.0.155:8080/api/usuario/perfil/$usuarioId/imagem');
+    final url = Uri.parse('http://${ApiConfig.baseUrl}/api/usuario/perfil/$usuarioId/imagem');
 
     final request = http.MultipartRequest('POST', url)
       ..files.add(await http.MultipartFile.fromPath('file', _imagemPerfil!.path));
 
     final response = await request.send();
 
-    if (response.statusCode != 200 && mounted) { // Adicionado 'mounted' para segurança
+    if (response.statusCode != 200 && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text("Erro ao enviar imagem de perfil: ${response.reasonPhrase}"),
         backgroundColor: Colors.red,
@@ -73,7 +74,8 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
   }
 
   Future<void> _cadastrarCliente() async {
-    final url = Uri.parse('http://192.168.0.155:8080/api/cadastro/usuario');
+    
+    final url = Uri.parse('http://${ApiConfig.baseUrl}/api/cadastro/usuario');
 
     final response = await http.post(
       url,
@@ -87,7 +89,7 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
       }),
     );
 
-    if (!mounted) return; // Verificar se o widget ainda está montado
+    if (!mounted) return;
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       final usuario = json.decode(response.body);
@@ -119,7 +121,8 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
       return;
     }
 
-    final url = Uri.parse('http://192.168.0.155:8080/api/cadastro/prestador');
+
+    final url = Uri.parse('http://${ApiConfig.baseUrl}/api/cadastro/prestador');
 
     final usuario = {
       "nome": _nomeController.text,
@@ -140,7 +143,7 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
 
     final response = await request.send();
 
-    if (!mounted) return; // Verificar se o widget ainda está montado
+    if (!mounted) return;
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       final respStr = await response.stream.bytesToString();
@@ -232,7 +235,7 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
 
   Widget _formClienteWidget() {
     return SingleChildScrollView(
-      child: Padding( // CORRIGIDO: Espaço adicionado -> child: Padding
+      child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: _formularioBase(_formCliente),
       ),
@@ -241,21 +244,21 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
 
   Widget _formPrestadorWidget() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0), // padding para o SingleChildScrollView
+      padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
           _formularioBase(_formPrestador, prestador: true),
           SizedBox(height: 16),
           Align(
             alignment: Alignment.centerLeft,
-            // Título para a seção de imagem de documento
-            child: Text("Imagem do Documento (Selfie com Doc. ou Doc. Oficial)", style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text("Imagem do Documento (Selfie com Doc. ou Doc. Oficial)",
+                style: TextStyle(fontWeight: FontWeight.bold)),
           ),
           SizedBox(height: 8),
           GestureDetector(
-            onTap: _selecionarImagemDocumento, // Função correta para imagem do documento
+            onTap: _selecionarImagemDocumento,
             child: Container(
-              height: 180, // Altura ajustada
+              height: 180,
               width: double.infinity,
               decoration: BoxDecoration(
                 color: Colors.grey[100],
@@ -280,29 +283,12 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
                       child: Image.file(_documentoImagem!, fit: BoxFit.cover),
                     ),
             ),
-          ), // Fecha GestureDetector para imagem do documento
-          // SizedBox(height: 30), // Removido ou ajustado conforme necessidade de espaçamento
-          // _formularioBase(_formPrestador), // Removido - Chamada duplicada do formulário base
-          // SizedBox(height: 20),
-          // Text( // Removido - Label duplicado
-          //   "Documento (CPF ou CNPJ)",
-          //   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          // ),
-          // SizedBox(height: 12),
-          // O GestureDetector abaixo parecia ser uma duplicação ou confusão
-          // com a foto de perfil que já está no _formularioBase.
-          // Se for um campo adicional específico para prestador, precisaria ser clarificado.
-          // Por ora, vou remover para evitar redundância e o erro de parêntese.
-
-          // O PARÊNTESE EXTRA ESTAVA AQUI. FOI REMOVIDO.
-          // O CÓDIGO ORIGINAL TINHA UM '),' ISOLADO AQUI, QUE QUEBRAVA A ESTRUTURA.
-
-          SizedBox(height: 20), // Este SizedBox agora é corretamente filho do Column
+          ),
+          SizedBox(height: 20),
         ],
       ),
     );
   }
-
 
   void _mostrarErro(String mensagem) {
     if (!mounted) return;
@@ -333,28 +319,25 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    // A estrutura do TabBar e TabBarView foi simplificada para um padrão mais comum.
-    // Se a intenção era ter um header customizado dentro de cada aba,
-    // esse header deveria ser parte do _formClienteWidget() e _formPrestadorWidget().
     return DefaultTabController(
-      length: 2, // Deve ser igual ao número de abas
+      length: 2,
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
           title: Text("Cadastro"),
-          bottom: TabBar( // TabBar principal no AppBar
-            controller: _tabController, // Usar o controller inicializado
+          bottom: TabBar(
+            controller: _tabController,
             tabs: const [
               Tab(text: "Cliente"),
               Tab(text: "Prestador"),
             ],
           ),
         ),
-        body: TabBarView( // TabBarView principal
-          controller: _tabController, // Usar o controller inicializado
+        body: TabBarView(
+          controller: _tabController,
           children: [
-            _formClienteWidget(), // Conteúdo da primeira aba
-            _formPrestadorWidget(), // Conteúdo da segunda aba
+            _formClienteWidget(),
+            _formPrestadorWidget(),
           ],
         ),
         bottomNavigationBar: Padding(
@@ -364,49 +347,31 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
               final abaAtual = _tabController.index;
               bool formValido = false;
 
-              if (abaAtual == 0) { // Aba Cliente
+              if (abaAtual == 0) {
                 if (_formCliente.currentState!.validate()) {
                   formValido = true;
                   _cadastrarCliente();
                 }
-              } else { // Aba Prestador
+              } else {
                 if (_formPrestador.currentState!.validate()) {
                   formValido = true;
                   _cadastrarPrestador();
                 }
               }
 
-              // A lógica de exibir SnackBar de sucesso foi movida para dentro dos métodos de cadastro
-              // para ser mostrada após a conclusão da API.
-              // A lógica abaixo de mostrar erro se o form não for válido pode ser útil.
               if (!formValido) {
-                 _mostrarErro("Por favor, preencha todos os campos corretamente.");
+                _mostrarErro("Por favor, preencha todos os campos corretamente.");
               }
-              // A lógica de SnackBar de sucesso imediato aqui foi removida, pois
-              // os métodos de cadastro já cuidam disso após a resposta da API.
-              // O if/else abaixo estava validando _formPrestador independentemente da aba atual.
-              /*
-              if (_formPrestador.currentState!.validate()) { // Esta validação aqui é redundante ou mal colocada
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text("Prestador cadastrado com sucesso!"), // Mensagem prematura
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              } else {
-                _mostrarErro("Por favor, preencha todos os campos corretamente");
-              }
-              */
             },
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: 12),
               textStyle: TextStyle(
-                fontSize: 18, // Ajustado para um bom tamanho
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.2,
-              )
+              ),
             ),
-            child: Text("CADASTRAR"), // Removido o TextStyle daqui, definido no style do ElevatedButton
+            child: Text("CADASTRAR"),
           ),
         ),
       ),

@@ -8,16 +8,30 @@ import 'dart:convert';
 import 'package:quebragalho2/views/cliente/pages/navegacao_cliente.dart';
 import 'package:quebragalho2/views/prestador/pages/navegacao_prestador.dart';
 
+import 'package:quebragalho2/views/cliente/pages/login_page.dart'; // arquivo onde voce coloca obterIdUsuario()
 
+class WelcomePage extends StatefulWidget {
+  const WelcomePage({super.key});
 
+  @override
+  State<WelcomePage> createState() => _WelcomePageState();
+}
 
-class WelcomePage extends StatelessWidget {
-  final int userId;
-  
-  const WelcomePage({
-    super.key,
-    required this.userId,
-  });
+class _WelcomePageState extends State<WelcomePage> {
+
+  int? usuarioId;
+
+  @override
+  void initState() {
+    super.initState();
+    carregarUsuario();
+  }
+
+  Future<void> carregarUsuario() async {
+    final id = await obterIdUsuario();
+    setState(() {
+      usuarioId = id;
+    });
 
   // Update function to handle boolean response
   Future<bool> _checkPrestador(int userId) async {
@@ -39,25 +53,20 @@ class WelcomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F8FF), // Azul bem clarinho, clean
+      backgroundColor: const Color(0xFFF3F8FF),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-
-              /// Lottie Animation no topo
               Lottie.asset(
                 'assets/welcome.json',
                 width: 200,
                 height: 200,
                 fit: BoxFit.contain,
               ),
-
               const SizedBox(height: 24),
-
-              /// Descrição
               const Text(
                 "Seja bem-vindo(a) ao App!\nEscolha como deseja continuar:",
                 textAlign: TextAlign.center,
@@ -67,10 +76,7 @@ class WelcomePage extends StatelessWidget {
                   color: Colors.black87,
                 ),
               ),
-
               const SizedBox(height: 36),
-
-              /// Botão Cliente
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -82,9 +88,7 @@ class WelcomePage extends StatelessWidget {
                     ),
                   ),
                   onPressed: () {
-
-                    // Navega para as opções do Cliente
-
+                    // Passa usuarioId se quiser
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -99,10 +103,7 @@ class WelcomePage extends StatelessWidget {
                   ),
                 ),
               ),
-
               const SizedBox(height: 16),
-
-              /// Botão Prestador
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -134,6 +135,7 @@ class WelcomePage extends StatelessWidget {
                         ),
                       );
                     }
+
                   },
                   icon: Icon(Icons.handyman, color: Colors.blue.shade600),
                   label: Text(

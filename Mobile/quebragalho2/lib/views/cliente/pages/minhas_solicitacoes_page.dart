@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import 'package:quebragalho2/api_config.dart';
 import 'package:quebragalho2/views/cliente/pages/detalhes_solicitacao_page.dart';
+import 'package:quebragalho2/views/cliente/pages/login_page.dart';
 import 'package:quebragalho2/views/cliente/widgets/solicitacao_card.dart';
 
 class MinhasSolicitacoesPage extends StatefulWidget {
@@ -14,15 +16,24 @@ class MinhasSolicitacoesPage extends StatefulWidget {
 
 class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
   final TextEditingController _searchController = TextEditingController();
-  
+
   bool _isLoading = true;
   List<dynamic> _solicitacoes = [];
   List<dynamic> _solicitacoesFiltradas = [];
+  int? _usuarioId;
 
   @override
   void initState() {
     super.initState();
-    _carregarSolicitacoes();
+
+    // Obter o usuário (sem await dentro de Future) e depois carregar as solicitações
+    obterIdUsuario().then((id) {
+      if (!mounted) return;
+      setState(() {
+        _usuarioId = id;
+      });
+      _carregarSolicitacoes();
+    });
   }
 
   String _formatarData(String dataString) {
@@ -31,10 +42,17 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
   }
 
   Future<void> _carregarSolicitacoes() async {
+    if (_usuarioId == null) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Usuário não identificado.')),
+      );
+      return;
+    }
+
     try {
       final response = await http.get(
-        //ALTERAR ID DO USUARIO NO FINAL DA URL
-        Uri.parse('http://192.168.0.155:8080/api/usuario/solicitacoes/2'),
+        Uri.parse('http://${ApiConfig.baseUrl}/api/usuario/solicitacoes/$_usuarioId'),
       );
 
       if (response.statusCode == 200) {
@@ -73,7 +91,6 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
       appBar: AppBar(title: const Text("Minhas Solicitações")),
       body: Column(
         children: [
-
           /// Barra de Pesquisa
           Padding(
             padding: const EdgeInsets.all(12.0),
@@ -86,32 +103,32 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-
               onChanged: _filtrarSolicitacoes,
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: _solicitacoes.length,
-              itemBuilder: (context, index) {
-                final item = _solicitacoes[index];
-                return SolicitacaoWidget(
-                  nome: item['nome']!,
-                  horario: item['horario']!,
-                  status: item['status']!,
-                  imagemUrl: item['imagem']!,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        //AO SELECIONAR UMA SOLICITACAO DEVE ENVIAR O ID DO SERVICO
-                        builder: (_) => DetalhesSolicitacaoPage(agendamentoId: 1),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    itemCount: _solicitacoesFiltradas.length,
+                    itemBuilder: (context, index) {
+                      final item = _solicitacoesFiltradas[index];
+                      return SolicitacaoWidget(
+                        nome: item['nome']!,
+                        horario: item['horario']!,
+                        status: item['status']!,
+                        imagemUrl: item['imagem']!,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => DetalhesSolicitacaoPage(agendamentoId: 1),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
           ),
         ],
       ),
