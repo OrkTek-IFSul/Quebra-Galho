@@ -1,10 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:quebragalho2/views/cliente/pages/cadastro_page.dart';
-import 'dart:convert';
 import 'package:quebragalho2/views/cliente/pages/tela_selecao_tipo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -45,7 +45,7 @@ class _LoginPageState extends State<LoginPage> {
       if (duracao <= expiracao) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => WelcomePage()),
+          MaterialPageRoute(builder: (_) => const WelcomePage()),
         );
         return;
       } else {
@@ -58,56 +58,64 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => carregando = false);
   }
 
-  Future<void> salvarPreferencias(String token, int id) async {
-
+  Future<void> salvarPreferencias(String token, int idUsuario, {int? idPrestador}) async {
     final prefs = await SharedPreferences.getInstance();
     if (manterLogado) {
       await prefs.setBool('manter_logado', true);
       await prefs.setString('token', token);
-      await prefs.setInt('usuario_id', id); // salvando o id do usuário
+      await prefs.setInt('usuario_id', idUsuario);
       await prefs.setString('token_criado_em', DateTime.now().toIso8601String());
+
+      if (idPrestador != null) {
+        await prefs.setInt('prestador_id', idPrestador);
+        print('ID do prestador salvo: $idPrestador');
+      }
     } else {
       await prefs.setBool('manter_logado', false);
     }
 
+    print('ID do prestador salvo: $idPrestador');
     print('Token salvo: $token');
-    print('ID do usuário salvo: $id');
-
+    print('ID do usuário salvo: $idUsuario');
   }
 
   Future<void> fazerLogin() async {
-    final email = emailController.text;
-    final senha = senhaController.text;
+  final email = emailController.text;
+  final senha = senhaController.text;
 
-    try {
-      final response = await http.post(
-        Uri.parse('http://192.168.0.155:8080/auth/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'senha': senha}),
+  try {
+    final response = await http.post(
+      Uri.parse('http://192.168.1.24:8080/auth/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'senha': senha}),
+    );
+
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body);
+      final token = body['token'];
+      final idUsuario = body['id_usuario'];
+
+      // Usa diretamente o id_prestador retornado pelo backend, se houver
+      final idPrestador = body['id_prestador']; // pode ser nulo
+
+      await salvarPreferencias(token, idUsuario, idPrestador: idPrestador);
+
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const WelcomePage()),
       );
-
-      if (response.statusCode == 200) {
-        final body = jsonDecode(response.body);
-        final token = body['token'];
-        final id = body['id_usuario'];
-        await salvarPreferencias(token, id);
-
-        if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => WelcomePage()),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email ou senha inválidos')),
-        );
-      }
-    } catch (e) {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao conectar: $e')),
+        const SnackBar(content: Text('Email ou senha inválidos')),
       );
     }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Erro ao conectar: $e')),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -147,30 +155,28 @@ class _LoginPageState extends State<LoginPage> {
               ],
             ),
             const SizedBox(height: 20),
-
             Row(
-  children: [
-    Expanded(
-      child: ElevatedButton(
-        onPressed: fazerLogin,
-        child: const Text('Entrar'),
-      ),
-    ),
-    const SizedBox(width: 10),
-    Expanded(
-      child: OutlinedButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const CadastroPage()),
-          );
-        },
-        child: const Text('Fazer Cadastro'),
-      ),
-    ),
-  ],
-),
-
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: fazerLogin,
+                    child: const Text('Entrar'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const CadastroPage()),
+                      );
+                    },
+                    child: const Text('Fazer Cadastro'),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
