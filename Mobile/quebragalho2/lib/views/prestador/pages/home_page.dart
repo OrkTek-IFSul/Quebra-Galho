@@ -44,7 +44,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> fetchSolicitacoes(int idPrestador) async {
     try {
       final response = await http.get(
-        Uri.parse('https://${ApiConfig.baseUrl}/api/prestadores/pedidoservico/$idPrestador'),
+        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/pedidoservico/$idPrestador'),
         headers: {
           'Accept': 'application/json',
         },
