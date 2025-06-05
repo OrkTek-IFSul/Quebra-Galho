@@ -1,10 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:quebragalho2/api_config.dart';
-import 'dart:convert';
+import 'package:quebragalho2/views/cliente/pages/login_page.dart'; // Para obterIdPrestador()
 import 'package:quebragalho2/views/prestador/pages/detalhes_solicitacao.dart';
 import 'package:quebragalho2/views/prestador/widgets/solicitacao_cliente_card.dart';
-import 'package:quebragalho2/views/cliente/pages/login_page.dart'; // Para obterIdPrestador()
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -43,7 +44,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> fetchSolicitacoes(int idPrestador) async {
     try {
       final response = await http.get(
-        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/pedidoservico/$idPrestador'),
+        Uri.parse('https://${ApiConfig.baseUrl}/api/prestadores/pedidoservico/$idPrestador'),
         headers: {
           'Accept': 'application/json',
         },
