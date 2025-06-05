@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:quebragalho2/api_config.dart';
 import 'package:quebragalho2/views/prestador/pages/editar_meus_dados.dart';
 
 class MeusDados extends StatefulWidget {
@@ -33,16 +34,16 @@ class _MeusDadosState extends State<MeusDados> {
   Future<void> carregarDados() async {
     try {
       final usuarioResp = await http.get(
-        Uri.parse('http://10.0.2.2:8080/api/usuario/perfil/$usuarioId'),
+        Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$usuarioId'),
       );
 
       final prestadorResp = await http.get(
-        Uri.parse('http://10.0.2.2:8080/api/prestador/perfil/$prestadorId'),
+        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/perfil/$prestadorId'),
       );
 
       final tagPrestadorResp = await http.get(
         Uri.parse(
-          'http://10.0.2.2:8080/api/tag-prestador/prestador/$prestadorId',
+          'https://${ApiConfig.baseUrl}/api/tag-prestador/prestador/$prestadorId',
         ),
       );
 
@@ -53,7 +54,7 @@ class _MeusDadosState extends State<MeusDados> {
 
         for (var idTag in tagIds) {
           final tagResp = await http.get(
-            Uri.parse('http://10.0.2.2:8080/api/tags/$idTag'),
+            Uri.parse('https://${ApiConfig.baseUrl}/api/tags/$idTag'),
           );
 
           if (tagResp.statusCode == 200) {

@@ -64,7 +64,7 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
     if (_imagemPerfil == null) return;
 
 
-    final url = Uri.parse('http://${ApiConfig.baseUrl}/api/usuario/perfil/$usuarioId/imagem');
+    final url = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$usuarioId/imagem');
 
     final request = http.MultipartRequest('POST', url)
       ..files.add(await http.MultipartFile.fromPath(
@@ -87,7 +87,7 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
 
   Future<void> _cadastrarCliente() async {
 
-    final url = Uri.parse('http://${ApiConfig.baseUrl}/api/cadastro/usuario');
+    final url = Uri.parse('https://${ApiConfig.baseUrl}/api/cadastro/usuario');
 
 
     final response = await http.post(
@@ -133,7 +133,7 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
       return;
     }
 
-    final url = Uri.parse('http://${ApiConfig.baseUrl}/api/cadastro/prestador');
+    final url = Uri.parse('https://${ApiConfig.baseUrl}/api/cadastro/prestador');
 
     final usuario = {
       "nome": _nomeController.text,

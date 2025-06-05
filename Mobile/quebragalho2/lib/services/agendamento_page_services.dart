@@ -10,7 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:quebragalho2/api_config.dart';
 
 class AgendamentoPageService {
-  static const String _baseUrl = 'http://${ApiConfig.baseUrl}/api/usuario/homepage/agendamento';
+  static const String _baseUrl = 'https://${ApiConfig.baseUrl}/api/usuario/homepage/agendamento';
 
   Future<List<DateTime>> listarHorariosIndisponiveis(int servicoId) async {
     try {

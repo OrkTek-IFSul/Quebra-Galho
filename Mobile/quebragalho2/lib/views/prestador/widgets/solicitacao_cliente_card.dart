@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:quebragalho2/api_config.dart';
 
 class SolicitacaoClienteCard extends StatefulWidget {
   final String nome;
@@ -42,7 +43,7 @@ class _SolicitacaoClienteCardState extends State<SolicitacaoClienteCard> {
 
     try {
       final response = await http.put(
-        Uri.parse('http://192.168.0.155:8080/api/prestador/pedidoservico/${widget.idAgendamento}/aceitar'),
+        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/pedidoservico/${widget.idAgendamento}/aceitar'),
       );
 
       if (response.statusCode == 200) {
@@ -80,7 +81,7 @@ class _SolicitacaoClienteCardState extends State<SolicitacaoClienteCard> {
 
     try {
       final response = await http.put(
-        Uri.parse('http://192.168.0.155:8080/api/prestador/pedidoservico/${widget.idAgendamento}/rejeitar'),
+        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/pedidoservico/${widget.idAgendamento}/rejeitar'),
       );
 
       if (response.statusCode == 200) {

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:quebragalho2/api_config.dart';
+
 class AdicionarServico extends StatefulWidget {
   final int idPrestador; // Add this parameter
 
@@ -38,7 +40,7 @@ class _AdicionarServicoState extends State<AdicionarServico> {
     try {
       final response = await http.post(
         Uri.parse(
-            'http://localhost:8080/api/prestador/servico/${widget.idPrestador}'),
+            'http://${ApiConfig.baseUrl}/api/prestador/servico/${widget.idPrestador}'),
         headers: {
           'Content-Type': 'application/json',
         },

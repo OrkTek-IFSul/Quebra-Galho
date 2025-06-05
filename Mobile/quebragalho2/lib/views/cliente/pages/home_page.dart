@@ -275,7 +275,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             TextField(
               controller: searchController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Buscar prestador...',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(

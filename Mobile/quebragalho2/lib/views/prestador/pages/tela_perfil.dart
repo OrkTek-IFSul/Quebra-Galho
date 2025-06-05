@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:quebragalho2/api_config.dart';
 import 'package:quebragalho2/views/prestador/pages/adicionar_servico.dart';
 import 'package:quebragalho2/views/prestador/pages/editar_servico.dart';
 import 'package:quebragalho2/views/prestador/pages/meus_dados.dart';
@@ -29,7 +30,7 @@ class _PerfilPageState extends State<PerfilPage> {
 
   // Faz requisição HTTP para obter os dados do prestador
   Future<void> carregarPerfil() async {
-    final url = 'http://192.168.1.24:8080/api/prestador/perfil/${widget.idPrestador}';
+    final url = 'https://${ApiConfig.baseUrl}/api/prestador/perfil/${widget.idPrestador}';
     try {
       final response = await http.get(Uri.parse(url));
       debugPrint('Resposta status: ${response.statusCode}');

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:quebragalho2/api_config.dart';
 import 'dart:convert';
 import 'package:quebragalho2/views/prestador/pages/detalhes_solicitacao.dart';
 import 'package:quebragalho2/views/prestador/widgets/solicitacao_cliente_card.dart';
@@ -28,7 +29,7 @@ class _HomePageState extends State<HomePage> {
     try {
       final response = await http.get(
         // Modifique a URL para buscar todas as solicitações, incluindo as confirmadas
-        Uri.parse('http://192.168.0.155:8080/api/prestador/pedidoservico/2'),
+        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/pedidoservico/2'),
         headers: {
           'Accept': 'application/json',
         },

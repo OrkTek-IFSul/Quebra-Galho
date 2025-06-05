@@ -52,7 +52,7 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://${ApiConfig.baseUrl}/api/usuario/solicitacoes/$_usuarioId'),
+        Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/solicitacoes/$_usuarioId'),
       );
 
       if (response.statusCode == 200) {

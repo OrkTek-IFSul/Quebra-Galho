@@ -4,11 +4,10 @@ import 'package:http/http.dart' as http;
 import 'package:quebragalho2/views/cliente/pages/cadastro_page.dart';
 import 'dart:convert';
 
-
 import 'package:quebragalho2/views/cliente/pages/navegacao_cliente.dart';
 import 'package:quebragalho2/views/prestador/pages/navegacao_prestador.dart';
-
-import 'package:quebragalho2/views/cliente/pages/login_page.dart'; // arquivo onde voce coloca obterIdUsuario()
+import 'package:quebragalho2/views/cliente/pages/login_page.dart'; // onde está obterIdUsuario()
+import 'package:quebragalho2/api_config.dart';
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
@@ -18,7 +17,6 @@ class WelcomePage extends StatefulWidget {
 }
 
 class _WelcomePageState extends State<WelcomePage> {
-
   int? usuarioId;
 
   @override
@@ -32,12 +30,12 @@ class _WelcomePageState extends State<WelcomePage> {
     setState(() {
       usuarioId = id;
     });
+  }
 
-  // Update function to handle boolean response
   Future<bool> _checkPrestador(int userId) async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.0.155:8080/api/tipousuario/$userId'),
+        Uri.parse('https://${ApiConfig.baseUrl}/api/tipousuario/$userId'),
       );
 
       if (response.statusCode == 200) {
@@ -45,7 +43,7 @@ class _WelcomePageState extends State<WelcomePage> {
       }
       return false;
     } catch (e) {
-      print('Error checking prestador: $e');
+      print('Erro ao verificar prestador: $e');
       return false;
     }
   }
@@ -88,7 +86,6 @@ class _WelcomePageState extends State<WelcomePage> {
                     ),
                   ),
                   onPressed: () {
-                    // Passa usuarioId se quiser
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -114,29 +111,29 @@ class _WelcomePageState extends State<WelcomePage> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  onPressed: () async {
-                    // Check if user is prestador
-                    final isPrestador = await _checkPrestador(userId);
-                    
-                    if (isPrestador) {
-                      // User is a prestador, navigate to NavegacaoPrestador
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => NavegacaoPrestador(prestadorId: userId),
-                        ),
-                      );
-                    } else {
-                      // User is not a prestador, navigate to CadastroPage
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => CadastroPage(),
-                        ),
-                      );
-                    }
+                  onPressed: usuarioId == null
+                      ? null
+                      : () async {
+                          final isPrestador =
+                              await _checkPrestador(usuarioId!);
 
-                  },
+                          if (isPrestador) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => NavegacaoPrestador(
+                                    prestadorId: usuarioId!),
+                              ),
+                            );
+                          } else {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => CadastroPage(),
+                              ),
+                            );
+                          }
+                        },
                   icon: Icon(Icons.handyman, color: Colors.blue.shade600),
                   label: Text(
                     "Sou Prestador",

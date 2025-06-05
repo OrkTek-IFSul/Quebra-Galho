@@ -56,7 +56,7 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
     if (_usuarioId == null) return;
     try {
       final response = await http.get(
-        Uri.parse('http://${ApiConfig.baseUrl}/api/usuario/perfil/$_usuarioId'),
+        Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$_usuarioId'),
       );
 
       if (response.statusCode == 200) {
@@ -88,7 +88,7 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
     }
 
     final url = Uri.parse(
-      'http://${ApiConfig.baseUrl}/api/usuario/perfil/atualizar/$_usuarioId',
+      'https://${ApiConfig.baseUrl}/api/usuario/perfil/atualizar/$_usuarioId',
     );
 
     final Map<String, dynamic> dados = {

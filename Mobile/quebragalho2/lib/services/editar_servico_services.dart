@@ -14,7 +14,7 @@ class EditarServicoService {
   factory EditarServicoService() => _instance;
   EditarServicoService._internal();
 
-  static const String _baseUrl = 'http://${ApiConfig.baseUrl}';
+  static const String _baseUrl = 'https://${ApiConfig.baseUrl}';
   Future<bool> atualizarServico({
     required int idPrestador,
     required int idServico,

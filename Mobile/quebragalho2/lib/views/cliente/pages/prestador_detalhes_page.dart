@@ -30,7 +30,7 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
   Future<void> _fetchPrestadorDetails() async {
     try {
       final response = await http.get(
-        Uri.parse('http://${ApiConfig.baseUrl}/api/usuario/homepage/prestador/${widget.id}'),
+        Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage/prestador/${widget.id}'),
       );
 
       if (response.statusCode == 200) {
@@ -81,7 +81,7 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.network(
-                'http://${ApiConfig.baseUrl}/${prestadorData!['imagemPerfil']}',
+                'https://${ApiConfig.baseUrl}/${prestadorData!['imagemPerfil']}',
                 height: 180,
                 width: double.infinity,
                 fit: BoxFit.cover,
