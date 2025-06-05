@@ -163,11 +163,13 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => AgendamentoPage(
-                          servico: servico['nome'],
-                          servicoId: 1,
-                          usuarioId: 1,
-                        ),
+                        builder:
+                            (_) => AgendamentoPage(
+                              servico: servico['nome'],
+                              servicoId: servico['id'],
+                              usuarioId: widget.id, //ID DO USUARIO QUE ESTÁ SOLICITANDO
+                            ),
+
                       ),
                     );
                   },

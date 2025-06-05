@@ -87,7 +87,10 @@ class _PerfilPageState extends State<PerfilPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Meu Perfil')),
+      appBar: AppBar(
+        title: const Text('Meu Perfil'),
+        automaticallyImplyLeading: false,
+      ),
       body: FutureBuilder<Map<String, dynamic>>(
         future: _dadosUsuario,
         builder: (context, snapshot) {
@@ -110,6 +113,7 @@ class _PerfilPageState extends State<PerfilPage> {
           final imagemUrl = (imagemPerfil != null && imagemPerfil != '')
               ? 'http://${ApiConfig.baseUrl}/$imagemPerfil?ts=${DateTime.now().millisecondsSinceEpoch}'
               : null;
+
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -181,7 +185,7 @@ class _PerfilPageState extends State<PerfilPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const EditarDadosPage(),
+                        builder: (context) => EditarDadosPage(),
                       ),
                     ).then((_) {
                       // Atualiza os dados ao voltar da tela de edição

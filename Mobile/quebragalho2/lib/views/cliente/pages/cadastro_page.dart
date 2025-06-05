@@ -74,6 +74,7 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
   }
 
   Future<void> _cadastrarCliente() async {
+    
     final url = Uri.parse('http://${ApiConfig.baseUrl}/api/cadastro/usuario');
 
     final response = await http.post(
@@ -119,6 +120,7 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
       }
       return;
     }
+
 
     final url = Uri.parse('http://${ApiConfig.baseUrl}/api/cadastro/prestador');
 

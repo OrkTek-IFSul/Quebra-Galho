@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:http/http.dart' as http;
+import 'package:quebragalho2/views/cliente/pages/cadastro_page.dart';
+import 'dart:convert';
+
 
 import 'package:quebragalho2/views/cliente/pages/navegacao_cliente.dart';
 import 'package:quebragalho2/views/prestador/pages/navegacao_prestador.dart';
@@ -28,6 +32,22 @@ class _WelcomePageState extends State<WelcomePage> {
     setState(() {
       usuarioId = id;
     });
+
+  // Update function to handle boolean response
+  Future<bool> _checkPrestador(int userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.0.155:8080/api/tipousuario/$userId'),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body) as bool;
+      }
+      return false;
+    } catch (e) {
+      print('Error checking prestador: $e');
+      return false;
+    }
   }
 
   @override
@@ -94,13 +114,28 @@ class _WelcomePageState extends State<WelcomePage> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => NavegacaoPrestador(),
-                      ),
-                    );
+                  onPressed: () async {
+                    // Check if user is prestador
+                    final isPrestador = await _checkPrestador(userId);
+                    
+                    if (isPrestador) {
+                      // User is a prestador, navigate to NavegacaoPrestador
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => NavegacaoPrestador(prestadorId: userId),
+                        ),
+                      );
+                    } else {
+                      // User is not a prestador, navigate to CadastroPage
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CadastroPage(),
+                        ),
+                      );
+                    }
+
                   },
                   icon: Icon(Icons.handyman, color: Colors.blue.shade600),
                   label: Text(

@@ -46,7 +46,7 @@ class _LoginPageState extends State<LoginPage> {
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const WelcomePage()), // Ajuste se necessário
+          MaterialPageRoute(builder: (_) => WelcomePage()),
         );
         return;
       } else {
@@ -104,7 +104,8 @@ class _LoginPageState extends State<LoginPage> {
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const WelcomePage()),  // Ajuste a tela que vai após o login
+          MaterialPageRoute(builder: (_) => WelcomePage()),
+
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

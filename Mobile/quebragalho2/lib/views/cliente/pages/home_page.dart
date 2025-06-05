@@ -4,11 +4,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:quebragalho2/views/cliente/pages/login_page.dart'; // onde está o obterIdUsuario()
+
 import 'package:quebragalho2/views/cliente/pages/prestador_detalhes_page.dart';
 import 'package:quebragalho2/views/cliente/widgets/prestador_home_card.dart';
-
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:http/http.dart' as http;
 
 import 'package:quebragalho2/api_config.dart'; // nova importação para a baseUrl
@@ -58,11 +56,16 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadInitialData() async {
+    // Mostra o loading ao iniciar
+    setState(() {
+      isLoading = true;
+    });
     await fetchCategorias();
     await fetchPrestadores();
+
   }
 
-  Future<List> _searchPrestadores() async {
+  Future<List<dynamic>> _searchPrestadores() async {
     setState(() {
       isLoading = true;
     });
@@ -80,8 +83,16 @@ class _HomePageState extends State<HomePage> {
         return await fetchPrestadores();
       }
 
-      final uri = Uri.parse('${ApiConfig.baseUrl}/api/usuario/homepage/buscar')
+      // Se não houver texto de busca e nenhuma tag selecionada, busca todos os prestadores.
+      // A verificação de queryParams.length == 2 (apenas 'page' e 'size')
+      // cobre o caso de searchController.text estar vazio E selectedTags estar vazia.
+      if (searchController.text.isEmpty && selectedTags.isEmpty) {
+        return await fetchPrestadores(); // fetchPrestadores já lida com isLoading e setState
+      }
+
+     final uri = Uri.parse('${ApiConfig.baseUrl}/api/usuario/homepage/buscar')
           .replace(queryParameters: queryParams);
+      
 
       final response = await http.get(uri);
 
@@ -93,26 +104,37 @@ class _HomePageState extends State<HomePage> {
         });
         return _prestadoresFiltrados;
       } else {
-        throw Exception('Falha ao buscar prestadores');
+        print('Falha ao buscar prestadores: ${response.statusCode} ${response.body}');
+        setState(() {
+          _prestadoresFiltrados = []; // Limpa a lista em caso de erro
+          isLoading = false;
+        });
+        // Lançar exceção pode ser útil se você tiver um Error Handler global
+        // throw Exception('Falha ao buscar prestadores');
+        return []; // Retorna lista vazia em caso de erro
       }
     } catch (e) {
       print('Erro na busca: $e');
       setState(() {
+        _prestadoresFiltrados = []; // Limpa a lista em caso de erro
         isLoading = false;
       });
-      throw Exception('Erro na busca: $e');
+      // throw Exception('Erro na busca: $e');
+      return []; // Retorna lista vazia em caso de erro
     }
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
+    searchController.removeListener(_debouncedSearch); // Boa prática remover o listener
     searchController.dispose();
     super.dispose();
   }
 
   Future<void> fetchCategorias() async {
     try {
+
       final uri = Uri.parse('${ApiConfig.baseUrl}/api/usuario/homepage/tags');
       final response = await http.get(uri);
 
@@ -125,7 +147,8 @@ class _HomePageState extends State<HomePage> {
           ];
         });
       } else {
-        throw Exception('Falha ao carregar categorias');
+        print('Falha ao carregar categorias: ${response.statusCode} ${response.body}');
+        // throw Exception('Falha ao carregar categorias');
       }
     } catch (e) {
       print('Erro ao carregar categorias: $e');
@@ -133,11 +156,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<List<dynamic>> fetchPrestadores() async {
+    // Esta função é chamada quando não há filtros (texto de busca ou tags)
+    // ou na carga inicial.
     setState(() {
       isLoading = true;
     });
 
     try {
+
       final uri = Uri.parse('${ApiConfig.baseUrl}/api/usuario/homepage');
       final response = await http.get(uri);
 
@@ -149,11 +175,18 @@ class _HomePageState extends State<HomePage> {
         });
         return data;
       } else {
-        throw Exception('Falha ao carregar prestadores');
+        print('Falha ao carregar prestadores: ${response.statusCode} ${response.body}');
+        setState(() {
+          _prestadoresFiltrados = [];
+          isLoading = false;
+        });
+        // throw Exception('Falha ao carregar prestadores');
+        return [];
       }
     } catch (e) {
       print('Erro ao carregar prestadores: $e');
       setState(() {
+        _prestadoresFiltrados = [];
         isLoading = false;
       });
       return [];
@@ -167,33 +200,27 @@ class _HomePageState extends State<HomePage> {
 
     return ChoiceChip(
       label: Text(category),
+      selectedColor: Theme.of(context).primaryColor.withOpacity(0.3),
       selected: isSelected,
       onSelected: (bool selected) {
         setState(() {
           if (category == 'Todos') {
             selectedTags.clear();
-            if (searchController.text.isEmpty) {
-              fetchPrestadores();
-            } else {
-              _searchPrestadores();
-            }
           } else {
+            // Se "Todos" estava selecionado e outra tag é selecionada,
+            // não há necessidade de remover "Todos" explicitamente, pois selectedTags já estaria vazia
+            // ou o comportamento de adicionar/remover a tag específica cuidará disso.
             if (selected) {
               selectedTags.add(category);
             } else {
               selectedTags.remove(category);
             }
-
-            if (selectedTags.isEmpty) {
-              if (searchController.text.isEmpty) {
-                fetchPrestadores();
-              } else {
-                _searchPrestadores();
-              }
-            } else {
-              _searchPrestadores();
-            }
           }
+          // Sempre chame _searchPrestadores.
+          // Esta função já lida com o caso de nenhum filtro estar ativo
+          // (searchController.text.isEmpty && selectedTags.isEmpty)
+          // chamando fetchPrestadores() internamente.
+          _searchPrestadores();
         });
       },
     );
@@ -205,6 +232,7 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('Home'),
         actions: [
+
           IconButton(icon: const Icon(Icons.notifications_none), onPressed: () {}),
           IconButton(
             icon: const Icon(Icons.logout),
@@ -237,8 +265,11 @@ class _HomePageState extends State<HomePage> {
                 hintText: 'Buscar prestador...',
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none, // Para um visual mais clean se preenchido
                 ),
+                filled: true, // Adicionar um preenchimento
+                fillColor: Colors.grey[200], // Cor do preenchimento
               ),
             ),
             const SizedBox(height: 12),
@@ -257,31 +288,49 @@ class _HomePageState extends State<HomePage> {
               child: isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _prestadoresFiltrados.isEmpty
-                      ? const Center(child: Text('Nenhum prestador encontrado'))
+                      ? Center(
+                          child: Text(
+                            'Nenhum prestador encontrado.\nTente ajustar sua busca ou filtros.',
+                            textAlign: TextAlign.center,
+                          )
+                        )
+
                       : ListView.builder(
                           itemCount: _prestadoresFiltrados.length,
                           itemBuilder: (context, index) {
                             final prestador = _prestadoresFiltrados[index];
-                            List<String> tags = (prestador['tags'] as List)
-                                .map((tag) => tag['nome'].toString())
-                                .toList();
+                            // Validação defensiva para os dados do prestador
+                            final String imageUrl = prestador['imagemPerfil'] as String? ?? ''; // Exemplo de como garantir string
+                            final String nome = prestador['nome'] as String? ?? 'Nome Indisponível';
+                            final List<String> tags = (prestador['tags'] as List?)
+                                    ?.map((tag) => (tag is Map && tag['nome'] != null) ? tag['nome'].toString() : '')
+                                    .where((tagNome) => tagNome.isNotEmpty) // Remove tags vazias se houver erro no map
+                                    .toList() ??
+                                [];
+                            final double rating = (prestador['mediaAvaliacoes'] as num?)?.toDouble() ?? 0.0;
+                            final int? prestadorId = prestador['id'] as int?;
+
 
                             return PrestadorHomeCard(
-                              imageUrl: prestador['imagemPerfil'] ?? '',
-                              name: prestador['nome'] ?? '',
+                              imageUrl: imageUrl,
+                              name: nome,
                               categories: tags,
-                              rating: (prestador['mediaAvaliacoes'] ?? 0.0)
-                                  .toDouble(),
+                              rating: rating,
                               onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        PrestadorDetalhesPage(
-                                      id: prestador['id'],
+                                if (prestadorId != null) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          PrestadorDetalhesPage(id: prestadorId), // Verifique se PrestadorDetalhesPage está ok
                                     ),
-                                  ),
-                                );
+                                  );
+                                } else {
+                                  // Opcional: mostrar um snackbar ou log se o ID for nulo
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('ID do prestador indisponível.'))
+                                  );
+                                }
                               },
                             );
                           },
