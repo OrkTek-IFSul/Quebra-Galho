@@ -1,12 +1,12 @@
-import 'dart:convert';
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
-// Certifique-se de que os caminhos de importação estão corretos para o seu projeto
+import 'package:http/http.dart' as http;
 import 'package:quebragalho2/views/cliente/pages/login_page.dart';
 import 'package:quebragalho2/views/cliente/pages/prestador_detalhes_page.dart';
 import 'package:quebragalho2/views/cliente/widgets/prestador_home_card.dart';
-import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,14 +21,41 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController searchController = TextEditingController();
   List<dynamic> _prestadoresFiltrados = [];
   bool isLoading = false;
-
+  bool isLoggedIn = false;
   Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
+    _checkLoginStatus();
     _loadInitialData();
     searchController.addListener(_debouncedSearch);
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    setState(() {
+      isLoggedIn = token != null && token.isNotEmpty;
+    });
+  }
+
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear(); // Limpa todos os dados de autenticação
+    
+    if (!mounted) return;
+    
+    // Navega para LoginPage e remove todas as rotas anteriores
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+      (route) => false,
+    );
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Logout realizado com sucesso')),
+    );
   }
 
   void _debouncedSearch() {
@@ -39,12 +66,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadInitialData() async {
-    // Mostra o loading ao iniciar
     setState(() {
       isLoading = true;
     });
     await fetchCategorias();
-    await fetchPrestadores(); // Atualiza direto a lista e controla isLoading internamente
+    await fetchPrestadores();
   }
 
   Future<List<dynamic>> _searchPrestadores() async {
@@ -60,15 +86,12 @@ class _HomePageState extends State<HomePage> {
         'size': '10',
       };
 
-      // Se não houver texto de busca e nenhuma tag selecionada, busca todos os prestadores.
-      // A verificação de queryParams.length == 2 (apenas 'page' e 'size')
-      // cobre o caso de searchController.text estar vazio E selectedTags estar vazia.
       if (searchController.text.isEmpty && selectedTags.isEmpty) {
-        return await fetchPrestadores(); // fetchPrestadores já lida com isLoading e setState
+        return await fetchPrestadores();
       }
 
       final uri = Uri.http(
-        '192.168.0.155:8080', // Seu IP e porta
+        '192.168.0.155:8080',
         '/api/usuario/homepage/buscar',
         queryParams,
       );
@@ -85,28 +108,25 @@ class _HomePageState extends State<HomePage> {
       } else {
         print('Falha ao buscar prestadores: ${response.statusCode} ${response.body}');
         setState(() {
-          _prestadoresFiltrados = []; // Limpa a lista em caso de erro
+          _prestadoresFiltrados = [];
           isLoading = false;
         });
-        // Lançar exceção pode ser útil se você tiver um Error Handler global
-        // throw Exception('Falha ao buscar prestadores');
-        return []; // Retorna lista vazia em caso de erro
+        return [];
       }
     } catch (e) {
       print('Erro na busca: $e');
       setState(() {
-        _prestadoresFiltrados = []; // Limpa a lista em caso de erro
+        _prestadoresFiltrados = [];
         isLoading = false;
       });
-      // throw Exception('Erro na busca: $e');
-      return []; // Retorna lista vazia em caso de erro
+      return [];
     }
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
-    searchController.removeListener(_debouncedSearch); // Boa prática remover o listener
+    searchController.removeListener(_debouncedSearch);
     searchController.dispose();
     super.dispose();
   }
@@ -114,7 +134,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> fetchCategorias() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.0.155:8080/api/usuario/homepage/tags'), // Seu IP e porta
+        Uri.parse('http://192.168.0.155:8080/api/usuario/homepage/tags'),
       );
 
       if (response.statusCode == 200) {
@@ -127,7 +147,6 @@ class _HomePageState extends State<HomePage> {
         });
       } else {
         print('Falha ao carregar categorias: ${response.statusCode} ${response.body}');
-        // throw Exception('Falha ao carregar categorias');
       }
     } catch (e) {
       print('Erro ao carregar categorias: $e');
@@ -135,15 +154,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<List<dynamic>> fetchPrestadores() async {
-    // Esta função é chamada quando não há filtros (texto de busca ou tags)
-    // ou na carga inicial.
     setState(() {
       isLoading = true;
     });
 
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.0.155:8080/api/usuario/homepage'), // Seu IP e porta
+        Uri.parse('http://192.168.0.155:8080/api/usuario/homepage'),
       );
 
       if (response.statusCode == 200) {
@@ -159,7 +176,6 @@ class _HomePageState extends State<HomePage> {
           _prestadoresFiltrados = [];
           isLoading = false;
         });
-        // throw Exception('Falha ao carregar prestadores');
         return [];
       }
     } catch (e) {
@@ -186,19 +202,12 @@ class _HomePageState extends State<HomePage> {
           if (category == 'Todos') {
             selectedTags.clear();
           } else {
-            // Se "Todos" estava selecionado e outra tag é selecionada,
-            // não há necessidade de remover "Todos" explicitamente, pois selectedTags já estaria vazia
-            // ou o comportamento de adicionar/remover a tag específica cuidará disso.
             if (selected) {
               selectedTags.add(category);
             } else {
               selectedTags.remove(category);
             }
           }
-          // Sempre chame _searchPrestadores.
-          // Esta função já lida com o caso de nenhum filtro estar ativo
-          // (searchController.text.isEmpty && selectedTags.isEmpty)
-          // chamando fetchPrestadores() internamente.
           _searchPrestadores();
         });
       },
@@ -209,18 +218,28 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
+        title: const Text('Home'),
         actions: [
-          IconButton(icon: Icon(Icons.notifications_none), onPressed: () {
-            // TODO: Implementar navegação ou ação para notificações
-          }),
           IconButton(
-            icon: Icon(Icons.person_outline),
+            icon: const Icon(Icons.notifications_none), 
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => LoginPage()), // Verifique se LoginPage está corretamente importada e definida
-              );
+              // TODO: Implementar navegação ou ação para notificações
+            },
+          ),
+          IconButton(
+            icon: Icon(isLoggedIn ? Icons.logout : Icons.person_outline),
+            onPressed: () {
+              if (isLoggedIn) {
+                _logout();
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                ).then((_) {
+                  // Atualiza o status quando volta do login
+                  _checkLoginStatus();
+                });
+              }
             },
           ),
         ],
@@ -234,32 +253,32 @@ class _HomePageState extends State<HomePage> {
               controller: searchController,
               decoration: InputDecoration(
                 hintText: 'Buscar prestador...',
-                prefixIcon: Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none, // Para um visual mais clean se preenchido
+                  borderSide: BorderSide.none,
                 ),
-                filled: true, // Adicionar um preenchimento
-                fillColor: Colors.grey[200], // Cor do preenchimento
+                filled: true,
+                fillColor: Colors.grey[200],
               ),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             SizedBox(
               height: 40,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: categories.length,
-                separatorBuilder: (_, __) => SizedBox(width: 8),
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (context, index) =>
                     _buildCategoryChip(categories[index]),
               ),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Expanded(
               child: isLoading
-                  ? Center(child: CircularProgressIndicator())
+                  ? const Center(child: CircularProgressIndicator())
                   : _prestadoresFiltrados.isEmpty
-                      ? Center(
+                      ? const Center(
                           child: Text(
                             'Nenhum prestador encontrado.\nTente ajustar sua busca ou filtros.',
                             textAlign: TextAlign.center,
@@ -269,18 +288,15 @@ class _HomePageState extends State<HomePage> {
                           itemCount: _prestadoresFiltrados.length,
                           itemBuilder: (context, index) {
                             final prestador = _prestadoresFiltrados[index];
-                            // Validação defensiva para os dados do prestador
-                            final String imageUrl = prestador['imagemPerfil'] as String? ?? ''; // Exemplo de como garantir string
+                            final String imageUrl = prestador['imagemPerfil'] as String? ?? '';
                             final String nome = prestador['nome'] as String? ?? 'Nome Indisponível';
                             final List<String> tags = (prestador['tags'] as List?)
                                     ?.map((tag) => (tag is Map && tag['nome'] != null) ? tag['nome'].toString() : '')
-                                    .where((tagNome) => tagNome.isNotEmpty) // Remove tags vazias se houver erro no map
+                                    .where((tagNome) => tagNome.isNotEmpty)
                                     .toList() ??
                                 [];
                             final double rating = (prestador['mediaAvaliacoes'] as num?)?.toDouble() ?? 0.0;
                             final int? prestadorId = prestador['id'] as int?;
-
-
                             return PrestadorHomeCard(
                               imageUrl: imageUrl,
                               name: nome,
@@ -292,13 +308,12 @@ class _HomePageState extends State<HomePage> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) =>
-                                          PrestadorDetalhesPage(id: prestadorId), // Verifique se PrestadorDetalhesPage está ok
+                                          PrestadorDetalhesPage(id: prestadorId),
                                     ),
                                   );
                                 } else {
-                                  // Opcional: mostrar um snackbar ou log se o ID for nulo
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('ID do prestador indisponível.'))
+                                    const SnackBar(content: Text('ID do prestador indisponível.'))
                                   );
                                 }
                               },

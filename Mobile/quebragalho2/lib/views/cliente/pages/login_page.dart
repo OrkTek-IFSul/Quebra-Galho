@@ -59,21 +59,18 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> salvarPreferencias(String token, int idUsuario, {int? idPrestador}) async {
-    final prefs = await SharedPreferences.getInstance();
-    if (manterLogado) {
-      await prefs.setBool('manter_logado', true);
-      await prefs.setString('token', token);
-      await prefs.setInt('usuario_id', idUsuario);
-      await prefs.setString('token_criado_em', DateTime.now().toIso8601String());
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('token', token); // SEMPRE salva o token
+  await prefs.setInt('usuario_id', idUsuario);
+  await prefs.setString('token_criado_em', DateTime.now().toIso8601String());
 
-      if (idPrestador != null) {
-        await prefs.setInt('prestador_id', idPrestador);
-        print('ID do prestador salvo: $idPrestador');
-      }
-    } else {
-      await prefs.setBool('manter_logado', false);
-    }
+  if (idPrestador != null) {
+    await prefs.setInt('prestador_id', idPrestador);
+  }
 
+  // A opção "manter logado" só controla o flag específico
+  await prefs.setBool('manter_logado', manterLogado);
+  
     print('ID do prestador salvo: $idPrestador');
     print('Token salvo: $token');
     print('ID do usuário salvo: $idUsuario');
