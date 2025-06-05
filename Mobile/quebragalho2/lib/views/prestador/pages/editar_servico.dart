@@ -1,27 +1,21 @@
-///
-/// Perfil View - Quebra Galho App
-/// By Jean Carlo | Orktek
-/// github.com/jeankeitwo16
-/// Descrição: Página de edição de serviços, onde o prestador pode atualizar os detalhes de um serviço específico, como nome, descrição e valor.
-/// Versão: 1.0.0
-///
 import 'package:flutter/material.dart';
 import 'package:quebragalho2/services/editar_servico_services.dart';
+import 'package:quebragalho2/views/cliente/pages/login_page.dart'; // para obterIdPrestador()
 
 class EditarServico extends StatefulWidget {
   final String nomeInicial;
   final String descricaoInicial;
-  final int valorInicial;
-  //final int idPrestador;
-  //final int idServico;
+  final double valorInicial; // mudou para double
+  final int? idPrestador;
+  final int? idServico;
 
   const EditarServico({
     super.key,
     required this.nomeInicial,
     required this.descricaoInicial,
     required this.valorInicial,
-    //required this.idPrestador,
-    //required this.idServico,
+    this.idPrestador,
+    this.idServico,
   });
 
   @override
@@ -35,14 +29,39 @@ class _EditarServicoState extends State<EditarServico> {
   bool _isSaving = false;
   final _servicoService = EditarServicoService();
 
+  int? _idPrestador;
+  int? _idServico;
+
+  bool _loadingIds = false;
+
   @override
   void initState() {
     super.initState();
     nomeController = TextEditingController(text: widget.nomeInicial);
     descricaoController = TextEditingController(text: widget.descricaoInicial);
     valorController = TextEditingController(text: widget.valorInicial.toString());
+
+    _idPrestador = widget.idPrestador;
+    _idServico = widget.idServico;
+
+    if (_idPrestador == null) {
+      _loadIds();
+    }
   }
- 
+
+  Future<void> _loadIds() async {
+    setState(() {
+      _loadingIds = true;
+    });
+
+    final prestadorIdFromPrefs = await obterIdPrestador();
+
+    setState(() {
+      _idPrestador = prestadorIdFromPrefs;
+      _loadingIds = false;
+    });
+  }
+
   @override
   void dispose() {
     nomeController.dispose();
@@ -54,26 +73,31 @@ class _EditarServicoState extends State<EditarServico> {
   Future<void> _salvarServico() async {
     final nome = nomeController.text;
     final descricao = descricaoController.text;
-    final valor = int.tryParse(valorController.text);
+    final valorText = valorController.text.replaceAll(',', '.');
+    final valor = double.tryParse(valorText);
 
     if (valor == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Valor precisa ser um número inteiro')),
+        const SnackBar(content: Text('Valor precisa ser um número válido')),
+      );
+      return;
+    }
+
+    if (_idPrestador == null || _idServico == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('IDs necessários não disponíveis')),
       );
       return;
     }
 
     setState(() => _isSaving = true);
 
-    const idPrestador = 1; //tem que puxar da tela anterior depois, só pra teste
-    const idServico = 1; //tem que puxar da tela anterior depois, só pra teste
-
     final sucesso = await _servicoService.atualizarServico(
-      idPrestador: idPrestador,
-      idServico: idServico,
+      idPrestador: _idPrestador!,
+      idServico: _idServico!,
       nome: nome,
       descricao: descricao,
-      valor: valor,
+      valor: valor,  // valor agora é double
     );
 
     setState(() => _isSaving = false);
@@ -92,6 +116,12 @@ class _EditarServicoState extends State<EditarServico> {
 
   @override
   Widget build(BuildContext context) {
+    if (_loadingIds) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('Editar Serviço')),
       body: Padding(
@@ -120,9 +150,9 @@ class _EditarServicoState extends State<EditarServico> {
                 Expanded(
                   child: TextField(
                     controller: valorController,
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(
-                      hintText: 'Somente números inteiros',
+                      hintText: 'Digite o valor, ex: 123.45',
                     ),
                   ),
                 ),

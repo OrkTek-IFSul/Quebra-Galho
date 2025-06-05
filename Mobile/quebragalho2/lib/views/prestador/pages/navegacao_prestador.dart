@@ -16,7 +16,7 @@ class _NavegacaoPrestadorState extends State<NavegacaoPrestador> {
 //Lista de páginas da navegação
   final List<Widget> paginas = [
     const HomePage(),
-    PerfilPage(idPrestador: 1),
+    PerfilPage(),
   ];
 
   void _onTabTapped(int index) {

@@ -192,4 +192,9 @@ Future<int?> obterIdUsuario() async {
   final prefs = await SharedPreferences.getInstance();
   return prefs.getInt('usuario_id');
 }
+Future<int?> obterIdPrestador() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getInt('prestador_id');
+}
+
 

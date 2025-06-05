@@ -1,4 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:quebragalho2/api_config.dart';
+import 'package:quebragalho2/views/cliente/pages/login_page.dart';
 
 class EditarMeusDados extends StatefulWidget {
   const EditarMeusDados({super.key});
@@ -8,14 +12,90 @@ class EditarMeusDados extends StatefulWidget {
 }
 
 class _EditarMeusDadosState extends State<EditarMeusDados> {
-  final nomeController = TextEditingController(text: 'João da Silva');
-  final telefoneController = TextEditingController(text: '(11) 91234-5678');
-  final emailController = TextEditingController(text: 'joao@email.com');
+  final nomeController = TextEditingController();
+  final telefoneController = TextEditingController();
+  final emailController = TextEditingController();
 
-  List<String> tags = ['Cabelo', 'Barba'];
-
+  List<String> tags = [];
   String? horaInicioSelecionada;
   String? horaFimSelecionada;
+
+  bool isLoading = true;
+  int? idUsuario;
+  int? idPrestador;
+
+  @override
+  void initState() {
+    super.initState();
+    inicializar();
+  }
+
+  void inicializar() async {
+    final id = await obterIdUsuario();
+    if (id == null) {
+      setState(() => isLoading = false);
+      return;
+    }
+
+    setState(() {
+      idUsuario = id;
+      idPrestador = id;
+    });
+
+    await carregarDados();
+  }
+
+  Future<void> carregarDados() async {
+    if (idUsuario == null || idPrestador == null) return;
+
+    try {
+      final usuarioResp = await http.get(
+        Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$idUsuario'),
+      );
+      final prestadorResp = await http.get(
+        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/perfil/$idPrestador'),
+      );
+      final tagPrestadorResp = await http.get(
+        Uri.parse('https://${ApiConfig.baseUrl}/api/tag-prestador/prestador/$idPrestador'),
+      );
+
+      if (usuarioResp.statusCode == 200 &&
+          prestadorResp.statusCode == 200 &&
+          tagPrestadorResp.statusCode == 200) {
+        final usuario = jsonDecode(usuarioResp.body);
+        final prestador = jsonDecode(prestadorResp.body);
+        final List tagIds = jsonDecode(tagPrestadorResp.body);
+
+        final List<String> tagNomes = [];
+
+        for (var idTag in tagIds) {
+          final tagResp = await http.get(
+            Uri.parse('https://${ApiConfig.baseUrl}/api/tags/$idTag'),
+          );
+
+          if (tagResp.statusCode == 200) {
+            final tagData = jsonDecode(tagResp.body);
+            tagNomes.add(tagData['nome']);
+          }
+        }
+
+        setState(() {
+          nomeController.text = usuario['nome'];
+          telefoneController.text = usuario['telefone'];
+          emailController.text = usuario['email'];
+          horaInicioSelecionada = prestador['data_hora_inicio'];
+          horaFimSelecionada = prestador['data_hora_fim'];
+          tags = tagNomes;
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Erro ao carregar dados do backend.');
+      }
+    } catch (e) {
+      debugPrint('Erro ao carregar dados: $e');
+      setState(() => isLoading = false);
+    }
+  }
 
   List<String> gerarHorarios() {
     List<String> lista = [];
@@ -46,21 +126,16 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
       isScrollControlled: true,
       builder: (context) {
         return Padding(
-          padding:
-              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Wrap(
               children: [
-                const Text(
-                  'Adicionar nova tag',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
+                const Text('Adicionar nova tag',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
-                const Text(
-                  'Digite o nome da nova tag',
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
-                ),
+                const Text('Digite o nome da nova tag',
+                    style: TextStyle(fontSize: 14, color: Colors.grey)),
                 const SizedBox(height: 16),
                 TextField(
                   controller: novaTagController,
@@ -71,9 +146,7 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
                   onPressed: () {
                     final novaTag = novaTagController.text.trim();
                     if (novaTag.isNotEmpty && !tags.contains(novaTag)) {
-                      setState(() {
-                        tags.add(novaTag);
-                      });
+                      setState(() => tags.add(novaTag));
                       Navigator.pop(context);
                     }
                   },
@@ -87,9 +160,66 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
     );
   }
 
+  Future<void> salvarDados() async {
+    if (idUsuario == null || idPrestador == null) return;
+
+    final nome = nomeController.text.trim();
+    final telefone = telefoneController.text.trim();
+    final email = emailController.text.trim();
+
+    if (horaInicioSelecionada == null || horaFimSelecionada == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preencha os horários!')),
+      );
+      return;
+    }
+
+    if (_horaToInt(horaFimSelecionada!) <= _horaToInt(horaInicioSelecionada!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Horário inválido')),
+      );
+      return;
+    }
+
+    try {
+      await http.put(
+        Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/$idUsuario'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'nome': nome, 'telefone': telefone, 'email': email}),
+      );
+
+      await http.put(
+        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/$idPrestador'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'data_hora_inicio': horaInicioSelecionada,
+          'data_hora_fim': horaFimSelecionada
+        }),
+      );
+
+      // Tags novas podem precisar de outro endpoint (POST para tag-prestador).
+      // Você pode implementar essa lógica separadamente.
+
+      if (mounted) {
+        Navigator.pop(context); // Volta para a tela anterior
+      }
+    } catch (e) {
+      debugPrint('Erro ao salvar dados: $e');
+    }
+  }
+
+  int _horaToInt(String hora) {
+    final partes = hora.split(':');
+    return int.parse(partes[0]) * 60 + int.parse(partes[1]);
+  }
+
   @override
   Widget build(BuildContext context) {
     final opcoesHorario = gerarHorarios();
+
+    if (isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -97,23 +227,7 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
-            onPressed: () {
-              if (horaInicioSelecionada == null || horaFimSelecionada == null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Preencha os horários!')),
-                );
-                return;
-              }
-              if (_horaToInt(horaFimSelecionada!) <=
-                  _horaToInt(horaInicioSelecionada!)) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Horário inválido')),
-                );
-                return;
-              }
-
-              // Salvar dados aqui...
-            },
+            onPressed: salvarDados,
           ),
         ],
       ),
@@ -202,10 +316,5 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
         ),
       ),
     );
-  }
-
-  int _horaToInt(String hora) {
-    final partes = hora.split(':');
-    return int.parse(partes[0]) * 60 + int.parse(partes[1]);
   }
 }

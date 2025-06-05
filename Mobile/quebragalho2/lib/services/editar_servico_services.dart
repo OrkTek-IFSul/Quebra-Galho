@@ -15,12 +15,13 @@ class EditarServicoService {
   EditarServicoService._internal();
 
   static const String _baseUrl = 'https://${ApiConfig.baseUrl}';
+
   Future<bool> atualizarServico({
     required int idPrestador,
     required int idServico,
     required String nome,
     required String descricao,
-    required int valor,
+    required double valor,  // mudou para double
   }) async {
     try {
       final response = await http.put(
@@ -29,7 +30,7 @@ class EditarServicoService {
         body: jsonEncode({
           'nome': nome,
           'descricao': descricao,
-          'preco': valor.toDouble(),
+          'preco': valor,  // já é double, envia direto
           'tags': [],
         }),
       );
@@ -37,6 +38,5 @@ class EditarServicoService {
     } catch (e) {
       return false;
     }
-    
   }
 }

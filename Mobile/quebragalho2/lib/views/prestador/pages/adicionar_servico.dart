@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:quebragalho2/api_config.dart';
 
 class AdicionarServico extends StatefulWidget {
-  final int idPrestador; // Add this parameter
+  final int idPrestador;
 
   const AdicionarServico({
     super.key,
@@ -26,7 +26,8 @@ class _AdicionarServicoState extends State<AdicionarServico> {
   Future<void> _salvarServico() async {
     final nome = nomeController.text.trim();
     final descricao = descricaoController.text.trim();
-    final valor = int.tryParse(valorController.text.trim());
+    final valorText = valorController.text.trim().replaceAll(',', '.');
+    final valor = double.tryParse(valorText);
 
     if (nome.isEmpty || descricao.isEmpty || valor == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -39,18 +40,13 @@ class _AdicionarServicoState extends State<AdicionarServico> {
 
     try {
       final response = await http.post(
-        Uri.parse(
-            'http://${ApiConfig.baseUrl}/api/prestador/servico/${widget.idPrestador}'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/servico/${widget.idPrestador}'),
+        headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'nome': nome,
           'descricao': descricao,
           'preco': valor,
-          'prestador': {
-            'id': widget.idPrestador,
-          },
+          'prestador': {'id': widget.idPrestador},
           'tags': []
         }),
       );
@@ -63,7 +59,7 @@ class _AdicionarServicoState extends State<AdicionarServico> {
           Navigator.pop(context);
         }
       } else {
-        throw Exception('Falha ao adicionar serviço');
+        throw Exception('Falha ao adicionar serviço (status: ${response.statusCode})');
       }
     } catch (e) {
       if (mounted) {
@@ -108,9 +104,9 @@ class _AdicionarServicoState extends State<AdicionarServico> {
                 Expanded(
                   child: TextField(
                     controller: valorController,
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(
-                      hintText: 'Somente números inteiros',
+                      hintText: 'Digite o valor, ex: 123.45',
                     ),
                   ),
                 ),

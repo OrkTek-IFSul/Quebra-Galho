@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:quebragalho2/api_config.dart';
+import 'package:quebragalho2/views/cliente/pages/login_page.dart';
 import 'package:quebragalho2/views/prestador/pages/editar_meus_dados.dart';
 
 class MeusDados extends StatefulWidget {
@@ -12,45 +13,60 @@ class MeusDados extends StatefulWidget {
 }
 
 class _MeusDadosState extends State<MeusDados> {
-  
-  Map<String, dynamic>? prestadorData;
-
   Map<String, dynamic>? usuario;
   Map<String, dynamic>? prestador;
   List<String> tags = [];
   bool isLoading = true;
-
-  final int usuarioId = 1;
-  final int prestadorId = 1;
-
+  int? idUsuario;
+  int? idPrestador;
 
   @override
   void initState() {
     super.initState();
-     carregarDados();
+    inicializarDados();
   }
 
+  Future<void> inicializarDados() async {
+    final usuarioId = await obterIdUsuario();        // método já existente
+    final prestadorId = await obterIdPrestador();    // supondo que exista este método
+    
+    if (usuarioId == null || prestadorId == null) {
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
+    
+    setState(() {
+      idUsuario = usuarioId;
+      idPrestador = prestadorId;
+    });
+    
+    await carregarDados();
+  }
 
   Future<void> carregarDados() async {
+    if (idUsuario == null || idPrestador == null) return;
+
     try {
       final usuarioResp = await http.get(
-        Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$usuarioId'),
+        Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$idUsuario'),
       );
 
       final prestadorResp = await http.get(
-        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/perfil/$prestadorId'),
+        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/perfil/$idPrestador'),
       );
 
       final tagPrestadorResp = await http.get(
-        Uri.parse(
-          'https://${ApiConfig.baseUrl}/api/tag-prestador/prestador/$prestadorId',
-        ),
+        Uri.parse('https://${ApiConfig.baseUrl}/api/tag-prestador/prestador/$idPrestador'),
       );
 
-      List<String> tagNomes = [];
+      if (usuarioResp.statusCode == 200 &&
+          prestadorResp.statusCode == 200 &&
+          tagPrestadorResp.statusCode == 200) {
+        final List tagIds = jsonDecode(tagPrestadorResp.body);
 
-      if (tagPrestadorResp.statusCode == 200) {
-        final List tagIds = jsonDecode(tagPrestadorResp.body); // [1, 2, 3]
+        List<String> tagNomes = [];
 
         for (var idTag in tagIds) {
           final tagResp = await http.get(
@@ -62,16 +78,21 @@ class _MeusDadosState extends State<MeusDados> {
             tagNomes.add(tagData['nome']);
           }
         }
-      }
 
-      setState(() {
-        usuario = jsonDecode(usuarioResp.body);
-        prestador = jsonDecode(prestadorResp.body);
-        tags = tagNomes;
-        isLoading = false;
-      });
+        setState(() {
+          usuario = jsonDecode(usuarioResp.body);
+          prestador = jsonDecode(prestadorResp.body);
+          tags = tagNomes;
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Erro nas respostas: '
+            'Usuário(${usuarioResp.statusCode}), '
+            'Prestador(${prestadorResp.statusCode}), '
+            'Tags(${tagPrestadorResp.statusCode})');
+      }
     } catch (e) {
-      print('Erro ao carregar dados: $e');
+      debugPrint('Erro ao carregar dados: $e');
       setState(() {
         isLoading = false;
       });
@@ -102,15 +123,10 @@ class _MeusDadosState extends State<MeusDados> {
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
-
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => EditarMeusDados(
-                  ),
-                ),
+                MaterialPageRoute(builder: (context) => const EditarMeusDados()),
               );
-              // Navegar para edição
             },
           ),
         ],
@@ -120,14 +136,10 @@ class _MeusDadosState extends State<MeusDados> {
         child: ListView(
           children: [
             const Text('Nome', style: TextStyle(fontWeight: FontWeight.bold)),
-
             Text(usuario!['nome']),
             const SizedBox(height: 12),
-            
-            const Text(
-              'Telefone',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+
+            const Text('Telefone', style: TextStyle(fontWeight: FontWeight.bold)),
             Text(usuario!['telefone']),
             const SizedBox(height: 12),
 
@@ -147,12 +159,9 @@ class _MeusDadosState extends State<MeusDados> {
             ),
             const SizedBox(height: 16),
 
-            const Text(
-              'Horários Disponibilizados',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+            const Text('Horários Disponibilizados', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            ...horarios.map((h) => Text('• $h')),
+            ...horarios.where((h) => h != null).map((h) => Text('• $h')),
           ],
         ),
       ),

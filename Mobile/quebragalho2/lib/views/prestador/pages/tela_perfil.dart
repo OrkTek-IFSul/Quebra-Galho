@@ -7,12 +7,10 @@ import 'package:quebragalho2/views/prestador/pages/adicionar_servico.dart';
 import 'package:quebragalho2/views/prestador/pages/editar_servico.dart';
 import 'package:quebragalho2/views/prestador/pages/meus_dados.dart';
 import 'package:quebragalho2/views/prestador/widgets/servico_card.dart';
+import 'package:quebragalho2/views/cliente/pages/login_page.dart'; // Para obterIdPrestador()
 
-// Página de perfil do prestador
 class PerfilPage extends StatefulWidget {
-  final int idPrestador;
-
-  const PerfilPage({super.key, required this.idPrestador});
+  const PerfilPage({super.key});
 
   @override
   State<PerfilPage> createState() => _PerfilPageState();
@@ -21,36 +19,47 @@ class PerfilPage extends StatefulWidget {
 class _PerfilPageState extends State<PerfilPage> {
   Map<String, dynamic>? prestador;
   bool carregando = true;
+  int? idPrestador;
 
   @override
   void initState() {
     super.initState();
-    carregarPerfil();
+    carregarDados();
   }
 
-  // Faz requisição HTTP para obter os dados do prestador
-  Future<void> carregarPerfil() async {
-    final url = 'https://${ApiConfig.baseUrl}/api/prestador/perfil/${widget.idPrestador}';
+  Future<void> carregarDados() async {
+    final id = await obterIdPrestador();
+    if (id != null) {
+      setState(() {
+        idPrestador = id;
+      });
+      await carregarPerfil(id);
+    } else {
+      setState(() {
+        carregando = false;
+        prestador = {'erro': 'ID do prestador não encontrado.'};
+      });
+    }
+  }
+
+  Future<void> carregarPerfil(int id) async {
+    final url = 'https://${ApiConfig.baseUrl}/api/prestador/perfil/$id';
     try {
       final response = await http.get(Uri.parse(url));
       debugPrint('Resposta status: ${response.statusCode}');
       debugPrint('Corpo da resposta: ${response.body}');
 
       if (response.statusCode == 200) {
-        // Se sucesso, atualiza o estado com os dados do prestador
         setState(() {
           prestador = jsonDecode(response.body);
           carregando = false;
         });
       } else {
-        
         throw Exception(
           'Erro ao carregar perfil. Status: ${response.statusCode}, Corpo: ${response.body}',
         );
       }
     } catch (e, stacktrace) {
-
-      // Em caso de exceção, exibe mensagem de erro
       debugPrint('Exceção ao carregar perfil: $e');
       debugPrint('Stacktrace: $stacktrace');
       setState(() {
@@ -62,22 +71,54 @@ class _PerfilPageState extends State<PerfilPage> {
     }
   }
 
+  // Função para navegar e atualizar dados ao voltar
+  Future<void> _navegarEAtualizar(Widget page) async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+    if (idPrestador != null) {
+      await carregarPerfil(idPrestador!);
+    }
+  }
+
+  // Função para desabilitar (excluir) serviço via API
+  Future<void> desabilitarServico(int idServico) async {
+    if (idPrestador == null) return;
+
+    final url = 'https://${ApiConfig.baseUrl}/api/prestador/perfil/desabilitar/$idServico';
+    try {
+      final response = await http.put(Uri.parse(url));
+      debugPrint('Desabilitar serviço status: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Serviço desabilitado com sucesso.')),
+        );
+        await carregarPerfil(idPrestador!);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Falha ao desabilitar serviço. Status: ${response.statusCode}')),
+        );
+      }
+    } catch (e) {
+      debugPrint('Erro ao desabilitar serviço: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao desabilitar serviço: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Enquanto os dados estão sendo carregados
     if (carregando) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
-    // Caso prestador seja nulo
+
     if (prestador == null) {
       return const Scaffold(
         body: Center(child: Text('Erro desconhecido ao carregar perfil.')),
       );
     }
 
-    // Caso ocorra erro ao carregar os dados
     if (prestador!.containsKey('erro')) {
       return Scaffold(
         body: Padding(
@@ -92,14 +133,13 @@ class _PerfilPageState extends State<PerfilPage> {
       );
     }
 
-    // Dados do prestador
     final nome = prestador?['nome'] ?? 'Sem nome';
     final descricao = prestador?['descricao'] ?? '';
     final usuario = prestador?['usuario'];
     final idUsuario = usuario?['id'];
-    final imagemPerfil = (usuario != null && usuario['id'] != null)
-    ? 'http://192.168.1.24:8080/api/usuarios/${usuario['id']}/imagem'
-    : '';
+    final imagemPerfil = (idUsuario != null)
+        ? 'https://${ApiConfig.baseUrl}/api/usuarios/$idUsuario/imagem'
+        : '';
 
     final List servicos = prestador?['servicos'] ?? [];
     final List tags = prestador?['tags'] ?? [];
@@ -110,15 +150,13 @@ class _PerfilPageState extends State<PerfilPage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Cabeçalho com foto, nome, descrição e botão "Meus dados"
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CircleAvatar(
                   radius: 40,
-                  backgroundImage: (imagemPerfil.isNotEmpty)
-                      ? NetworkImage(imagemPerfil)
-                      : null,
+                  backgroundImage:
+                      (imagemPerfil.isNotEmpty) ? NetworkImage(imagemPerfil) : null,
                   child: imagemPerfil.isEmpty
                       ? const Icon(Icons.person, size: 40)
                       : null,
@@ -128,8 +166,6 @@ class _PerfilPageState extends State<PerfilPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Nome
-
                       Text(
                         nome,
                         style: const TextStyle(
@@ -137,14 +173,11 @@ class _PerfilPageState extends State<PerfilPage> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      // Descrição se houver
                       if (descricao.isNotEmpty) ...[
                         const SizedBox(height: 4),
                         Text(descricao),
                       ],
                       const SizedBox(height: 8),
-
-                      // Tags do prestador
                       Wrap(
                         spacing: 8,
                         children: tags
@@ -154,16 +187,9 @@ class _PerfilPageState extends State<PerfilPage> {
                             .toList(),
                       ),
                       const SizedBox(height: 8),
-
-                      // Botão que leva à tela de edição dos dados do prestador
                       ElevatedButton.icon(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => MeusDados(),
-                            ),
-                          );
+                          _navegarEAtualizar(MeusDados());
                         },
                         icon: const Icon(Icons.edit),
                         label: const Text('Meus dados'),
@@ -174,8 +200,6 @@ class _PerfilPageState extends State<PerfilPage> {
               ],
             ),
             const SizedBox(height: 24),
-
-            // Título "Serviços" com botão de adicionar serviço
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -185,13 +209,9 @@ class _PerfilPageState extends State<PerfilPage> {
                 ),
                 ElevatedButton.icon(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        //ALTERAR PARA ID DO PRESTADOR QUE ESTÁ LOGADO
-                        builder: (context) => AdicionarServico(idPrestador: 1),
-                      ),
-                    );
+                    if (idPrestador != null) {
+                      _navegarEAtualizar(AdicionarServico(idPrestador: idPrestador!));
+                    }
                   },
                   icon: const Icon(Icons.add),
                   label: const Text('Adicionar'),
@@ -199,9 +219,6 @@ class _PerfilPageState extends State<PerfilPage> {
               ],
             ),
             const SizedBox(height: 8),
-
-
-            // Lista de serviços do prestador
             Expanded(
               child: servicos.isEmpty
                   ? const Center(child: Text('Nenhum serviço cadastrado.'))
@@ -211,24 +228,18 @@ class _PerfilPageState extends State<PerfilPage> {
                         final servico = servicos[index];
                         return ServicoCard(
                           nome: servico['nome'] ?? '',
-
-                          valor: 0, // Atualize com valor real se necessário
+                          valor: servico['valor'] ?? 0,
                           onDelete: () {
-                            setState(() {
-                              servicos.removeAt(index);
-                            });
+                            desabilitarServico(servico['id']);
                           },
                           onTap: () {
-                            // Navega para a tela de edição do serviço
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => EditarServico(
-                                  nomeInicial: servico['nome'] ?? '',
-                                  descricaoInicial:
-                                      'Descrição não carregada da API',
-                                  valorInicial: 0,
-                                ),
+                            _navegarEAtualizar(
+                              EditarServico(
+                                idPrestador: idPrestador!,
+                                idServico: servico['id'],
+                                nomeInicial: servico['nome'] ?? '',
+                                descricaoInicial: servico['descricao'] ?? '',
+                                valorInicial: servico['valor'] ?? 0,
                               ),
                             );
                           },

@@ -4,6 +4,7 @@ import 'package:quebragalho2/api_config.dart';
 import 'dart:convert';
 import 'package:quebragalho2/views/prestador/pages/detalhes_solicitacao.dart';
 import 'package:quebragalho2/views/prestador/widgets/solicitacao_cliente_card.dart';
+import 'package:quebragalho2/views/cliente/pages/login_page.dart'; // Para obterIdPrestador()
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,23 +14,36 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  //Variaveis para listagem de solicitacoes
   List<dynamic> solicitacoes = [];
   bool isLoading = true;
+  int? idPrestador;
 
-  //inicializar estado e executar carregamento do JSON
   @override
   void initState() {
     super.initState();
-    fetchSolicitacoes();
+    carregarSolicitacoesDoPrestador();
   }
 
-  //Método para carregar dados da API JSON
-  Future<void> fetchSolicitacoes() async {
+  Future<void> carregarSolicitacoesDoPrestador() async {
+    final id = await obterIdPrestador();
+
+    if (id != null) {
+      setState(() {
+        idPrestador = id;
+      });
+      fetchSolicitacoes(id);
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+      print('ID do prestador não encontrado.');
+    }
+  }
+
+  Future<void> fetchSolicitacoes(int idPrestador) async {
     try {
       final response = await http.get(
-        // Modifique a URL para buscar todas as solicitações, incluindo as confirmadas
-        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/pedidoservico/2'),
+        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/pedidoservico/$idPrestador'),
         headers: {
           'Accept': 'application/json',
         },
@@ -56,58 +70,54 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Lista de Solicitações')),
-      body:
-          isLoading
-              ? Center(child: CircularProgressIndicator())
-              : ListView.builder(
-                itemCount: solicitacoes.length,
-                itemBuilder: (context, index) {
-                  final solicitacao = solicitacoes[index];
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              itemCount: solicitacoes.length,
+              itemBuilder: (context, index) {
+                final solicitacao = solicitacoes[index];
 
-                  // Formatar a data e hora
-                  final DateTime dataHora = DateTime.parse(
-                    solicitacao['dataHoraAgendamento'],
-                  );
-                  final String dataHoraFormatada =
-                      '${dataHora.day}/${dataHora.month}/${dataHora.year} das ${dataHora.hour}:${dataHora.minute.toString().padLeft(2, '0')}';
+                final DateTime dataHora = DateTime.parse(
+                  solicitacao['dataHoraAgendamento'],
+                );
+                final String dataHoraFormatada =
+                    '${dataHora.day}/${dataHora.month}/${dataHora.year} às ${dataHora.hour}:${dataHora.minute.toString().padLeft(2, '0')}';
 
-                  // In the ListView.builder, update the SolicitacaoClienteCard
-                  return SolicitacaoClienteCard(
-                    nome: solicitacao['nomeDoUsuario'],
-                    fotoUrl:
-                        'http://192.168.0.155:8080${solicitacao['fotoPerfilUsuario']}',
-                 
-                    idAgendamento: solicitacao['idAgendamento'],
-                    isConfirmed: solicitacao['statusPedidoAgendamento'] == true,
-                    isCanceled: solicitacao['statusPedidoAgendamento'] == false,
-                    onConfirm: () {
-                      fetchSolicitacoes();
-                    },
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (_) => DetalhesSolicitacaoPage(
-                                nome: solicitacao['nomeDoUsuario'],
-                                fotoUrl:
-                                    'http://192.168.0.155:8080${solicitacao['fotoPerfilUsuario']}',
-                                servico: solicitacao['nomeServico'],
-                                dataHora: dataHoraFormatada,
-                                valorTotal:
-                                    solicitacao['precoServico'].toDouble(),
-                                idAgendamento: solicitacao['idAgendamento'],
-                              ),
+                return SolicitacaoClienteCard(
+                  nome: solicitacao['nomeDoUsuario'],
+                  fotoUrl:
+                      'https://${ApiConfig.baseUrl}/${solicitacao['fotoPerfilUsuario']}',
+                  idAgendamento: solicitacao['idAgendamento'],
+                  isConfirmed: solicitacao['statusPedidoAgendamento'] == true,
+                  isCanceled: solicitacao['statusPedidoAgendamento'] == false,
+                  onConfirm: () {
+                    if (idPrestador != null) {
+                      fetchSolicitacoes(idPrestador!);
+                    }
+                  },
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => DetalhesSolicitacaoPage(
+                          nome: solicitacao['nomeDoUsuario'],
+                          fotoUrl:
+                              'https://${ApiConfig.baseUrl}/${solicitacao['fotoPerfilUsuario']}',
+                          servico: solicitacao['nomeServico'],
+                          dataHora: dataHoraFormatada,
+                          valorTotal: solicitacao['precoServico'].toDouble(),
+                          idAgendamento: solicitacao['idAgendamento'],
                         ),
-                      ).then((_) {
-                       
-                          fetchSolicitacoes();
-                        
-                      });
-                    },
-                  );
-                },
-              ),
+                      ),
+                    ).then((_) {
+                      if (idPrestador != null) {
+                        fetchSolicitacoes(idPrestador!);
+                      }
+                    });
+                  },
+                );
+              },
+            ),
     );
   }
 }

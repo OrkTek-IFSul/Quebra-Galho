@@ -17,12 +17,12 @@ class _AdicionarServicoPageState extends State<AdicionarServicoPage> {
     if (_formKey.currentState!.validate()) {
       String nome = _nomeController.text;
       String descricao = _descricaoController.text;
-      int valor = int.parse(_valorController.text);
+      double valor = double.parse(_valorController.text.replaceAll(',', '.'));
 
       // Aqui você pode fazer o salvamento real do serviço, como enviar para o backend ou salvar localmente
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Serviço "$nome" adicionado com sucesso!')),
+        SnackBar(content: Text('Serviço "$nome" adicionado com sucesso! Valor: R\$ ${valor.toStringAsFixed(2)}')),
       );
 
       // Limpar campos
@@ -83,13 +83,14 @@ class _AdicionarServicoPageState extends State<AdicionarServicoPage> {
                   labelText: 'Valor (R\$)',
                   border: OutlineInputBorder(),
                 ),
-                keyboardType: TextInputType.number,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Informe o valor';
                   }
-                  final n = int.tryParse(value);
-                  if (n == null) return 'Digite apenas números inteiros';
+                  // Aceita vírgula ou ponto como separador decimal
+                  final n = double.tryParse(value.replaceAll(',', '.'));
+                  if (n == null) return 'Digite um número válido';
                   return null;
                 },
               ),
