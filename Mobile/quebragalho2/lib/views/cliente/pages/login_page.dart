@@ -86,7 +86,7 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     try {
-      final url = Uri.parse('http://${ApiConfig.baseUrl}/auth/login');
+      final url = Uri.parse('${ApiConfig.baseUrl}/auth/login');
 
       final response = await http.post(
         url,

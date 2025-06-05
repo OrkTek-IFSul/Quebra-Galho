@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:http/http.dart' as http;
+import 'package:quebragalho2/api_config.dart';
 import 'package:quebragalho2/views/cliente/pages/cadastro_page.dart';
 import 'dart:convert';
-
 
 import 'package:quebragalho2/views/cliente/pages/navegacao_cliente.dart';
 import 'package:quebragalho2/views/prestador/pages/navegacao_prestador.dart';
 
-import 'package:quebragalho2/views/cliente/pages/login_page.dart'; // arquivo onde voce coloca obterIdUsuario()
+// Assuming obterIdUsuario() is correctly defined in login_page.dart
+// and returns Future<int?>
+import 'package:quebragalho2/views/cliente/pages/login_page.dart';
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
@@ -18,33 +20,47 @@ class WelcomePage extends StatefulWidget {
 }
 
 class _WelcomePageState extends State<WelcomePage> {
-
-  int? usuarioId;
+  int? usuarioId; // Stores the ID of the logged-in user
 
   @override
   void initState() {
     super.initState();
-    carregarUsuario();
+    // Load the user ID when the widget is initialized
+    _carregarUsuario();
   }
 
-  Future<void> carregarUsuario() async {
+  /// Fetches the user ID using obterIdUsuario() and updates the state.
+  Future<void> _carregarUsuario() async {
+    // obtainerIdUsuario is expected to be defined in your login_page.dart
+    // and should return the user's ID, or null if not logged in/found.
     final id = await obterIdUsuario();
-    setState(() {
-      usuarioId = id;
-    });
+    if (mounted) { // Check if the widget is still in the tree
+      setState(() {
+        usuarioId = id;
+      });
+    }
+  }
 
-  // Update function to handle boolean response
+  /// Checks if the user with the given [userId] is a "Prestador".
+  ///
+  /// Makes an HTTP GET request to your API.
+  /// Returns `true` if the user is a "Prestador", `false` otherwise or on error.
   Future<bool> _checkPrestador(int userId) async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.0.155:8080/api/tipousuario/$userId'),
+        // Ensure this IP address is correct and your backend is running
+        Uri.parse('${ApiConfig.baseUrl}/api/tipousuario/$userId'),
       );
 
       if (response.statusCode == 200) {
+        // The API is expected to return a boolean value directly
         return json.decode(response.body) as bool;
       }
+      // If status code is not 200, assume not a prestador or an error occurred
+      print('Failed to check prestador status: ${response.statusCode}');
       return false;
     } catch (e) {
+      // Handles network errors or issues with parsing the response
       print('Error checking prestador: $e');
       return false;
     }
@@ -61,7 +77,7 @@ class _WelcomePageState extends State<WelcomePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Lottie.asset(
-                'assets/welcome.json',
+                'assets/welcome.json', // Your Lottie animation file
                 width: 200,
                 height: 200,
                 fit: BoxFit.contain,
@@ -88,7 +104,8 @@ class _WelcomePageState extends State<WelcomePage> {
                     ),
                   ),
                   onPressed: () {
-                    // Passa usuarioId se quiser
+                    // Navigate to the client navigation screen
+                    // You could pass usuarioId here if NavegacaoCliente needs it
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -115,27 +132,50 @@ class _WelcomePageState extends State<WelcomePage> {
                     ),
                   ),
                   onPressed: () async {
-                    // Check if user is prestador
-                    final isPrestador = await _checkPrestador(userId);
-                    
-                    if (isPrestador) {
-                      // User is a prestador, navigate to NavegacaoPrestador
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => NavegacaoPrestador(prestadorId: userId),
-                        ),
+                    // Check if usuarioId has been loaded
+                    if (usuarioId == null) {
+                      print("User ID not loaded yet. Cannot check prestador status.");
+                      // Optionally, show a SnackBar or a dialog to the user
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Aguarde, carregando dados do usuário...")),
                       );
-                    } else {
-                      // User is not a prestador, navigate to CadastroPage
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => CadastroPage(),
-                        ),
-                      );
+                      return; // Exit if no usuarioId
                     }
 
+                    // Show a loading indicator while checking
+                    // You might want to implement a more sophisticated loading state
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (BuildContext context) {
+                        return const Center(child: CircularProgressIndicator());
+                      },
+                    );
+
+                    final bool isPrestador = await _checkPrestador(usuarioId!); // Use '!' because we checked for null
+
+                    if (mounted) { // Check if the widget is still mounted before updating UI
+                       Navigator.pop(context); // Dismiss the loading indicator
+
+                      if (isPrestador) {
+                        // User is a prestador, navigate to NavegacaoPrestador
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            // Pass the prestadorId to the navigation screen
+                            builder: (_) => NavegacaoPrestador(prestadorId: usuarioId!),
+                          ),
+                        );
+                      } else {
+                        // User is not a prestador, navigate to CadastroPage to register as one
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => CadastroPage(), // Assuming CadastroPage is for becoming a prestador
+                          ),
+                        );
+                      }
+                    }
                   },
                   icon: Icon(Icons.handyman, color: Colors.blue.shade600),
                   label: Text(

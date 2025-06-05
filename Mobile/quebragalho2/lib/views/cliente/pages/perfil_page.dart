@@ -111,7 +111,7 @@ class _PerfilPageState extends State<PerfilPage> {
           final cpf = dados['documento'] ?? '';
           final imagemPerfil = dados['imagemPerfil'];
           final imagemUrl = (imagemPerfil != null && imagemPerfil != '')
-              ? 'http://${ApiConfig.baseUrl}/$imagemPerfil?ts=${DateTime.now().millisecondsSinceEpoch}'
+              ? '${ApiConfig.baseUrl}/$imagemPerfil?ts=${DateTime.now().millisecondsSinceEpoch}'
               : null;
 
 

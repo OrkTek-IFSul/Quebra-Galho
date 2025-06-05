@@ -9,7 +9,8 @@ import 'package:quebragalho2/views/cliente/pages/prestador_detalhes_page.dart';
 import 'package:quebragalho2/views/cliente/widgets/prestador_home_card.dart';
 import 'package:http/http.dart' as http;
 
-import 'package:quebragalho2/api_config.dart'; // nova importação para a baseUrl
+import 'package:quebragalho2/api_config.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // nova importação para a baseUrl
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -261,9 +262,9 @@ class _HomePageState extends State<HomePage> {
           children: [
             TextField(
               controller: searchController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Buscar prestador...',
-                prefixIcon: Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none, // Para um visual mais clean se preenchido

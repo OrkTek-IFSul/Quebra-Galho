@@ -46,7 +46,7 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
     setState(() => _isLoading = true);
     try {
       final response = await http.get(
-        Uri.parse('http://${ApiConfig.baseUrl}/api/usuario/solicitacoes/agendamento/${widget.agendamentoId}'),
+        Uri.parse('${ApiConfig.baseUrl}/api/usuario/solicitacoes/agendamento/${widget.agendamentoId}'),
       );
 
       if (!mounted) return;
@@ -108,7 +108,7 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
       };
 
       final response = await http.post(
-        Uri.parse('http://${ApiConfig.baseUrl}/api/usuario/solicitacoes/agendamento/${widget.agendamentoId}/avaliacao'),
+        Uri.parse('${ApiConfig.baseUrl}/api/usuario/solicitacoes/agendamento/${widget.agendamentoId}/avaliacao'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(requestBody),
       );
