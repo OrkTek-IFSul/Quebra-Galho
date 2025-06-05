@@ -1,10 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:quebragalho2/views/cliente/pages/cadastro_page.dart';
-import 'dart:convert';
 import 'package:quebragalho2/views/cliente/pages/tela_selecao_tipo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:quebragalho2/api_config.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -46,7 +48,7 @@ class _LoginPageState extends State<LoginPage> {
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => WelcomePage()),
+          MaterialPageRoute(builder: (_) => const WelcomePage()),
         );
         return;
       } else {
@@ -59,65 +61,63 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => carregando = false);
   }
 
-  Future<void> salvarPreferencias(String token, int id) async {
-    final prefs = await SharedPreferences.getInstance();
-    if (manterLogado) {
-      await prefs.setBool('manter_logado', true);
-      await prefs.setString('token', token);
-      await prefs.setInt('usuario_id', id);   // salva id do usuário aqui
-      await prefs.setString('token_criado_em', DateTime.now().toIso8601String());
-    } else {
-      await prefs.setBool('manter_logado', false);
-    }
 
+  Future<void> salvarPreferencias(String token, int idUsuario, {int? idPrestador}) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('token', token); // SEMPRE salva o token
+  await prefs.setInt('usuario_id', idUsuario);
+  await prefs.setString('token_criado_em', DateTime.now().toIso8601String());
+
+  if (idPrestador != null) {
+    await prefs.setInt('prestador_id', idPrestador);
+  }
+
+  // A opção "manter logado" só controla o flag específico
+  await prefs.setBool('manter_logado', manterLogado);
+  
+    print('ID do prestador salvo: $idPrestador');
     print('Token salvo: $token');
-    print('ID do usuário salvo: $id');
+    print('ID do usuário salvo: $idUsuario');
   }
 
   Future<void> fazerLogin() async {
-    final email = emailController.text.trim();
-    final senha = senhaController.text.trim();
+  final email = emailController.text;
+  final senha = senhaController.text;
 
-    if (email.isEmpty || senha.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Preencha todos os campos')),
+  try {
+    final response = await http.post(
+      Uri.parse('http://192.168.1.24:8080/auth/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'senha': senha}),
+    );
+
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body);
+      final token = body['token'];
+      final idUsuario = body['id_usuario'];
+
+      // Usa diretamente o id_prestador retornado pelo backend, se houver
+      final idPrestador = body['id_prestador']; // pode ser nulo
+
+      await salvarPreferencias(token, idUsuario, idPrestador: idPrestador);
+
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const WelcomePage()),
       );
-      return;
-    }
+    } else {
 
-    try {
-      final url = Uri.parse('http://${ApiConfig.baseUrl}/auth/login');
-
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'senha': senha}),
-      );
-
-      if (response.statusCode == 200) {
-        final body = jsonDecode(response.body);
-        final token = body['token'];
-        final id = body['id_usuario'];  // Confirme que a API retorna esse campo
-
-        await salvarPreferencias(token, id);
-
-        if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => WelcomePage()),
-
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email ou senha inválidos')),
-        );
-      }
-    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao conectar: $e')),
+        const SnackBar(content: Text('Email ou senha inválidos')),
       );
     }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Erro ao conectar: $e')),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -184,6 +184,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+
 }
 
 // Função que as outras telas vão usar para obter o ID do usuário
@@ -191,3 +192,4 @@ Future<int?> obterIdUsuario() async {
   final prefs = await SharedPreferences.getInstance();
   return prefs.getInt('usuario_id');
 }
+
