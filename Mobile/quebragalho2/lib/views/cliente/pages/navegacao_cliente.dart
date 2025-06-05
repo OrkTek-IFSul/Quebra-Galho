@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:quebragalho2/views/cliente/pages/home_page.dart';
 import 'package:quebragalho2/views/cliente/pages/perfil_page.dart';
 
-
 class NavegacaoCliente extends StatefulWidget {
   const NavegacaoCliente({super.key});
 
@@ -14,11 +13,10 @@ class _NavegacaoClienteState extends State<NavegacaoCliente> {
   // Index da página selecionada
   int _selectedIndex = 0;
 
-//Lista de páginas da navegação
-  final List<Widget> paginas = [
+  // Lista de páginas da navegação
+  final List<Widget> paginas = const [
     HomePage(),
-    PerfilPage(usuarioId: 1,),
-    
+    PerfilPage(), // Sem passar usuarioId
   ];
 
   void _onTabTapped(int index) {
@@ -53,6 +51,3 @@ class _NavegacaoClienteState extends State<NavegacaoCliente> {
     );
   }
 }
-
-
-

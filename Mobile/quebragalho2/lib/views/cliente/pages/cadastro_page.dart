@@ -7,7 +7,9 @@ import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 
-import 'login_page.dart'; // ajuste o caminho real conforme seu projeto
+import 'login_page.dart';
+import 'package:quebragalho2/api_config.dart';
+
 
 class CadastroPage extends StatefulWidget {
   const CadastroPage({super.key});
@@ -61,7 +63,8 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
   Future<void> _uploadImagemPerfil(int usuarioId) async {
     if (_imagemPerfil == null) return;
 
-    final url = Uri.parse('http://192.168.1.24:8080/api/usuario/perfil/$usuarioId/imagem');
+
+    final url = Uri.parse('http://${ApiConfig.baseUrl}/api/usuario/perfil/$usuarioId/imagem');
 
     final request = http.MultipartRequest('POST', url)
       ..files.add(await http.MultipartFile.fromPath(
@@ -73,16 +76,19 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
 
     final response = await request.send();
 
-    if (response.statusCode != 200) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Erro ao enviar imagem de perfil"),
+    if (response.statusCode != 200 && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Erro ao enviar imagem de perfil: ${response.reasonPhrase}"),
+
         backgroundColor: Colors.red,
       ));
     }
   }
 
   Future<void> _cadastrarCliente() async {
-    final url = Uri.parse('http://192.168.1.24:8080/api/cadastro/usuario');
+
+    final url = Uri.parse('http://${ApiConfig.baseUrl}/api/cadastro/usuario');
+
 
     final response = await http.post(
       url,
@@ -95,6 +101,9 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
         "telefone": _telefoneController.text,
       }),
     );
+
+
+    if (!mounted) return;
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       final usuario = json.decode(response.body);
@@ -124,7 +133,7 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
       return;
     }
 
-    final url = Uri.parse('http://192.168.1.24:8080/api/cadastro/prestador');
+    final url = Uri.parse('http://${ApiConfig.baseUrl}/api/cadastro/prestador');
 
     final usuario = {
       "nome": _nomeController.text,
@@ -150,6 +159,9 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
 
     final response = await request.send();
     final respStr = await response.stream.bytesToString();
+
+
+    if (!mounted) return;
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       final prestador = json.decode(respStr);
@@ -239,6 +251,7 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
 
   Widget _formClienteWidget() {
     return SingleChildScrollView(
+
       padding: const EdgeInsets.all(16.0),
       child: _formularioBase(_formCliente),
     );
@@ -253,7 +266,8 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
           const SizedBox(height: 16),
           Align(
             alignment: Alignment.centerLeft,
-            child: const Text("Documento (CPF ou CNPJ)", style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text("Imagem do Documento (Selfie com Doc. ou Doc. Oficial)",
+                style: TextStyle(fontWeight: FontWeight.bold)),
           ),
           const SizedBox(height: 8),
           GestureDetector(
@@ -267,7 +281,22 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
                   : Image.file(_documentoImagem!, fit: BoxFit.cover),
             ),
           ),
+          SizedBox(height: 20),
         ],
+      ),
+    );
+  }
+
+  void _mostrarErro(String mensagem) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(mensagem),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
       ),
     );
   }
@@ -292,7 +321,8 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
-          title: const Text("Cadastro"),
+
+          title: Text("Cadastro"),
           bottom: TabBar(
             controller: _tabController,
             tabs: const [
@@ -313,6 +343,9 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
           child: ElevatedButton(
             onPressed: () {
               final abaAtual = _tabController.index;
+
+              bool formValido = false;
+
               if (abaAtual == 0) {
                 if (_formCliente.currentState!.validate()) {
                   _cadastrarCliente();
@@ -322,8 +355,21 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
                   _cadastrarPrestador();
                 }
               }
+
+
+              if (!formValido) {
+                _mostrarErro("Por favor, preencha todos os campos corretamente.");
+              }
             },
-            child: const Text("Cadastrar"),
+            style: ElevatedButton.styleFrom(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              textStyle: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
+            ),
+            child: Text("CADASTRAR"),
           ),
         ),
       ),

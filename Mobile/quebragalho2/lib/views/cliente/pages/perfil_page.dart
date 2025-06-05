@@ -1,34 +1,55 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:quebragalho2/services/perfil_page_services.dart';
 import 'package:quebragalho2/views/cliente/pages/editar_dados_page.dart';
 import 'package:quebragalho2/views/cliente/pages/minhas_solicitacoes_page.dart';
 import 'package:quebragalho2/views/cliente/widgets/info_campos_perfil.dart';
+import 'package:quebragalho2/api_config.dart';
 
 class PerfilPage extends StatefulWidget {
-  final int usuarioId;
-  const PerfilPage({super.key, required this.usuarioId});
+  const PerfilPage({super.key}); // Sem parâmetro usuarioId
 
   @override
   State<PerfilPage> createState() => _PerfilPageState();
 }
 
 class _PerfilPageState extends State<PerfilPage> {
-  late Future<Map<String, dynamic>> _dadosUsuario;
+  int? _usuarioId; // Aqui não é Future mais
+  Future<Map<String, dynamic>>? _dadosUsuario;
   XFile? _imagemSelecionada;
 
   @override
   void initState() {
     super.initState();
-    _carregarDados();
+    _carregarUsuarioId();
+  }
+
+  Future<void> _carregarUsuarioId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final id = prefs.getInt('usuario_id');
+    if (id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro: usuário não está logado')),
+      );
+      return;
+    }
+    setState(() {
+      _usuarioId = id;
+      _dadosUsuario = PerfilPageService().buscarPerfilUsuario(id);
+    });
   }
 
   void _carregarDados() {
-    _dadosUsuario = PerfilPageService().buscarPerfilUsuario(widget.usuarioId);
+    if (_usuarioId == null) return;
+    setState(() {
+      _dadosUsuario = PerfilPageService().buscarPerfilUsuario(_usuarioId!);
+    });
   }
 
   Future<void> _selecionarImagem() async {
+    if (_usuarioId == null) return;
     final ImagePicker picker = ImagePicker();
     final XFile? imagem = await picker.pickImage(source: ImageSource.gallery);
 
@@ -36,7 +57,7 @@ class _PerfilPageState extends State<PerfilPage> {
       final File fileImagem = File(imagem.path);
 
       String? resposta = await PerfilPageService().uploadImagemPerfil(
-        widget.usuarioId,
+        _usuarioId!,
         fileImagem,
       );
 
@@ -49,15 +70,22 @@ class _PerfilPageState extends State<PerfilPage> {
           const SnackBar(content: Text('Imagem atualizada com sucesso!')),
         );
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Falha ao enviar imagem')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Falha ao enviar imagem')),
+        );
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_usuarioId == null) {
+      // Enquanto carrega o ID, mostra loading
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meu Perfil'),
@@ -82,10 +110,10 @@ class _PerfilPageState extends State<PerfilPage> {
           final email = dados['email'] ?? '';
           final cpf = dados['documento'] ?? '';
           final imagemPerfil = dados['imagemPerfil'];
-          final imagemUrl =
-              imagemPerfil != null && imagemPerfil != ''
-                  ? 'http://10.0.2.2:8080/$imagemPerfil?ts=${DateTime.now().millisecondsSinceEpoch}'
-                  : null;
+          final imagemUrl = (imagemPerfil != null && imagemPerfil != '')
+              ? 'http://${ApiConfig.baseUrl}/$imagemPerfil?ts=${DateTime.now().millisecondsSinceEpoch}'
+              : null;
+
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -95,13 +123,12 @@ class _PerfilPageState extends State<PerfilPage> {
                   children: [
                     CircleAvatar(
                       radius: 60,
-                      backgroundImage:
-                          _imagemSelecionada != null
-                              ? FileImage(File(_imagemSelecionada!.path))
-                              : (imagemUrl != null
-                                      ? NetworkImage(imagemUrl)
-                                      : const AssetImage('assets/perfil.jpg'))
-                                  as ImageProvider,
+                      backgroundImage: _imagemSelecionada != null
+                          ? FileImage(File(_imagemSelecionada!.path))
+                          : (imagemUrl != null
+                              ? NetworkImage(imagemUrl)
+                              : const AssetImage('assets/perfil.jpg'))
+                              as ImageProvider,
                       backgroundColor: Colors.grey,
                     ),
                     Positioned(
@@ -158,9 +185,12 @@ class _PerfilPageState extends State<PerfilPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => EditarDadosPage(usuarioId: 1),
+                        builder: (context) => EditarDadosPage(),
                       ),
-                    );
+                    ).then((_) {
+                      // Atualiza os dados ao voltar da tela de edição
+                      _carregarDados();
+                    });
                   },
                   icon: const Icon(Icons.edit),
                   label: const Text("Editar meus dados"),

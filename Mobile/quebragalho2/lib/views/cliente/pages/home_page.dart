@@ -4,9 +4,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:quebragalho2/views/cliente/pages/login_page.dart';
+
 import 'package:quebragalho2/views/cliente/pages/prestador_detalhes_page.dart';
 import 'package:quebragalho2/views/cliente/widgets/prestador_home_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:quebragalho2/api_config.dart'; // nova importação para a baseUrl
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -24,9 +27,12 @@ class _HomePageState extends State<HomePage> {
   bool isLoggedIn = false;
   Timer? _debounce;
 
+  int? usuarioId;
+
   @override
   void initState() {
     super.initState();
+
     _checkLoginStatus();
     _loadInitialData();
     searchController.addListener(_debouncedSearch);
@@ -56,6 +62,20 @@ class _HomePageState extends State<HomePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Logout realizado com sucesso')),
     );
+    carregarDados();
+    searchController.addListener(_debouncedSearch);
+  }
+
+  Future<void> carregarDados() async {
+    await carregarUsuarioId();
+    await _loadInitialData();
+  }
+
+  Future<void> carregarUsuarioId() async {
+    final id = await obterIdUsuario();
+    setState(() {
+      usuarioId = id;
+    });
   }
 
   void _debouncedSearch() {
@@ -71,6 +91,7 @@ class _HomePageState extends State<HomePage> {
     });
     await fetchCategorias();
     await fetchPrestadores();
+
   }
 
   Future<List<dynamic>> _searchPrestadores() async {
@@ -86,15 +107,18 @@ class _HomePageState extends State<HomePage> {
         'size': '10',
       };
 
+      if (queryParams.length == 2) {
+        return await fetchPrestadores();
+      }
+
       if (searchController.text.isEmpty && selectedTags.isEmpty) {
         return await fetchPrestadores();
       }
 
-      final uri = Uri.http(
-        '192.168.0.155:8080',
-        '/api/usuario/homepage/buscar',
-        queryParams,
-      );
+
+     final uri = Uri.parse('${ApiConfig.baseUrl}/api/usuario/homepage/buscar')
+          .replace(queryParameters: queryParams);
+      
 
       final response = await http.get(uri);
 
@@ -133,9 +157,10 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> fetchCategorias() async {
     try {
-      final response = await http.get(
-        Uri.parse('http://192.168.0.155:8080/api/usuario/homepage/tags'),
-      );
+
+      final uri = Uri.parse('${ApiConfig.baseUrl}/api/usuario/homepage/tags');
+      final response = await http.get(uri);
+
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -159,9 +184,10 @@ class _HomePageState extends State<HomePage> {
     });
 
     try {
-      final response = await http.get(
-        Uri.parse('http://192.168.0.155:8080/api/usuario/homepage'),
-      );
+
+      final uri = Uri.parse('${ApiConfig.baseUrl}/api/usuario/homepage');
+      final response = await http.get(uri);
+
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -220,25 +246,23 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('Home'),
         actions: [
+          IconButton(icon: const Icon(Icons.notifications_none), onPressed: () {}),
           IconButton(
-            icon: const Icon(Icons.notifications_none), 
-            onPressed: () {
-              // TODO: Implementar navegação ou ação para notificações
-            },
-          ),
-          IconButton(
-            icon: Icon(isLoggedIn ? Icons.logout : Icons.person_outline),
-            onPressed: () {
-              if (isLoggedIn) {
-                _logout();
-              } else {
-                Navigator.push(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Sair',
+            onPressed: () async {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.remove('token');
+              await prefs.remove('token_criado_em');
+              await prefs.remove('manter_logado');
+
+              if (context.mounted) {
+                Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                ).then((_) {
-                  // Atualiza o status quando volta do login
-                  _checkLoginStatus();
-                });
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                  (route) => false,
+                );
+
               }
             },
           ),
@@ -251,7 +275,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             TextField(
               controller: searchController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Buscar prestador...',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
@@ -284,6 +308,7 @@ class _HomePageState extends State<HomePage> {
                             textAlign: TextAlign.center,
                           )
                         )
+
                       : ListView.builder(
                           itemCount: _prestadoresFiltrados.length,
                           itemBuilder: (context, index) {

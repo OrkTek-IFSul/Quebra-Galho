@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:quebragalho2/views/cliente/pages/cadastro_page.dart';
 import 'package:quebragalho2/views/cliente/pages/tela_selecao_tipo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:quebragalho2/api_config.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -43,6 +45,7 @@ class _LoginPageState extends State<LoginPage> {
       const expiracao = Duration(hours: 1);
 
       if (duracao <= expiracao) {
+        if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const WelcomePage()),
@@ -57,6 +60,7 @@ class _LoginPageState extends State<LoginPage> {
 
     setState(() => carregando = false);
   }
+
 
   Future<void> salvarPreferencias(String token, int idUsuario, {int? idPrestador}) async {
   final prefs = await SharedPreferences.getInstance();
@@ -103,6 +107,7 @@ class _LoginPageState extends State<LoginPage> {
         MaterialPageRoute(builder: (_) => const WelcomePage()),
       );
     } else {
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Email ou senha inválidos')),
       );
@@ -179,4 +184,12 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+
 }
+
+// Função que as outras telas vão usar para obter o ID do usuário
+Future<int?> obterIdUsuario() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getInt('usuario_id');
+}
+
