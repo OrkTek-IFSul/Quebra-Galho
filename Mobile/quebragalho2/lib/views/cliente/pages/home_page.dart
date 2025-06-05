@@ -116,7 +116,7 @@ class _HomePageState extends State<HomePage> {
       }
 
 
-     final uri = Uri.parse('${ApiConfig.baseUrl}/api/usuario/homepage/buscar')
+     final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage/buscar')
           .replace(queryParameters: queryParams);
       
 
@@ -185,7 +185,7 @@ class _HomePageState extends State<HomePage> {
 
     try {
 
-      final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage');
+      final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage/prestadores');
       final response = await http.get(uri);
 
 
