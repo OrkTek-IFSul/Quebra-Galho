@@ -49,7 +49,6 @@ class _HomePageState extends State<HomePage> {
   // --- MÉTODOS DE LÓGICA E DADOS ---
 
   /// Método centralizador que decide qual busca realizar.
-  /// Ele verifica o estado do campo de busca e das tags.
   Future<void> _filtrarEBuscarPrestadores() async {
     setState(() {
       isLoading = true;
@@ -57,12 +56,9 @@ class _HomePageState extends State<HomePage> {
 
     final termoBusca = searchController.text.trim();
 
-    // Condição principal: Se a busca está vazia e nenhuma tag específica
-    // foi selecionada, busca todos os prestadores.
     if (termoBusca.isEmpty && selectedTags.isEmpty) {
       await fetchPrestadores();
     } else {
-      // Caso contrário, realiza uma busca com os filtros atuais.
       await _searchPrestadoresComFiltros();
     }
   }
@@ -70,14 +66,14 @@ class _HomePageState extends State<HomePage> {
   /// Carrega os dados iniciais da página.
   Future<void> _loadInitialData() async {
     await fetchCategorias();
-    await _filtrarEBuscarPrestadores(); // Usa o método centralizado
+    await _filtrarEBuscarPrestadores();
   }
 
   /// Listener para o campo de busca com debounce.
   void _debouncedSearch() {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
-      _filtrarEBuscarPrestadores(); // Chama o método centralizado
+      _filtrarEBuscarPrestadores();
     });
   }
 
@@ -85,7 +81,6 @@ class _HomePageState extends State<HomePage> {
 
   /// Busca TODOS os prestadores (sem filtros).
   Future<void> fetchPrestadores() async {
-    // Garante que o estado de loading seja o correto
     if (!isLoading) setState(() => isLoading = true);
 
     try {
@@ -93,7 +88,8 @@ class _HomePageState extends State<HomePage> {
       final response = await http.get(uri);
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
+        // AJUSTE DE DECODIFICAÇÃO APLICADO AQUI
+        final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
         setState(() {
           _prestadoresFiltrados = data;
         });
@@ -105,7 +101,6 @@ class _HomePageState extends State<HomePage> {
       print('Erro ao carregar prestadores: $e');
       setState(() => _prestadoresFiltrados = []);
     } finally {
-      // Garante que o loading seja desativado
       if (mounted) setState(() => isLoading = false);
     }
   }
@@ -128,7 +123,8 @@ class _HomePageState extends State<HomePage> {
       final response = await http.get(uri);
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        // AJUSTE DE DECODIFICAÇÃO APLICADO AQUI
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
         setState(() {
           _prestadoresFiltrados = data['content'] ?? [];
         });
@@ -166,7 +162,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
   
-  // --- MÉTODOS DE AUTENTICAÇÃO E OUTROS ---
+  // --- MÉTODOS DE AUTENTICAÇÃO E OUTROS (sem alterações) ---
   
   Future<void> _checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
@@ -178,11 +174,10 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear(); // Limpa todos os dados de autenticação
+    await prefs.clear();
     
     if (!mounted) return;
     
-    // Navega para LoginPage e remove todas as rotas anteriores
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -192,15 +187,11 @@ class _HomePageState extends State<HomePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Logout realizado com sucesso')),
     );
-    _loadInitialData(); // Recarrega os dados para o estado de deslogado
+    _loadInitialData();
   }
 
   Future<void> carregarUsuarioId() async {
     // Implemente a busca do ID do usuário se necessário
-    // final id = await obterIdUsuario(); 
-    // setState(() {
-    //   usuarioId = id;
-    // });
   }
 
   // --- WIDGETS ---
@@ -216,8 +207,6 @@ class _HomePageState extends State<HomePage> {
       selectedColor: Theme.of(context).primaryColor.withOpacity(0.3),
       selected: isSelected,
       onSelected: (bool selected) {
-        // A lógica de seleção de tag agora é mais simples.
-        // Apenas atualiza o estado da lista `selectedTags`.
         setState(() {
           if (category == 'Todos') {
             selectedTags.clear();
@@ -229,8 +218,6 @@ class _HomePageState extends State<HomePage> {
             }
           }
         });
-        // Após qualquer mudança nas tags, chama o método centralizador
-        // para atualizar a lista de prestadores.
         _filtrarEBuscarPrestadores();
       },
     );
@@ -240,13 +227,25 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
+        automaticallyImplyLeading: false, // Desabilita completamente a seta de voltar
+        title: isLoggedIn 
+            ? const Text('Home')
+            : const Text(''),
         actions: [
-          IconButton(icon: const Icon(Icons.notifications_none), onPressed: () {}),
+          if (isLoggedIn)
+            IconButton(
+              icon: const Icon(Icons.notifications_none), 
+              onPressed: () {}
+            ),
           IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Sair',
-            onPressed: _logout, // Chama a função de logout
+            icon: Icon(isLoggedIn ? Icons.logout : Icons.login),
+            tooltip: isLoggedIn ? 'Sair' : 'Entrar',
+            onPressed: isLoggedIn 
+                ? _logout 
+                : () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginPage()),
+                    ),
           ),
         ],
       ),
@@ -295,6 +294,7 @@ class _HomePageState extends State<HomePage> {
                           itemBuilder: (context, index) {
                             final prestador = _prestadoresFiltrados[index];
                             final String imageUrl = prestador['imagemPerfil'] as String? ?? '';
+                            // O nome agora virá decodificado corretamente
                             final String nome = prestador['nome'] as String? ?? 'Nome Indisponível';
                             final List<String> tags = (prestador['tags'] as List?)
                                     ?.map((tag) => (tag is Map && tag['nome'] != null) ? tag['nome'].toString() : '')
@@ -314,7 +314,10 @@ class _HomePageState extends State<HomePage> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) =>
-                                          PrestadorDetalhesPage(id: prestadorId),
+                                          PrestadorDetalhesPage(
+                                            id: prestadorId,
+                                            isLoggedIn: isLoggedIn,
+                                            ),
                                     ),
                                   );
                                 } else {

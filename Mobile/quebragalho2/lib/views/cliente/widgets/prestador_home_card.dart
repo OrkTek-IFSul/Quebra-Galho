@@ -19,15 +19,14 @@ class PrestadorHomeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: EdgeInsets.all(12),
+          padding: const EdgeInsets.all(12),
           child: Row(
             children: [
               // Imagem do perfil
-              // Imagem do perfil com cantos arredondados (não é círculo)
               Container(
                 width: 70,
                 height: 70,
@@ -37,10 +36,37 @@ class PrestadorHomeCard extends StatelessWidget {
                   border: Border.all(color: Colors.grey[300]!, width: 2),
                 ),
                 clipBehavior: Clip.antiAlias,
-                child: Image.network(imageUrl, fit: BoxFit.cover),
+                // AJUSTE FEITO AQUI dentro do Image.network
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.cover,
+                  
+                  // Mostra um indicador de carregamento enquanto a imagem baixa
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+                  },
+
+                  // Se der erro ao carregar, mostra o container com a inicial
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      alignment: Alignment.center,
+                      // A cor de fundo já vem do BoxDecoration do Container pai
+                      child: Text(
+                        name.isNotEmpty ? name[0].toUpperCase() : '?',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
 
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
+
               // Informações do prestador
               Expanded(
                 child: Column(
@@ -48,46 +74,46 @@ class PrestadorHomeCard extends StatelessWidget {
                   children: [
                     Text(
                       name,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     // Wrap para as categorias
                     Wrap(
                       spacing: 4,
                       runSpacing: 4,
-                      children:
-                          categories
-                              .map(
-                                (category) => Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[200],
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    category,
-                                    style: TextStyle(fontSize: 12),
-                                  ),
-                                ),
-                              )
-                              .toList(),
+                      children: categories
+                          .map(
+                            (category) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                category,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          )
+                          .toList(),
                     ),
                   ],
                 ),
               ),
+
               // Avaliação
               Column(
                 children: [
-                  Icon(Icons.star, color: Colors.amber),
+                  const Icon(Icons.star, color: Colors.amber),
                   Text(
                     rating.toStringAsFixed(1),
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ],
               ),

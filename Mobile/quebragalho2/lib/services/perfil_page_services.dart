@@ -13,7 +13,7 @@ import 'package:mime/mime.dart';
 import 'package:quebragalho2/api_config.dart';
 
 class PerfilPageService {
-  final String baseUrl = 'https://${ApiConfig.baseUrl}/api/usuario/perfil'; // ajuste conforme necessário
+  final String baseUrl = 'http://${ApiConfig.baseUrl}/api/usuario/perfil'; // ajuste conforme necessário
 
   Future<Map<String, dynamic>> buscarPerfilUsuario(int usuarioId) async {
   final response = await http.get(

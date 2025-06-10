@@ -9,47 +9,30 @@ import 'package:quebragalho2/views/cliente/widgets/info_campos_perfil.dart';
 import 'package:quebragalho2/api_config.dart';
 
 class PerfilPage extends StatefulWidget {
-  const PerfilPage({super.key}); // Sem parâmetro usuarioId
+  final int usuarioId;
+  const PerfilPage({super.key, required this.usuarioId});
 
   @override
   State<PerfilPage> createState() => _PerfilPageState();
 }
 
 class _PerfilPageState extends State<PerfilPage> {
-  int? _usuarioId; // Aqui não é Future mais
   Future<Map<String, dynamic>>? _dadosUsuario;
   XFile? _imagemSelecionada;
 
   @override
   void initState() {
     super.initState();
-    _carregarUsuarioId();
-  }
-
-  Future<void> _carregarUsuarioId() async {
-    final prefs = await SharedPreferences.getInstance();
-    final id = prefs.getInt('usuario_id');
-    if (id == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Erro: usuário não está logado')),
-      );
-      return;
-    }
-    setState(() {
-      _usuarioId = id;
-      _dadosUsuario = PerfilPageService().buscarPerfilUsuario(id);
-    });
+    _carregarDados();
   }
 
   void _carregarDados() {
-    if (_usuarioId == null) return;
     setState(() {
-      _dadosUsuario = PerfilPageService().buscarPerfilUsuario(_usuarioId!);
+      _dadosUsuario = PerfilPageService().buscarPerfilUsuario(widget.usuarioId);
     });
   }
 
   Future<void> _selecionarImagem() async {
-    if (_usuarioId == null) return;
     final ImagePicker picker = ImagePicker();
     final XFile? imagem = await picker.pickImage(source: ImageSource.gallery);
 
@@ -57,7 +40,7 @@ class _PerfilPageState extends State<PerfilPage> {
       final File fileImagem = File(imagem.path);
 
       String? resposta = await PerfilPageService().uploadImagemPerfil(
-        _usuarioId!,
+        widget.usuarioId,
         fileImagem,
       );
 
@@ -79,13 +62,6 @@ class _PerfilPageState extends State<PerfilPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_usuarioId == null) {
-      // Enquanto carrega o ID, mostra loading
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meu Perfil'),
@@ -111,7 +87,7 @@ class _PerfilPageState extends State<PerfilPage> {
           final cpf = dados['documento'] ?? '';
           final imagemPerfil = dados['imagemPerfil'];
           final imagemUrl = (imagemPerfil != null && imagemPerfil != '')
-              ? 'https://${ApiConfig.baseUrl}/$imagemPerfil?ts=${DateTime.now().millisecondsSinceEpoch}'
+              ? 'http://${ApiConfig.baseUrl}/$imagemPerfil?ts=${DateTime.now().millisecondsSinceEpoch}'
               : null;
 
 

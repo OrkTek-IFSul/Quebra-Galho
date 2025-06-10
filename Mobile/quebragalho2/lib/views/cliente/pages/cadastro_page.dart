@@ -5,11 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
+// 1. Importe o pacote da máscara
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:path/path.dart' as p;
 
 import 'login_page.dart';
 import 'package:quebragalho2/api_config.dart';
-
 
 class CadastroPage extends StatefulWidget {
   const CadastroPage({super.key});
@@ -18,7 +19,8 @@ class CadastroPage extends StatefulWidget {
   State<CadastroPage> createState() => _CadastroPageState();
 }
 
-class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderStateMixin {
+class _CadastroPageState extends State<CadastroPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   final _formCliente = GlobalKey<FormState>();
@@ -36,16 +38,30 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
   File? _documentoImagem;
   File? _imagemPerfil;
 
+  // 2. Crie as instâncias das máscaras
+  final _maskTelefone = MaskTextInputFormatter(
+    mask: '(##) #####-####',
+    filter: {"#": RegExp(r'[0-9]')},
+    type: MaskAutoCompletionType.lazy,
+  );
+
+  final _maskCpf = MaskTextInputFormatter(
+    mask: '###.###.###-##',
+    filter: {"#": RegExp(r'[0-9]')},
+    type: MaskAutoCompletionType.lazy,
+  );
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
   }
 
+  // ... (seus métodos _selecionarImagemDocumento, _selecionarImagemPerfil, _uploadImagemPerfil permanecem os mesmos)
   Future<void> _selecionarImagemDocumento() async {
     final XFile? imagem = await _picker.pickImage(source: ImageSource.gallery);
     if (imagem != null) {
-      setState(() {
+      (() {
         _documentoImagem = File(imagem.path);
       });
     }
@@ -63,32 +79,41 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
   Future<void> _uploadImagemPerfil(int usuarioId) async {
     if (_imagemPerfil == null) return;
 
-
-    final url = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$usuarioId/imagem');
+    final url = Uri.parse(
+      'http://${ApiConfig.baseUrl}/api/usuario/perfil/$usuarioId/imagem',
+    );
 
     final request = http.MultipartRequest('POST', url)
-      ..files.add(await http.MultipartFile.fromPath(
-        'file',
-        _imagemPerfil!.path,
-        filename: p.basename(_imagemPerfil!.path),
-        contentType: MediaType('image', 'jpeg'),
-      ));
+      ..files.add(
+        await http.MultipartFile.fromPath(
+          'file',
+          _imagemPerfil!.path,
+          filename: p.basename(_imagemPerfil!.path),
+          contentType: MediaType('image', 'jpeg'),
+        ),
+      );
 
     final response = await request.send();
 
     if (response.statusCode != 200 && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text("Erro ao enviar imagem de perfil: ${response.reasonPhrase}"),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Erro ao enviar imagem de perfil: ${response.reasonPhrase}",
+          ),
 
-        backgroundColor: Colors.red,
-      ));
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
   Future<void> _cadastrarCliente() async {
+    final url = Uri.parse('http://${ApiConfig.baseUrl}/api/cadastro/usuario');
 
-    final url = Uri.parse('https://${ApiConfig.baseUrl}/api/cadastro/usuario');
-
+    // 3. Limpe a máscara antes de enviar para a API
+    final telefoneLimpo = _maskTelefone.getUnmaskedText();
+    final cpfLimpo = _maskCpf.getUnmaskedText();
 
     final response = await http.post(
       url,
@@ -97,12 +122,12 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
         "nome": _nomeController.text,
         "email": _emailController.text,
         "senha": _senhaController.text,
-        "documento": _cpfController.text,
-        "telefone": _telefoneController.text,
+        "documento": cpfLimpo, // Envia o valor sem máscara
+        "telefone": telefoneLimpo, // Envia o valor sem máscara
       }),
     );
 
-
+    // ... (resto do método _cadastrarCliente permanece o mesmo)
     if (!mounted) return;
 
     if (response.statusCode == 200 || response.statusCode == 201) {
@@ -110,37 +135,50 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
       final id = usuario["id"];
       await _uploadImagemPerfil(id);
 
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Cadastro realizado com sucesso!"),
-        backgroundColor: Colors.green,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Cadastro realizado com sucesso!"),
+          backgroundColor: Colors.green,
+        ),
+      );
 
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginPage()));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+      );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text("Erro ao cadastrar: ${response.body}"),
-        backgroundColor: Colors.red,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Erro ao cadastrar: ${response.body}"),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
   Future<void> _cadastrarPrestador() async {
     if (_documentoImagem == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Selecione uma imagem do documento"),
-        backgroundColor: Colors.orange,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Selecione uma imagem do documento"),
+          backgroundColor: Colors.orange,
+        ),
+      );
       return;
     }
 
-    final url = Uri.parse('https://${ApiConfig.baseUrl}/api/cadastro/prestador');
+    final url = Uri.parse('http://${ApiConfig.baseUrl}/api/cadastro/prestador');
+
+    // 3. Limpe a máscara antes de enviar para a API
+    final telefoneLimpo = _maskTelefone.getUnmaskedText();
+    final cpfLimpo = _maskCpf.getUnmaskedText();
 
     final usuario = {
       "nome": _nomeController.text,
       "email": _emailController.text,
       "senha": _senhaController.text,
-      "documento": _cpfController.text,
-      "telefone": _telefoneController.text,
+      "documento": cpfLimpo, // Envia o valor sem máscara
+      "telefone": telefoneLimpo, // Envia o valor sem máscara
     };
 
     final prestadorDTO = {
@@ -148,19 +186,22 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
       "usuario": usuario,
     };
 
-    final request = http.MultipartRequest('POST', url)
-      ..fields['prestadorDTO'] = json.encode(prestadorDTO)
-      ..files.add(await http.MultipartFile.fromPath(
-        'imagemDocumento',
-        _documentoImagem!.path,
-        filename: p.basename(_documentoImagem!.path),
-        contentType: MediaType('image', 'jpeg'),
-      ));
+    final request =
+        http.MultipartRequest('POST', url)
+          ..fields['prestadorDTO'] = json.encode(prestadorDTO)
+          ..files.add(
+            await http.MultipartFile.fromPath(
+              'imagemDocumento',
+              _documentoImagem!.path,
+              filename: p.basename(_documentoImagem!.path),
+              contentType: MediaType('image', 'jpeg'),
+            ),
+          );
 
     final response = await request.send();
     final respStr = await response.stream.bytesToString();
 
-
+    // ... (resto do método _cadastrarPrestador permanece o mesmo)
     if (!mounted) return;
 
     if (response.statusCode == 200 || response.statusCode == 201) {
@@ -168,21 +209,31 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
       final idUsuario = prestador["usuario"]["id"];
       await _uploadImagemPerfil(idUsuario);
 
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Cadastro realizado com sucesso!"),
-        backgroundColor: Colors.green,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Cadastro realizado com sucesso!"),
+          backgroundColor: Colors.green,
+        ),
+      );
 
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginPage()));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+      );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text("Erro ao cadastrar prestador: $respStr"),
-        backgroundColor: Colors.red,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Erro ao cadastrar prestador: $respStr"),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
-  Widget _formularioBase(GlobalKey<FormState> formKey, {bool prestador = false}) {
+  Widget _formularioBase(
+    GlobalKey<FormState> formKey, {
+    bool prestador = false,
+  }) {
     return Form(
       key: formKey,
       child: Column(
@@ -190,47 +241,84 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
           TextFormField(
             controller: _nomeController,
             decoration: const InputDecoration(labelText: "Nome completo"),
-            validator: (value) => value == null || value.isEmpty ? "Informe o nome" : null,
+            validator:
+                (value) =>
+                    value == null || value.isEmpty ? "Informe o nome" : null,
           ),
           TextFormField(
             controller: _emailController,
             decoration: const InputDecoration(labelText: "Email"),
-            validator: (value) => value == null || value.isEmpty ? "Informe o email" : null,
+            keyboardType: TextInputType.emailAddress,
+            validator:
+                (value) =>
+                    value == null || value.isEmpty ? "Informe o email" : null,
           ),
+          // APLICAÇÃO DA MÁSCARA DE TELEFONE
           TextFormField(
             controller: _telefoneController,
             decoration: const InputDecoration(labelText: "Telefone"),
-            validator: (value) => value == null || value.isEmpty ? "Informe o telefone" : null,
+            inputFormatters: [_maskTelefone], // Aplica a máscara
+            keyboardType:
+                TextInputType.phone, // Melhora a experiência do teclado
+            validator:
+                (value) =>
+                    value == null || value.isEmpty
+                        ? "Informe o telefone"
+                        : null,
           ),
+          // APLICAÇÃO DA MÁSCARA DE CPF
           TextFormField(
             controller: _cpfController,
-            decoration: const InputDecoration(labelText: "CPF/CNPJ"),
-            validator: (value) => value == null || value.isEmpty ? "Informe o CPF/CNPJ" : null,
+            decoration: const InputDecoration(
+              labelText: "CPF",
+            ), // Label ajustado para CPF
+            inputFormatters: [_maskCpf], // Aplica a máscara
+            keyboardType:
+                TextInputType.number, // Melhora a experiência do teclado
+            validator:
+                (value) =>
+                    value == null || value.isEmpty ? "Informe o CPF" : null,
           ),
           TextFormField(
             controller: _senhaController,
             decoration: const InputDecoration(labelText: "Senha"),
             obscureText: true,
-            validator: (value) => value == null || value.length < 6 ? "Senha muito curta" : null,
+            validator:
+                (value) =>
+                    value == null || value.length < 6
+                        ? "Senha muito curta"
+                        : null,
           ),
           TextFormField(
             controller: _confirmarSenhaController,
             decoration: const InputDecoration(labelText: "Confirmar Senha"),
             obscureText: true,
-            validator: (value) =>
-                value != _senhaController.text ? "Senhas não coincidem" : null,
+            validator:
+                (value) =>
+                    value != _senhaController.text
+                        ? "Senhas não coincidem"
+                        : null,
           ),
           if (prestador)
             TextFormField(
               controller: _descricaoController,
-              decoration: const InputDecoration(labelText: "Descrição dos serviços"),
-              validator: (value) =>
-                  value == null || value.isEmpty ? "Informe a descrição" : null,
+              decoration: const InputDecoration(
+                labelText: "Descrição dos serviços",
+              ),
+              validator:
+                  (value) =>
+                      value == null || value.isEmpty
+                          ? "Informe a descrição"
+                          : null,
             ),
           const SizedBox(height: 16),
+          // ... (resto do _formularioBase permanece o mesmo)
           Align(
             alignment: Alignment.centerLeft,
-            child: const Text("Foto de perfil", style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(
+              "Foto de perfil",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
           const SizedBox(height: 8),
           GestureDetector(
@@ -239,9 +327,12 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
               height: 150,
               width: double.infinity,
               color: Colors.grey[200],
-              child: _imagemPerfil == null
-                  ? const Center(child: Text("Clique para selecionar imagem de perfil"))
-                  : Image.file(_imagemPerfil!, fit: BoxFit.cover),
+              child:
+                  _imagemPerfil == null
+                      ? const Center(
+                        child: Text("Clique para selecionar imagem de perfil"),
+                      )
+                      : Image.file(_imagemPerfil!, fit: BoxFit.cover),
             ),
           ),
         ],
@@ -249,9 +340,9 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
     );
   }
 
+  // ... (seus métodos _formClienteWidget, _formPrestadorWidget, _mostrarErro, dispose e build permanecem os mesmos)
   Widget _formClienteWidget() {
     return SingleChildScrollView(
-
       padding: const EdgeInsets.all(16.0),
       child: _formularioBase(_formCliente),
     );
@@ -266,8 +357,10 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
           const SizedBox(height: 16),
           Align(
             alignment: Alignment.centerLeft,
-            child: Text("Imagem do Documento (Selfie com Doc. ou Doc. Oficial)",
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(
+              "Imagem do Documento (Selfie com Doc. ou Doc. Oficial)",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
           const SizedBox(height: 8),
           GestureDetector(
@@ -276,9 +369,14 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
               height: 150,
               width: double.infinity,
               color: Colors.grey[200],
-              child: _documentoImagem == null
-                  ? const Center(child: Text("Clique para selecionar imagem do documento"))
-                  : Image.file(_documentoImagem!, fit: BoxFit.cover),
+              child:
+                  _documentoImagem == null
+                      ? const Center(
+                        child: Text(
+                          "Clique para selecionar imagem do documento",
+                        ),
+                      )
+                      : Image.file(_documentoImagem!, fit: BoxFit.cover),
             ),
           ),
           SizedBox(height: 20),
@@ -294,9 +392,7 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
         content: Text(mensagem),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
@@ -321,44 +417,37 @@ class _CadastroPageState extends State<CadastroPage> with SingleTickerProviderSt
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
-
           title: Text("Cadastro"),
           bottom: TabBar(
             controller: _tabController,
-            tabs: const [
-              Tab(text: "Cliente"),
-              Tab(text: "Prestador"),
-            ],
+            tabs: const [Tab(text: "Cliente"), Tab(text: "Prestador")],
           ),
         ),
         body: TabBarView(
           controller: _tabController,
-          children: [
-            _formClienteWidget(),
-            _formPrestadorWidget(),
-          ],
+          children: [_formClienteWidget(), _formPrestadorWidget()],
         ),
         bottomNavigationBar: Padding(
           padding: const EdgeInsets.all(16.0),
           child: ElevatedButton(
             onPressed: () {
               final abaAtual = _tabController.index;
-
-              bool formValido = false;
-
               if (abaAtual == 0) {
                 if (_formCliente.currentState!.validate()) {
                   _cadastrarCliente();
+                } else {
+                  _mostrarErro(
+                    "Por favor, preencha todos os campos corretamente.",
+                  );
                 }
               } else {
                 if (_formPrestador.currentState!.validate()) {
                   _cadastrarPrestador();
+                } else {
+                  _mostrarErro(
+                    "Por favor, preencha todos os campos corretamente.",
+                  );
                 }
-              }
-
-
-              if (!formValido) {
-                _mostrarErro("Por favor, preencha todos os campos corretamente.");
               }
             },
             style: ElevatedButton.styleFrom(

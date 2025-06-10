@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:quebragalho2/views/cliente/pages/home_page.dart';
+import 'package:quebragalho2/views/cliente/pages/navegacao_cliente.dart';
 
 
 class SplashScreen extends StatefulWidget {
@@ -50,7 +51,7 @@ class _SplashScreenState extends State<SplashScreen>
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (BuildContext context) => HomePage(),
+            builder: (BuildContext context) => NavegacaoCliente(),
           ),
         );
       }
