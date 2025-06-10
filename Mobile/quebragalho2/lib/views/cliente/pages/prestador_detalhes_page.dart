@@ -30,7 +30,7 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
   Future<void> _fetchPrestadorDetails() async {
     try {
       final response = await http.get(
-        Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage/prestador/${widget.id}'),
+        Uri.parse('http://${ApiConfig.baseUrl}/api/usuario/homepage/prestador/${widget.id}'),
       );
 
       if (response.statusCode == 200) {
@@ -80,12 +80,25 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
             // Imagem
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                'https://${ApiConfig.baseUrl}/${prestadorData!['imagemPerfil']}',
-                height: 180,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
+              child: prestadorData!['imagemPerfil'] != null && prestadorData!['imagemPerfil'].toString().isNotEmpty
+                  ? Image.network(
+                      prestadorData!['imagemPerfil'],
+                      height: 180,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        height: 180,
+                        width: double.infinity,
+                        color: Colors.grey[300],
+                        child: const Icon(Icons.person, size: 80, color: Colors.grey),
+                      ),
+                    )
+                  : Container(
+                      height: 180,
+                      width: double.infinity,
+                      color: Colors.grey[300],
+                      child: const Icon(Icons.person, size: 80, color: Colors.grey),
+                    ),
             ),
             const SizedBox(height: 16),
 

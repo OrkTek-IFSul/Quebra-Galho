@@ -1,3 +1,3 @@
 class ApiConfig {
-  static const String baseUrl = 'remarkably-amazed-viper.ngrok-free.app';
+  static const String baseUrl = '192.168.0.155:8080';
 }

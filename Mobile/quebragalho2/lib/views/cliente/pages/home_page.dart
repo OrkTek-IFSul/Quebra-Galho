@@ -38,6 +38,136 @@ class _HomePageState extends State<HomePage> {
     searchController.addListener(_debouncedSearch);
   }
 
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    searchController.removeListener(_debouncedSearch);
+    searchController.dispose();
+    super.dispose();
+  }
+
+  // --- MÉTODOS DE LÓGICA E DADOS ---
+
+  /// Método centralizador que decide qual busca realizar.
+  /// Ele verifica o estado do campo de busca e das tags.
+  Future<void> _filtrarEBuscarPrestadores() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final termoBusca = searchController.text.trim();
+
+    // Condição principal: Se a busca está vazia e nenhuma tag específica
+    // foi selecionada, busca todos os prestadores.
+    if (termoBusca.isEmpty && selectedTags.isEmpty) {
+      await fetchPrestadores();
+    } else {
+      // Caso contrário, realiza uma busca com os filtros atuais.
+      await _searchPrestadoresComFiltros();
+    }
+  }
+
+  /// Carrega os dados iniciais da página.
+  Future<void> _loadInitialData() async {
+    await fetchCategorias();
+    await _filtrarEBuscarPrestadores(); // Usa o método centralizado
+  }
+
+  /// Listener para o campo de busca com debounce.
+  void _debouncedSearch() {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      _filtrarEBuscarPrestadores(); // Chama o método centralizado
+    });
+  }
+
+  // --- MÉTODOS DE API ---
+
+  /// Busca TODOS os prestadores (sem filtros).
+  Future<void> fetchPrestadores() async {
+    // Garante que o estado de loading seja o correto
+    if (!isLoading) setState(() => isLoading = true);
+
+    try {
+      final uri = Uri.parse('http://${ApiConfig.baseUrl}/api/usuario/homepage/prestadores');
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _prestadoresFiltrados = data;
+        });
+      } else {
+        print('Falha ao carregar prestadores: ${response.statusCode} ${response.body}');
+        setState(() => _prestadoresFiltrados = []);
+      }
+    } catch (e) {
+      print('Erro ao carregar prestadores: $e');
+      setState(() => _prestadoresFiltrados = []);
+    } finally {
+      // Garante que o loading seja desativado
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
+  /// Realiza a busca com os filtros (nome e/ou tags).
+  Future<void> _searchPrestadoresComFiltros() async {
+    if (!isLoading) setState(() => isLoading = true);
+
+    try {
+      final queryParams = {
+        if (searchController.text.trim().isNotEmpty) 'nome': searchController.text.trim(),
+        if (selectedTags.isNotEmpty) 'tags': selectedTags.join(','),
+        'page': '0',
+        'size': '10',
+      };
+
+      final uri = Uri.parse('http://${ApiConfig.baseUrl}/api/usuario/homepage/buscar')
+          .replace(queryParameters: queryParams);
+
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _prestadoresFiltrados = data['content'] ?? [];
+        });
+      } else {
+        print('Falha ao buscar prestadores: ${response.statusCode} ${response.body}');
+        setState(() => _prestadoresFiltrados = []);
+      }
+    } catch (e) {
+      print('Erro na busca: $e');
+      setState(() => _prestadoresFiltrados = []);
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+  
+  /// Busca as categorias/tags disponíveis.
+  Future<void> fetchCategorias() async {
+    try {
+      final uri = Uri.parse('http://${ApiConfig.baseUrl}/api/usuario/homepage/tags');
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+        setState(() {
+          categories = [
+            'Todos',
+            ...data.map((tag) => tag['nome'].toString()),
+          ];
+        });
+      } else {
+        print('Falha ao carregar categorias: ${response.statusCode} ${response.body}');
+      }
+    } catch (e) {
+      print('Erro ao carregar categorias: $e');
+    }
+  }
+  
+  // --- MÉTODOS DE AUTENTICAÇÃO E OUTROS ---
+  
   Future<void> _checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
@@ -62,158 +192,20 @@ class _HomePageState extends State<HomePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Logout realizado com sucesso')),
     );
-    carregarDados();
-    searchController.addListener(_debouncedSearch);
-  }
-
-  Future<void> carregarDados() async {
-    await carregarUsuarioId();
-    await _loadInitialData();
+    _loadInitialData(); // Recarrega os dados para o estado de deslogado
   }
 
   Future<void> carregarUsuarioId() async {
-    final id = await obterIdUsuario();
-    setState(() {
-      usuarioId = id;
-    });
+    // Implemente a busca do ID do usuário se necessário
+    // final id = await obterIdUsuario(); 
+    // setState(() {
+    //   usuarioId = id;
+    // });
   }
 
-  void _debouncedSearch() {
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () {
-      _searchPrestadores();
-    });
-  }
+  // --- WIDGETS ---
 
-  Future<void> _loadInitialData() async {
-    setState(() {
-      isLoading = true;
-    });
-    await fetchCategorias();
-    await fetchPrestadores();
-
-  }
-
-  Future<List<dynamic>> _searchPrestadores() async {
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      final queryParams = {
-        if (searchController.text.isNotEmpty) 'nome': searchController.text,
-        if (selectedTags.isNotEmpty) 'tags': selectedTags.join(','),
-        'page': '0',
-        'size': '10',
-      };
-
-      if (queryParams.length == 2) {
-        return await fetchPrestadores();
-      }
-
-      if (searchController.text.isEmpty && selectedTags.isEmpty) {
-        return await fetchPrestadores();
-      }
-
-
-     final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage/buscar')
-          .replace(queryParameters: queryParams);
-      
-
-      final response = await http.get(uri);
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          _prestadoresFiltrados = data['content'] ?? [];
-          isLoading = false;
-        });
-        return _prestadoresFiltrados;
-      } else {
-        print('Falha ao buscar prestadores: ${response.statusCode} ${response.body}');
-        setState(() {
-          _prestadoresFiltrados = [];
-          isLoading = false;
-        });
-        return [];
-      }
-    } catch (e) {
-      print('Erro na busca: $e');
-      setState(() {
-        _prestadoresFiltrados = [];
-        isLoading = false;
-      });
-      return [];
-    }
-  }
-
-  @override
-  void dispose() {
-    _debounce?.cancel();
-    searchController.removeListener(_debouncedSearch);
-    searchController.dispose();
-    super.dispose();
-  }
-
-  Future<void> fetchCategorias() async {
-    try {
-
-      final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage/tags');
-      final response = await http.get(uri);
-
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        setState(() {
-          categories = [
-            'Todos',
-            ...data.map((tag) => tag['nome'].toString()),
-          ];
-        });
-      } else {
-        print('Falha ao carregar categorias: ${response.statusCode} ${response.body}');
-      }
-    } catch (e) {
-      print('Erro ao carregar categorias: $e');
-    }
-  }
-
-  Future<List<dynamic>> fetchPrestadores() async {
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-
-      final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage/prestadores');
-      final response = await http.get(uri);
-
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        setState(() {
-          _prestadoresFiltrados = data;
-          isLoading = false;
-        });
-        return data;
-      } else {
-        print('Falha ao carregar prestadores: ${response.statusCode} ${response.body}');
-        setState(() {
-          _prestadoresFiltrados = [];
-          isLoading = false;
-        });
-        return [];
-      }
-    } catch (e) {
-      print('Erro ao carregar prestadores: $e');
-      setState(() {
-        _prestadoresFiltrados = [];
-        isLoading = false;
-      });
-      return [];
-    }
-  }
-
+  /// Constrói os chips de categoria.
   Widget _buildCategoryChip(String category) {
     final isSelected = category == 'Todos'
         ? selectedTags.isEmpty
@@ -224,6 +216,8 @@ class _HomePageState extends State<HomePage> {
       selectedColor: Theme.of(context).primaryColor.withOpacity(0.3),
       selected: isSelected,
       onSelected: (bool selected) {
+        // A lógica de seleção de tag agora é mais simples.
+        // Apenas atualiza o estado da lista `selectedTags`.
         setState(() {
           if (category == 'Todos') {
             selectedTags.clear();
@@ -234,8 +228,10 @@ class _HomePageState extends State<HomePage> {
               selectedTags.remove(category);
             }
           }
-          _searchPrestadores();
         });
+        // Após qualquer mudança nas tags, chama o método centralizador
+        // para atualizar a lista de prestadores.
+        _filtrarEBuscarPrestadores();
       },
     );
   }
@@ -250,21 +246,7 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Sair',
-            onPressed: () async {
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.remove('token');
-              await prefs.remove('token_criado_em');
-              await prefs.remove('manter_logado');
-
-              if (context.mounted) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoginPage()),
-                  (route) => false,
-                );
-
-              }
-            },
+            onPressed: _logout, // Chama a função de logout
           ),
         ],
       ),
@@ -308,7 +290,6 @@ class _HomePageState extends State<HomePage> {
                             textAlign: TextAlign.center,
                           )
                         )
-
                       : ListView.builder(
                           itemCount: _prestadoresFiltrados.length,
                           itemBuilder: (context, index) {
