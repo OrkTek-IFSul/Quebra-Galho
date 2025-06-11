@@ -29,6 +29,7 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
   }
 
   Future<void> _inicializar() async {
+    
     final id = await obterIdUsuario();
     if (id == null) {
       if (!mounted) return;

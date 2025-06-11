@@ -12,6 +12,7 @@ import 'package:quebragalho2/api_config.dart';
 class PerfilPage extends StatefulWidget {
   final int usuarioId;
   const PerfilPage({super.key, required this.usuarioId});
+  
 
   @override
   State<PerfilPage> createState() => _PerfilPageState();
