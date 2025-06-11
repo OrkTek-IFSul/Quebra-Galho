@@ -8,6 +8,7 @@ import 'package:quebragalho2/views/cliente/pages/navegacao_cliente.dart';
 import 'package:quebragalho2/views/prestador/pages/navegacao_prestador.dart';
 import 'package:quebragalho2/views/cliente/pages/login_page.dart'; // onde está obterIdUsuario()
 import 'package:quebragalho2/api_config.dart';
+import 'package:quebragalho2/views/cliente/widgets/modal_cadastro_prestador.dart';
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
@@ -126,12 +127,7 @@ class _WelcomePageState extends State<WelcomePage> {
                               ),
                             );
                           } else {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => CadastroPage(),
-                              ),
-                            );
+                            showCadastroPrestadorModal(context);
                           }
                         },
                   icon: Icon(Icons.handyman, color: Colors.blue.shade600),

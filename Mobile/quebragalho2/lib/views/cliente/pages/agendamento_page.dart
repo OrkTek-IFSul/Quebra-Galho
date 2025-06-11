@@ -143,7 +143,7 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Agendar ${widget.servico}'),
+        title: Text('Agendar',style: TextStyle(fontSize: 16),),
         centerTitle: true,
       ),
       body: _loading

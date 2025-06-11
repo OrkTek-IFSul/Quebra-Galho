@@ -13,7 +13,8 @@ import 'login_page.dart';
 import 'package:quebragalho2/api_config.dart';
 
 class CadastroPage extends StatefulWidget {
-  const CadastroPage({super.key});
+ 
+  const CadastroPage({super.key, });
 
   @override
   State<CadastroPage> createState() => _CadastroPageState();
@@ -80,7 +81,7 @@ class _CadastroPageState extends State<CadastroPage>
     if (_imagemPerfil == null) return;
 
     final url = Uri.parse(
-      'http://${ApiConfig.baseUrl}/api/usuario/perfil/$usuarioId/imagem',
+      'https://${ApiConfig.baseUrl}/api/usuario/perfil/$usuarioId/imagem',
     );
 
     final request = http.MultipartRequest('POST', url)
@@ -109,7 +110,7 @@ class _CadastroPageState extends State<CadastroPage>
   }
 
   Future<void> _cadastrarCliente() async {
-    final url = Uri.parse('http://${ApiConfig.baseUrl}/api/cadastro/usuario');
+    final url = Uri.parse('https://${ApiConfig.baseUrl}/api/cadastro/usuario');
 
     // 3. Limpe a máscara antes de enviar para a API
     final telefoneLimpo = _maskTelefone.getUnmaskedText();
@@ -167,7 +168,7 @@ class _CadastroPageState extends State<CadastroPage>
       return;
     }
 
-    final url = Uri.parse('http://${ApiConfig.baseUrl}/api/cadastro/prestador');
+    final url = Uri.parse('https://${ApiConfig.baseUrl}/api/cadastro/prestador');
 
     // 3. Limpe a máscara antes de enviar para a API
     final telefoneLimpo = _maskTelefone.getUnmaskedText();

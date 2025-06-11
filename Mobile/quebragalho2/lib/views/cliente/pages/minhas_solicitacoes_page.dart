@@ -116,7 +116,7 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
                       return SolicitacaoWidget(
                         nome: item['nome']!,
                         horario: item['horario']!,
-                        status: item['status']!,
+                        status: item['status_aceito']!,
                         imagemUrl: item['imagem']!,
                         onTap: () {
                           Navigator.push(

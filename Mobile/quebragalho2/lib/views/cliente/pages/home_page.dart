@@ -84,7 +84,7 @@ class _HomePageState extends State<HomePage> {
     if (!isLoading) setState(() => isLoading = true);
 
     try {
-      final uri = Uri.parse('http://${ApiConfig.baseUrl}/api/usuario/homepage/prestadores');
+      final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage/prestadores');
       final response = await http.get(uri);
 
       if (response.statusCode == 200) {
@@ -117,7 +117,7 @@ class _HomePageState extends State<HomePage> {
         'size': '10',
       };
 
-      final uri = Uri.parse('http://${ApiConfig.baseUrl}/api/usuario/homepage/buscar')
+      final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage/buscar')
           .replace(queryParameters: queryParams);
 
       final response = await http.get(uri);
@@ -143,7 +143,7 @@ class _HomePageState extends State<HomePage> {
   /// Busca as categorias/tags disponíveis.
   Future<void> fetchCategorias() async {
     try {
-      final uri = Uri.parse('http://${ApiConfig.baseUrl}/api/usuario/homepage/tags');
+      final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage/tags');
       final response = await http.get(uri);
 
       if (response.statusCode == 200) {

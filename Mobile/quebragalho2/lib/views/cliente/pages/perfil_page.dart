@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:quebragalho2/views/cliente/pages/cadastro_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:quebragalho2/services/perfil_page_services.dart';
 import 'package:quebragalho2/views/cliente/pages/editar_dados_page.dart';
@@ -53,9 +54,9 @@ class _PerfilPageState extends State<PerfilPage> {
           const SnackBar(content: Text('Imagem atualizada com sucesso!')),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Falha ao enviar imagem')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Falha ao enviar imagem')));
       }
     }
   }
@@ -86,10 +87,10 @@ class _PerfilPageState extends State<PerfilPage> {
           final email = dados['email'] ?? '';
           final cpf = dados['documento'] ?? '';
           final imagemPerfil = dados['imagemPerfil'];
-          final imagemUrl = (imagemPerfil != null && imagemPerfil != '')
-              ? 'http://${ApiConfig.baseUrl}/$imagemPerfil?ts=${DateTime.now().millisecondsSinceEpoch}'
-              : null;
-
+          final imagemUrl =
+              (imagemPerfil != null && imagemPerfil != '')
+                  ? 'https://${ApiConfig.baseUrl}/$imagemPerfil?ts=${DateTime.now().millisecondsSinceEpoch}'
+                  : null;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -99,12 +100,13 @@ class _PerfilPageState extends State<PerfilPage> {
                   children: [
                     CircleAvatar(
                       radius: 60,
-                      backgroundImage: _imagemSelecionada != null
-                          ? FileImage(File(_imagemSelecionada!.path))
-                          : (imagemUrl != null
-                              ? NetworkImage(imagemUrl)
-                              : const AssetImage('assets/perfil.jpg'))
-                              as ImageProvider,
+                      backgroundImage:
+                          _imagemSelecionada != null
+                              ? FileImage(File(_imagemSelecionada!.path))
+                              : (imagemUrl != null
+                                      ? NetworkImage(imagemUrl)
+                                      : const AssetImage('assets/perfil.jpg'))
+                                  as ImageProvider,
                       backgroundColor: Colors.grey,
                     ),
                     Positioned(
@@ -174,6 +176,28 @@ class _PerfilPageState extends State<PerfilPage> {
                     foregroundColor: Colors.blue,
                     minimumSize: const Size(double.infinity, 50),
                     side: const BorderSide(color: Colors.blue),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Botão "Migrar para prestador"
+                OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CadastroPage(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.swap_horiz),
+                  label: const Text("Migrar para prestador"),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.deepOrange,
+                    minimumSize: const Size(double.infinity, 50),
+                    side: const BorderSide(color: Colors.deepOrange),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
