@@ -33,7 +33,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-
     _checkLoginStatus();
     _loadNomeUsuario(); // Chame aqui
     _loadInitialData();

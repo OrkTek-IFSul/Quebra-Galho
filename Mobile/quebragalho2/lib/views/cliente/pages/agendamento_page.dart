@@ -12,16 +12,15 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:quebragalho2/api_config.dart'; // Importa a config da API
 import '../../../services/agendamento_page_services.dart'; // Verifique este arquivo também
+import 'login_page.dart';
 
 class AgendamentoPage extends StatefulWidget {
   final String servico;
   final int servicoId;
-  final int usuarioId;
 
   const AgendamentoPage({
     required this.servico,
     required this.servicoId,
-    required this.usuarioId,
     super.key,
   });
 
@@ -38,13 +37,33 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
   ];
   final AgendamentoPageService _service = AgendamentoPageService();
   List<DateTime> _horariosIndisponiveis = [];
-  bool _loading = false;
+  bool _loading = true; // começa true enquanto carrega usuário e horários
+
+  int? _usuarioId;
 
   @override
   void initState() {
     super.initState();
     _selectedDay = DateTime.now();
-    _carregarHorariosIndisponiveis();
+    _iniciar();
+  }
+
+  Future<void> _iniciar() async {
+    final id = await obterIdUsuario();
+    if (id == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro: usuário não está logado')),
+      );
+      setState(() => _loading = false);
+      return;
+    }
+
+    setState(() {
+      _usuarioId = id;
+    });
+
+    await _carregarHorariosIndisponiveis();
   }
 
   Future<void> _carregarHorariosIndisponiveis() async {
@@ -85,7 +104,7 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
   }
 
   Future<void> _solicitarAgendamento() async {
-    if (_selectedTime == null) return;
+    if (_selectedTime == null || _usuarioId == null) return;
 
     setState(() => _loading = true);
     try {
@@ -96,7 +115,7 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
       }
 
       final agendamento = await _service.cadastrarAgendamento(
-        usuarioId: widget.usuarioId,
+        usuarioId: _usuarioId!,
         servicoId: widget.servicoId,
         horario: dataHora,
       );
@@ -144,7 +163,7 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Agendar',style: TextStyle(fontSize: 16),),
+        title: Text('Agendar', style: TextStyle(fontSize: 16)),
         centerTitle: true,
       ),
       body: _loading

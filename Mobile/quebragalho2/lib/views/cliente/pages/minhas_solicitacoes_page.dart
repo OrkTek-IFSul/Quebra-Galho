@@ -23,22 +23,29 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
   int? _usuarioId;
 
   @override
-  void initState() {
-    super.initState();
+void initState() {
+  super.initState();
 
-    // Obter o usuário (sem await dentro de Future) e depois carregar as solicitações
-    obterIdUsuario().then((id) {
-      if (!mounted) return;
-      setState(() {
-        _usuarioId = id;
-      });
-      _carregarSolicitacoes();
+  obterIdUsuario().then((id) {
+    if (!mounted) return;
+    setState(() {
+      _usuarioId = id;
     });
-  }
+    _carregarSolicitacoes(); // <-- Chama o carregamento com o ID certo
+  });
+}
+
+  
 
   String _formatarData(String dataString) {
     final data = DateTime.parse(dataString);
-    return '${data.hour.toString().padLeft(2, '0')}:${data.minute.toString().padLeft(2, '0')}';
+    return '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')} às ${data.hour.toString().padLeft(2, '0')}:${data.minute.toString().padLeft(2, '0')}';
+  }
+
+  String _formatarBool(dynamic valor) {
+    if (valor == true) return 'Sim';
+    if (valor == false) return 'Não';
+    return 'Pendente';
   }
 
   Future<void> _carregarSolicitacoes() async {
@@ -56,8 +63,11 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
       );
 
       if (response.statusCode == 200) {
+        final dados = json.decode(response.body);
+        print('Solicitações recebidas: $dados');
+
         setState(() {
-          _solicitacoes = json.decode(response.body);
+          _solicitacoes = dados;
           _solicitacoesFiltradas = _solicitacoes;
           _isLoading = false;
         });
@@ -66,9 +76,9 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao carregar dados: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao carregar dados: $e')));
     }
   }
 
@@ -91,7 +101,6 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
       appBar: AppBar(title: const Text("Minhas Solicitações")),
       body: Column(
         children: [
-          /// Barra de Pesquisa
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: TextField(
@@ -109,35 +118,42 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    itemCount: _solicitacoesFiltradas.length,
-                    itemBuilder: (context, index) {
-                      final item = _solicitacoesFiltradas[index];
-                      return SolicitacaoWidget(
-                        nome: item['nome']!,
-                        horario: item['horario']!,
-                        status: item['status_aceito']!,
-                        imagemUrl: item['imagem']!,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => DetalhesSolicitacaoPage(agendamentoId: 1),
-                            ),
+                : _solicitacoesFiltradas.isEmpty
+                    ? const Center(child: Text('Nenhuma solicitação encontrada.'))
+                    : ListView.builder(
+                        itemCount: _solicitacoesFiltradas.length,
+                        itemBuilder: (context, index) {
+                          final item = _solicitacoesFiltradas[index];
+
+                          return SolicitacaoWidget(
+                            nome: item['nome_prestador'] ?? 'Não informado',
+                            horario: _formatarData(item['horario']),
+                            statusServico: _formatarBool(item['status_servico']),
+                            statusAceito: _formatarBool(item['status_aceito']),
+                            idAgendamento: item['id_agendamento'].toString(),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => DetalhesSolicitacaoPage(
+                                    agendamentoId: item['id_agendamento'],
+                                  ),
+                                ),
+                              );
+                            },
                           );
                         },
-                      );
-                    },
-                  ),
+                      ),
           ),
         ],
       ),
     );
   }
-
+  
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 }
+

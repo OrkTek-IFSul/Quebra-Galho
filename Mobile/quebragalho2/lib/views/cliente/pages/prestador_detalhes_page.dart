@@ -276,7 +276,6 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
                                     (_) => AgendamentoPage(
                                       servico: servico['nome'],
                                       servicoId: servico['id'],
-                                      usuarioId: widget.id,
                                     ),
                               ),
                             );
