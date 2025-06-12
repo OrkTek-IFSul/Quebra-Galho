@@ -70,11 +70,17 @@ class _NavegacaoClienteState extends State<NavegacaoCliente> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
             IconButton(
-              icon: const Icon(Icons.home),
+              icon: Icon(
+                Icons.home,
+                color: _selectedIndex == 0 ? Colors.black : Colors.grey[400],
+              ),
               onPressed: () => _onTabTapped(0),
             ),
             IconButton(
-              icon: const Icon(Icons.person),
+              icon: Icon(
+                Icons.person,
+                color: _selectedIndex == 1 ? Colors.black : Colors.grey[400],
+              ),
               onPressed: () => _onTabTapped(1),
             ),
           ],

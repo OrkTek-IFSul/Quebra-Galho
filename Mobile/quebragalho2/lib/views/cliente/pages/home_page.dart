@@ -28,12 +28,14 @@ class _HomePageState extends State<HomePage> {
   Timer? _debounce;
 
   int? usuarioId;
+  String? nomeUsuario; // Adicione esta variável
 
   @override
   void initState() {
     super.initState();
 
     _checkLoginStatus();
+    _loadNomeUsuario(); // Chame aqui
     _loadInitialData();
     searchController.addListener(_debouncedSearch);
   }
@@ -194,6 +196,13 @@ class _HomePageState extends State<HomePage> {
     // Implemente a busca do ID do usuário se necessário
   }
 
+  Future<void> _loadNomeUsuario() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      nomeUsuario = prefs.getString('user_name') ?? '';
+    });
+  }
+
   // --- WIDGETS ---
 
   /// Constrói os chips de categoria.
@@ -203,13 +212,20 @@ class _HomePageState extends State<HomePage> {
         : selectedTags.contains(category);
 
     return ChoiceChip(
-      label: Text(category),
-      selectedColor: Theme.of(context).primaryColor.withOpacity(0.3),
+      label: Text(
+        category,
+        style: TextStyle(
+          color: isSelected ? Colors.white : Colors.black, // texto branco se selecionado
+        ),
+      ),
+      selectedColor: Colors.black, // selecionado fica preto
+      backgroundColor: Colors.grey[200],
       selected: isSelected,
       onSelected: (bool selected) {
         setState(() {
           if (category == 'Todos') {
             selectedTags.clear();
+            searchController.clear(); // opcional: limpa busca ao selecionar 'Todos'
           } else {
             if (selected) {
               selectedTags.add(category);
@@ -227,26 +243,49 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false, // Desabilita completamente a seta de voltar
-        title: isLoggedIn 
-            ? const Text('Home')
+        automaticallyImplyLeading: false,
+        title: isLoggedIn
+            ? Text('Olá, ${nomeUsuario ?? ''}')
             : const Text(''),
         actions: [
           if (isLoggedIn)
-            IconButton(
-              icon: const Icon(Icons.notifications_none), 
-              onPressed: () {}
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF0F0F0), // cinza claro
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.notifications_none),
+                  onPressed: () {},
+                  color: Colors.black87,
+                  splashRadius: 24,
+                ),
+              ),
             ),
-          IconButton(
-            icon: Icon(isLoggedIn ? Icons.logout : Icons.login),
-            tooltip: isLoggedIn ? 'Sair' : 'Entrar',
-            onPressed: isLoggedIn 
-                ? _logout 
-                : () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const LoginPage()),
-                    ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFFF0F0F0), // cinza claro
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: Icon(isLoggedIn ? Icons.logout : Icons.login),
+                tooltip: isLoggedIn ? 'Sair' : 'Entrar',
+                onPressed: isLoggedIn
+                    ? _logout
+                    : () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const LoginPage()),
+                        ),
+                color: Colors.black87,
+                splashRadius: 24,
+              ),
+            ),
           ),
+          const SizedBox(width: 12), // Espaçamento extra à direita do último ícone
         ],
       ),
       body: Padding(

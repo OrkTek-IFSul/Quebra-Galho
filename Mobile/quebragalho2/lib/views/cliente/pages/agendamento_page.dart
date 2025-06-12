@@ -5,6 +5,7 @@
 /// Descrição: Página de agendamento de serviços, onde o usuário pode selecionar uma data e horário disponíveis para agendar um serviço específico.
 /// Versão: 1.0.0
 ///
+library;
 import 'package:flutter/material.dart';
 import 'package:quebragalho2/views/cliente/pages/tela_confirmacao_solicitacao.dart'; // Verifique este arquivo também
 import 'package:table_calendar/table_calendar.dart';

@@ -5,6 +5,7 @@
 /// Descrição: Serviço de agendamento de horários para serviços, onde o usuário pode selecionar uma data e horário disponíveis para agendar um serviço específico.
 /// Versão: 1.0.0
 ///
+library;
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:quebragalho2/api_config.dart';

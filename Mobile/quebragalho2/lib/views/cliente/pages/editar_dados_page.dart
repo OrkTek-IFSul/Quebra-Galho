@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:quebragalho2/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:quebragalho2/views/prestador/pages/tela_perfil.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class EditarDadosPage extends StatefulWidget {
   const EditarDadosPage({super.key});
@@ -21,6 +21,12 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
 
   int? _usuarioId;
   bool _isLoading = true;
+
+  final maskTelefone = MaskTextInputFormatter(
+    mask: '(##) #####-####',
+    filter: { "#": RegExp(r'[0-9]') },
+    type: MaskAutoCompletionType.lazy,
+  );
 
   @override
   void initState() {
@@ -165,7 +171,8 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
                   const SizedBox(height: 16),
                   TextField(
                     controller: _telefoneController,
-                    keyboardType: TextInputType.phone,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [maskTelefone],
                     decoration: const InputDecoration(
                       labelText: "Telefone",
                       border: OutlineInputBorder(),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:http/http.dart' as http;
-import 'package:quebragalho2/views/cliente/pages/cadastro_page.dart';
 import 'dart:convert';
 
 import 'package:quebragalho2/views/cliente/pages/navegacao_cliente.dart';

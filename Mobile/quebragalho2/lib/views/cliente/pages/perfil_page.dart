@@ -2,12 +2,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:quebragalho2/views/cliente/pages/cadastro_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:quebragalho2/services/perfil_page_services.dart';
 import 'package:quebragalho2/views/cliente/pages/editar_dados_page.dart';
 import 'package:quebragalho2/views/cliente/pages/minhas_solicitacoes_page.dart';
 import 'package:quebragalho2/views/cliente/widgets/info_campos_perfil.dart';
 import 'package:quebragalho2/api_config.dart';
+import 'package:quebragalho2/views/cliente/widgets/modal_cadastro_prestador.dart';
+import 'package:http/http.dart' as http;
 
 class PerfilPage extends StatefulWidget {
   final int usuarioId;
@@ -59,6 +60,18 @@ class _PerfilPageState extends State<PerfilPage> {
         ).showSnackBar(const SnackBar(content: Text('Falha ao enviar imagem')));
       }
     }
+  }
+
+  Future<bool> _verificarPrestador(int usuarioId) async {
+    try {
+      final url = Uri.parse('https://${ApiConfig.baseUrl}/api/tipousuario/$usuarioId');
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final result = response.body.trim().toLowerCase();
+        return result == 'true';
+      }
+    } catch (_) {}
+    return false;
   }
 
   @override
@@ -184,13 +197,16 @@ class _PerfilPageState extends State<PerfilPage> {
                 const SizedBox(height: 16),
                 // Botão "Migrar para prestador"
                 OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => CadastroPage(),
-                      ),
-                    );
+                  onPressed: () async {
+                    final isPrestador = await _verificarPrestador(widget.usuarioId);
+                    if (isPrestador) {
+                      // Redireciona para NavegacaoPrestador
+                      Navigator.pushReplacementNamed(context, '/navegacaoPrestador');
+                      // Ou, se não usar rotas nomeadas:
+                      // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => NavegacaoPrestador(prestadorId: widget.usuarioId)));
+                    } else {
+                      showCadastroPrestadorModal(context);
+                    }
                   },
                   icon: const Icon(Icons.swap_horiz),
                   label: const Text("Migrar para prestador"),

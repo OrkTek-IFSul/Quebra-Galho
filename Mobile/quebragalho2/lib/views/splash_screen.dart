@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:quebragalho2/views/cliente/pages/home_page.dart';
 import 'package:quebragalho2/views/cliente/pages/navegacao_cliente.dart';
 
 

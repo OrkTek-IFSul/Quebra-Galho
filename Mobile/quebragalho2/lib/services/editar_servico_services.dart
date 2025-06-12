@@ -5,6 +5,7 @@
 /// Descrição: Serviço de edição de serviços, onde o prestador pode atualizar os detalhes de um serviço específico, como nome, descrição e valor.
 /// Versão: 1.0.0
 ///
+library;
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:quebragalho2/api_config.dart';
