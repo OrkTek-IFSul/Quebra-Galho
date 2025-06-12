@@ -27,6 +27,7 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
     super.initState();
     _inicializarDados();
   }
+  
 
   Future<void> _inicializarDados() async {
     final id = await obterIdUsuario();
@@ -36,6 +37,20 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
     });
     await _carregarDados();
   }
+
+  String _formatarHorario(String horario) {
+  try {
+    final data = DateTime.parse(horario);
+    final dia = data.day.toString().padLeft(2, '0');
+    final mes = data.month.toString().padLeft(2, '0');
+    final hora = data.hour.toString().padLeft(2, '0');
+    final minuto = data.minute.toString().padLeft(2, '0');
+    return '$dia/$mes às $hora:$minuto';
+  } catch (e) {
+    return 'Horário inválido';
+  }
+}
+
 
   Future<void> _carregarDados() async {
     if (_usuarioId == null) {
@@ -53,7 +68,7 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
 
       if (response.statusCode == 200) {
         setState(() {
-          _servicoData = json.decode(response.body);
+          _servicoData = json.decode(utf8.decode(response.bodyBytes));
           _isLoading = false;
         });
       } else {
@@ -104,7 +119,7 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
         "comentario": _comentarioController.text.trim(),
         "data": formattedDate,
         "nomeServico": _servicoData!['nome_servico'] ?? 'N/A',
-        "nomeUsuario": _servicoData!['nome_usuario'] ?? 'N/A',
+        "nomeUsuario": _usuarioId.toString(),
       };
 
       final response = await http.post(
@@ -147,9 +162,8 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
 
     final String nomePrestador = _servicoData!['nome_prestador'] ?? 'Prestador Indisponível';
     final String nomeServico = _servicoData!['nome_servico'] ?? 'Serviço Indisponível';
-    final String horarioFormatado = _servicoData!['horario'] ?? 'N/A';
-    final double precoServico = (_servicoData!['preco_servico'] as num? ?? 0.0).toDouble();
-    final String imagemUrl = _servicoData!['imagem_url_prestador'] ?? '';
+    final double precoServico = (_servicoData!['valor_servico'] as num? ?? 0.0).toDouble();
+    final String imagemUrl = _servicoData!['img_prestador'] ?? '';
     final bool? statusAceito = _servicoData!['status_aceito'] as bool?;
     final bool jaAvaliado = _servicoData!['avaliado'] ?? _servicoAvaliadoLocalmente;
 
@@ -171,7 +185,7 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
                     borderRadius: BorderRadius.circular(12),
                     image: imagemUrl.isNotEmpty
                         ? DecorationImage(
-                            image: NetworkImage(imagemUrl),
+                            image: NetworkImage('https://${ApiConfig.baseUrl}/$imagemUrl'),
                             fit: BoxFit.cover,
                           )
                         : null,
@@ -187,7 +201,7 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
                       const SizedBox(height: 4),
                       Text("Serviço: $nomeServico"),
                       const SizedBox(height: 4),
-                      Text("Horário: $horarioFormatado"),
+                      Text("Horário: ${_formatarHorario(_servicoData!['horario'])}"),
                     ],
                   ),
                 ),

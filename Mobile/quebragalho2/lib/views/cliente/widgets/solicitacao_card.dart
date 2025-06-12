@@ -34,7 +34,6 @@ class SolicitacaoWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text("Prestador: $nome", style: const TextStyle(fontWeight: FontWeight.bold)),
-            Text("Agendamento ID: $idAgendamento"),
             Text("Horário: $horario"),
             Text("Status Serviço: $statusServico"),
             Text("Status Aceito: $statusAceito"),
