@@ -3,7 +3,8 @@ import 'package:quebragalho2/views/prestador/pages/home_page.dart';
 import 'package:quebragalho2/views/prestador/pages/tela_perfil.dart';
 
 class NavegacaoPrestador extends StatefulWidget {
-  const NavegacaoPrestador({super.key, required prestadorId});
+
+  NavegacaoPrestador({super.key,  required int id_prestador});
 
   @override
   State<NavegacaoPrestador> createState() => _NavegacaoPrestadorState();

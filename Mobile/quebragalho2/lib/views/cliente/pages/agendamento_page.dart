@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:quebragalho2/views/cliente/pages/tela_confirmacao_solicitacao.dart'; // Verifique este arquivo também
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
-import 'package:quebragalho2/api_config.dart'; // Importa a config da API
+// Importa a config da API
 import '../../../services/agendamento_page_services.dart'; // Verifique este arquivo também
 import 'login_page.dart';
 

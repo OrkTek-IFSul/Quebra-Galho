@@ -20,6 +20,7 @@ class _LoginPageState extends State<LoginPage> {
   final senhaController = TextEditingController();
   bool manterLogado = false;
   bool carregando = true;
+  bool _isPasswordObscured = true;
 
   @override
   void initState() {
@@ -27,6 +28,7 @@ class _LoginPageState extends State<LoginPage> {
     verificarLoginAutomatico();
   }
 
+  // --- A LÓGICA DE NEGÓCIO CONTINUA A MESMA ---
   Future<void> verificarLoginAutomatico() async {
     final prefs = await SharedPreferences.getInstance();
     final manter = prefs.getBool('manter_logado') ?? false;
@@ -48,7 +50,7 @@ class _LoginPageState extends State<LoginPage> {
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const WelcomePage()),
+          MaterialPageRoute(builder: (_) => const NavegacaoCliente()),
         );
         return;
       } else {
@@ -57,26 +59,18 @@ class _LoginPageState extends State<LoginPage> {
         await prefs.setBool('manter_logado', false);
       }
     }
-
     setState(() => carregando = false);
   }
 
   Future<void> salvarPreferencias(String token, int idUsuario, {int? idPrestador}) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('token', token); // SEMPRE salva o token
+    await prefs.setString('token', token);
     await prefs.setInt('usuario_id', idUsuario);
     await prefs.setString('token_criado_em', DateTime.now().toIso8601String());
-
     if (idPrestador != null) {
       await prefs.setInt('prestador_id', idPrestador);
     }
-
-    // A opção "manter logado" só controla o flag específico
     await prefs.setBool('manter_logado', manterLogado);
-
-    print('ID do prestador salvo: $idPrestador');
-    print('Token salvo: $token');
-    print('ID do usuário salvo: $idUsuario');
   }
 
   Future<void> fazerLogin() async {
@@ -94,16 +88,12 @@ class _LoginPageState extends State<LoginPage> {
         final body = jsonDecode(response.body);
         final token = body['token'];
         final idUsuario = body['id_usuario'];
-
-        // Usa diretamente o id_prestador retornado pelo backend, se houver
-        final idPrestador = body['id_prestador']; // pode ser nulo
-
+        final idPrestador = body['id_prestador'];
         await salvarPreferencias(token, idUsuario, idPrestador: idPrestador);
-
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const WelcomePage()),
+          MaterialPageRoute(builder: (_) => const NavegacaoCliente()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -117,6 +107,7 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     if (carregando) {
@@ -126,87 +117,184 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Login'),
-        // Adicione leading para customizar o botão voltar
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          // --- AÇÃO ATUALIZADA AQUI ---
           onPressed: () {
+            // Navega para a HomePage e remove todas as rotas anteriores.
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (context) => const NavegacaoCliente()),
-              (route) => false,
+              (Route<dynamic> route) => false,
             );
           },
         ),
-        // Desabilita o comportamento padrão de voltar
-        automaticallyImplyLeading: false,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(labelText: 'E-mail'),
-            ),
-            TextField(
-              controller: senhaController,
-              decoration: const InputDecoration(labelText: 'Senha'),
-              obscureText: true,
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Checkbox(
-                  value: manterLogado,
-                  onChanged: (value) {
-                    setState(() {
-                      manterLogado = value ?? false;
-                    });
-                  },
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 20),
+              const Text(
+                'Bem-vindo',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
                 ),
-                const Text('Continuar logado'),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: fazerLogin,
-                    child: const Text('Entrar'),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Faça o login abaixo para acessar as principais funções do aplicativo',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 48),
+              const Text('Email', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  hintText: 'Mariaarshaad123@gmail.com',
+                  filled: true,
+                  fillColor: const Color.fromARGB(255, 233, 233, 233),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
                   ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: OutlinedButton(
+              ),
+              const SizedBox(height: 20),
+              const Text('Password', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: senhaController,
+                obscureText: _isPasswordObscured,
+                decoration: InputDecoration(
+                  hintText: '••••••••••',
+                  filled: true,
+                  fillColor: const Color.fromARGB(255, 233, 233, 233),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordObscured ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.grey[400],
+                    ),
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const CadastroPage()),
-                      );
+                      setState(() {
+                        _isPasswordObscured = !_isPasswordObscured;
+                      });
                     },
-                    child: const Text('Fazer Cadastro'),
                   ),
                 ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: manterLogado,
+                        onChanged: (value) {
+                          setState(() {
+                            manterLogado = value ?? false;
+                          });
+                        },
+                        activeColor: const Color.fromARGB(255, 0, 0, 0),
+                        checkColor: Colors.white,
+                        fillColor: MaterialStateProperty.resolveWith((states) {
+                          if (states.contains(MaterialState.selected)) {
+                            return const Color.fromARGB(255, 0, 0, 0);
+                          }
+                          return Colors.grey[300];
+                        }),
+                      ),
+                      const Text('Manter conectado', style: TextStyle(color: Colors.black54)),
+                    ],
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      // TODO: Implementar lógica de "Esqueci a Senha"
+                    },
+                    child: const Text(
+                      'Esqueci a senha?',
+                      style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton(
+                onPressed: fazerLogin,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                child: const Text('Login'),
+              ),
+              const SizedBox(height: 16),
+              OutlinedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CadastroPage()),
+                  );
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color.fromARGB(255, 49, 49, 49),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  side: const BorderSide(color: Color.fromARGB(255, 77, 77, 77)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                child: const Text('Cadastre-se'),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
-
-// Função que as outras telas vão usar para obter o ID do usuário
+// Funções de obter ID permanecem as mesmas
 Future<int?> obterIdUsuario() async {
   final prefs = await SharedPreferences.getInstance();
   return prefs.getInt('usuario_id');
 }
+
 Future<int?> obterIdPrestador() async {
   final prefs = await SharedPreferences.getInstance();
   return prefs.getInt('prestador_id');
 }
-
-

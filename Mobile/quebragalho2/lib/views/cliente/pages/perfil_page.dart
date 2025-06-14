@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:quebragalho2/views/cliente/pages/cadastro_page.dart';
 import 'package:quebragalho2/services/perfil_page_services.dart';
 import 'package:quebragalho2/views/cliente/pages/editar_dados_page.dart';
 import 'package:quebragalho2/views/cliente/pages/minhas_solicitacoes_page.dart';

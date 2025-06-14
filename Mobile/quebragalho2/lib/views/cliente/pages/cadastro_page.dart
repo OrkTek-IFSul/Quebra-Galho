@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
-// 1. Importe o pacote da máscara
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:path/path.dart' as p;
 
@@ -13,8 +13,7 @@ import 'login_page.dart';
 import 'package:quebragalho2/api_config.dart';
 
 class CadastroPage extends StatefulWidget {
- 
-  const CadastroPage({super.key, });
+  const CadastroPage({super.key});
 
   @override
   State<CadastroPage> createState() => _CadastroPageState();
@@ -24,9 +23,9 @@ class _CadastroPageState extends State<CadastroPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
+  // Controllers e Keys permanecem os mesmos
   final _formCliente = GlobalKey<FormState>();
   final _formPrestador = GlobalKey<FormState>();
-
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
   final _telefoneController = TextEditingController();
@@ -39,7 +38,7 @@ class _CadastroPageState extends State<CadastroPage>
   File? _documentoImagem;
   File? _imagemPerfil;
 
-  // 2. Crie as instâncias das máscaras
+  // Máscaras permanecem as mesmas
   final _maskTelefone = MaskTextInputFormatter(
     mask: '(##) #####-####',
     filter: {"#": RegExp(r'[0-9]')},
@@ -51,6 +50,11 @@ class _CadastroPageState extends State<CadastroPage>
     filter: {"#": RegExp(r'[0-9]')},
     type: MaskAutoCompletionType.lazy,
   );
+  
+  // NOVO: Estado para controlar a visibilidade da senha
+  bool _isPasswordObscured = true;
+  bool _isConfirmPasswordObscured = true;
+
 
   @override
   void initState() {
@@ -58,11 +62,12 @@ class _CadastroPageState extends State<CadastroPage>
     _tabController = TabController(length: 2, vsync: this);
   }
 
-  // ... (seus métodos _selecionarImagemDocumento, _selecionarImagemPerfil, _uploadImagemPerfil permanecem os mesmos)
+  // --- MÉTODOS DE LÓGICA (permanecem inalterados) ---
+
   Future<void> _selecionarImagemDocumento() async {
     final XFile? imagem = await _picker.pickImage(source: ImageSource.gallery);
     if (imagem != null) {
-      (() {
+      setState(() {
         _documentoImagem = File(imagem.path);
       });
     }
@@ -102,7 +107,6 @@ class _CadastroPageState extends State<CadastroPage>
           content: Text(
             "Erro ao enviar imagem de perfil: ${response.reasonPhrase}",
           ),
-
           backgroundColor: Colors.red,
         ),
       );
@@ -111,8 +115,6 @@ class _CadastroPageState extends State<CadastroPage>
 
   Future<void> _cadastrarCliente() async {
     final url = Uri.parse('https://${ApiConfig.baseUrl}/api/cadastro/usuario');
-
-    // 3. Limpe a máscara antes de enviar para a API
     final telefoneLimpo = _maskTelefone.getUnmaskedText();
     final cpfLimpo = _maskCpf.getUnmaskedText();
 
@@ -123,12 +125,11 @@ class _CadastroPageState extends State<CadastroPage>
         "nome": _nomeController.text,
         "email": _emailController.text,
         "senha": _senhaController.text,
-        "documento": cpfLimpo, // Envia o valor sem máscara
-        "telefone": telefoneLimpo, // Envia o valor sem máscara
+        "documento": cpfLimpo,
+        "telefone": telefoneLimpo,
       }),
     );
 
-    // ... (resto do método _cadastrarCliente permanece o mesmo)
     if (!mounted) return;
 
     if (response.statusCode == 200 || response.statusCode == 201) {
@@ -148,29 +149,19 @@ class _CadastroPageState extends State<CadastroPage>
         MaterialPageRoute(builder: (_) => const LoginPage()),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Erro ao cadastrar: ${response.body}"),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _mostrarErro("Erro ao cadastrar: ${response.body}");
     }
   }
 
   Future<void> _cadastrarPrestador() async {
     if (_documentoImagem == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Selecione uma imagem do documento"),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      _mostrarErro("Por favor, selecione a imagem do seu documento.");
       return;
     }
 
-    final url = Uri.parse('https://${ApiConfig.baseUrl}/api/cadastro/prestador');
-
-    // 3. Limpe a máscara antes de enviar para a API
+    final url = Uri.parse(
+      'https://${ApiConfig.baseUrl}/api/cadastro/prestador',
+    );
     final telefoneLimpo = _maskTelefone.getUnmaskedText();
     final cpfLimpo = _maskCpf.getUnmaskedText();
 
@@ -178,8 +169,8 @@ class _CadastroPageState extends State<CadastroPage>
       "nome": _nomeController.text,
       "email": _emailController.text,
       "senha": _senhaController.text,
-      "documento": cpfLimpo, // Envia o valor sem máscara
-      "telefone": telefoneLimpo, // Envia o valor sem máscara
+      "documento": cpfLimpo,
+      "telefone": telefoneLimpo,
     };
 
     final prestadorDTO = {
@@ -187,22 +178,20 @@ class _CadastroPageState extends State<CadastroPage>
       "usuario": usuario,
     };
 
-    final request =
-        http.MultipartRequest('POST', url)
-          ..fields['prestadorDTO'] = json.encode(prestadorDTO)
-          ..files.add(
-            await http.MultipartFile.fromPath(
-              'imagemDocumento',
-              _documentoImagem!.path,
-              filename: p.basename(_documentoImagem!.path),
-              contentType: MediaType('image', 'jpeg'),
-            ),
-          );
+    final request = http.MultipartRequest('POST', url)
+      ..fields['prestadorDTO'] = json.encode(prestadorDTO)
+      ..files.add(
+        await http.MultipartFile.fromPath(
+          'imagemDocumento',
+          _documentoImagem!.path,
+          filename: p.basename(_documentoImagem!.path),
+          contentType: MediaType('image', 'jpeg'),
+        ),
+      );
 
     final response = await request.send();
     final respStr = await response.stream.bytesToString();
 
-    // ... (resto do método _cadastrarPrestador permanece o mesmo)
     if (!mounted) return;
 
     if (response.statusCode == 200 || response.statusCode == 201) {
@@ -222,15 +211,135 @@ class _CadastroPageState extends State<CadastroPage>
         MaterialPageRoute(builder: (_) => const LoginPage()),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Erro ao cadastrar prestador: $respStr"),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _mostrarErro("Erro ao cadastrar prestador: $respStr");
     }
   }
 
+  // --- WIDGETS DE LAYOUT (atualizados para o novo design) ---
+
+  // NOVO: Widget helper para criar os campos de texto estilizados
+  Widget _buildCustomTextField({
+    required TextEditingController controller,
+    required String label,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+    List? inputFormatters,
+    bool obscureText = false,
+    Widget? suffixIcon,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[800],
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: controller,
+            validator: validator,
+            keyboardType: keyboardType,
+            inputFormatters:
+                inputFormatters?.cast<TextInputFormatter>(),
+            obscureText: obscureText,
+            decoration: InputDecoration(
+              suffixIcon: suffixIcon,
+              filled: true,
+              fillColor: const Color.fromARGB(255, 235, 235, 235),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 15.0, horizontal: 12.0),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.0),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.0),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.0),
+                borderSide:
+                    BorderSide(color: Theme.of(context).primaryColor, width: 2.0),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.0),
+                borderSide: const BorderSide(color: Colors.red, width: 1.5),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.0),
+                borderSide: const BorderSide(color: Colors.red, width: 2.0),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // NOVO: Widget helper para criar os seletores de imagem estilizados
+  Widget _buildImagePicker({
+    required String label,
+    required File? imageFile,
+    required VoidCallback onTap,
+    required String placeholderText,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[800],
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: onTap,
+            child: Container(
+              height: 150,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12.0),
+                  border: Border.all(color: Colors.grey.shade300)),
+              child: imageFile == null
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.camera_alt_outlined,
+                              color: Colors.grey[600], size: 40),
+                          const SizedBox(height: 8),
+                          Text(
+                            placeholderText,
+                            style: TextStyle(color: Colors.grey[700]),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    )
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(12.0),
+                      child: Image.file(imageFile, fit: BoxFit.cover),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // ATUALIZADO: _formularioBase agora usa os novos widgets helpers
   Widget _formularioBase(
     GlobalKey<FormState> formKey, {
     bool prestador = false,
@@ -238,162 +347,131 @@ class _CadastroPageState extends State<CadastroPage>
     return Form(
       key: formKey,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextFormField(
+          _buildCustomTextField(
             controller: _nomeController,
-            decoration: const InputDecoration(labelText: "Nome completo"),
-            validator:
-                (value) =>
-                    value == null || value.isEmpty ? "Informe o nome" : null,
+            label: "Nome completo",
+            validator: (value) =>
+                value == null || value.isEmpty ? "Informe o nome" : null,
           ),
-          TextFormField(
+          _buildCustomTextField(
             controller: _emailController,
-            decoration: const InputDecoration(labelText: "Email"),
+            label: "Email",
             keyboardType: TextInputType.emailAddress,
-            validator:
-                (value) =>
-                    value == null || value.isEmpty ? "Informe o email" : null,
+            validator: (value) =>
+                value == null || value.isEmpty ? "Informe o email" : null,
           ),
-          // APLICAÇÃO DA MÁSCARA DE TELEFONE
-          TextFormField(
+          _buildCustomTextField(
             controller: _telefoneController,
-            decoration: const InputDecoration(labelText: "Telefone"),
-            inputFormatters: [_maskTelefone], // Aplica a máscara
-            keyboardType:
-                TextInputType.phone, // Melhora a experiência do teclado
-            validator:
-                (value) =>
-                    value == null || value.isEmpty
-                        ? "Informe o telefone"
-                        : null,
+            label: "Telefone",
+            inputFormatters: [_maskTelefone],
+            keyboardType: TextInputType.phone,
+            validator: (value) =>
+                value == null || value.isEmpty ? "Informe o telefone" : null,
           ),
-          // APLICAÇÃO DA MÁSCARA DE CPF
-          TextFormField(
+          _buildCustomTextField(
             controller: _cpfController,
-            decoration: const InputDecoration(
-              labelText: "CPF",
-            ), // Label ajustado para CPF
-            inputFormatters: [_maskCpf], // Aplica a máscara
-            keyboardType:
-                TextInputType.number, // Melhora a experiência do teclado
-            validator:
-                (value) =>
-                    value == null || value.isEmpty ? "Informe o CPF" : null,
+            label: "CPF",
+            inputFormatters: [_maskCpf],
+            keyboardType: TextInputType.number,
+            validator: (value) =>
+                value == null || value.isEmpty ? "Informe o CPF" : null,
           ),
-          TextFormField(
+          _buildCustomTextField(
             controller: _senhaController,
-            decoration: const InputDecoration(labelText: "Senha"),
-            obscureText: true,
-            validator:
-                (value) =>
-                    value == null || value.length < 6
-                        ? "Senha muito curta"
-                        : null,
+            label: "Senha",
+            obscureText: _isPasswordObscured,
+            validator: (value) => value == null || value.length < 6
+                ? "Senha deve ter no mínimo 6 caracteres"
+                : null,
+            suffixIcon: IconButton(
+              icon: Icon(
+                _isPasswordObscured ? Icons.visibility_off : Icons.visibility,
+                color: Colors.grey,
+              ),
+              onPressed: () {
+                setState(() {
+                  _isPasswordObscured = !_isPasswordObscured;
+                });
+              },
+            ),
           ),
-          TextFormField(
+          _buildCustomTextField(
             controller: _confirmarSenhaController,
-            decoration: const InputDecoration(labelText: "Confirmar Senha"),
-            obscureText: true,
-            validator:
-                (value) =>
-                    value != _senhaController.text
-                        ? "Senhas não coincidem"
-                        : null,
+            label: "Confirmar Senha",
+            obscureText: _isConfirmPasswordObscured,
+            validator: (value) =>
+                value != _senhaController.text ? "Senhas não coincidem" : null,
+            suffixIcon: IconButton(
+              icon: Icon(
+                _isConfirmPasswordObscured
+                    ? Icons.visibility_off
+                    : Icons.visibility,
+                color: Colors.grey,
+              ),
+              onPressed: () {
+                setState(() {
+                  _isConfirmPasswordObscured = !_isConfirmPasswordObscured;
+                });
+              },
+            ),
           ),
           if (prestador)
-            TextFormField(
+            _buildCustomTextField(
               controller: _descricaoController,
-              decoration: const InputDecoration(
-                labelText: "Descrição dos serviços",
-              ),
-              validator:
-                  (value) =>
-                      value == null || value.isEmpty
-                          ? "Informe a descrição"
-                          : null,
+              label: "Descrição dos serviços",
+              validator: (value) =>
+                  value == null || value.isEmpty ? "Informe a descrição" : null,
             ),
-          const SizedBox(height: 16),
-          // ... (resto do _formularioBase permanece o mesmo)
-          Align(
-            alignment: Alignment.centerLeft,
-            child: const Text(
-              "Foto de perfil",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          const SizedBox(height: 8),
-          GestureDetector(
+          _buildImagePicker(
+            label: "Foto de perfil",
+            imageFile: _imagemPerfil,
             onTap: _selecionarImagemPerfil,
-            child: Container(
-              height: 150,
-              width: double.infinity,
-              color: Colors.grey[200],
-              child:
-                  _imagemPerfil == null
-                      ? const Center(
-                        child: Text("Clique para selecionar imagem de perfil"),
-                      )
-                      : Image.file(_imagemPerfil!, fit: BoxFit.cover),
-            ),
+            placeholderText: "Clique para selecionar sua foto de perfil",
           ),
         ],
       ),
     );
   }
 
-  // ... (seus métodos _formClienteWidget, _formPrestadorWidget, _mostrarErro, dispose e build permanecem os mesmos)
+  // ATUALIZADO: Widget do formulário de cliente com novo padding
   Widget _formClienteWidget() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
       child: _formularioBase(_formCliente),
     );
   }
 
+  // ATUALIZADO: Widget do formulário de prestador com novo padding e usando o helper de imagem
   Widget _formPrestadorWidget() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
       child: Column(
         children: [
           _formularioBase(_formPrestador, prestador: true),
-          const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              "Imagem do Documento (Selfie com Doc. ou Doc. Oficial)",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          const SizedBox(height: 8),
-          GestureDetector(
+          _buildImagePicker(
+            label: "Imagem do Documento (Selfie com Doc. ou Doc. Oficial)",
+            imageFile: _documentoImagem,
             onTap: _selecionarImagemDocumento,
-            child: Container(
-              height: 150,
-              width: double.infinity,
-              color: Colors.grey[200],
-              child:
-                  _documentoImagem == null
-                      ? const Center(
-                        child: Text(
-                          "Clique para selecionar imagem do documento",
-                        ),
-                      )
-                      : Image.file(_documentoImagem!, fit: BoxFit.cover),
-            ),
+            placeholderText: "Clique para selecionar imagem do documento",
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
         ],
       ),
     );
   }
 
+  // ATUALIZADO:SnackBar de erro com novo estilo
   void _mostrarErro(String mensagem) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(mensagem),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.redAccent,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
       ),
     );
   }
@@ -411,17 +489,32 @@ class _CadastroPageState extends State<CadastroPage>
     super.dispose();
   }
 
+  // ATUALIZADO: Método build principal com a nova estrutura de layout
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Colors.black;
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        backgroundColor: const Color(0xFFF7F8FA), // Fundo cinza claro
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
-          title: Text("Cadastro"),
+          title: const Text("Crie sua Conta"),
+          centerTitle: true,
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.black, // Cor dos ícones e texto
           bottom: TabBar(
             controller: _tabController,
-            tabs: const [Tab(text: "Cliente"), Tab(text: "Prestador")],
+            indicatorColor: primaryColor,
+            labelColor: primaryColor,
+            unselectedLabelColor: Colors.grey[600],
+            indicatorWeight: 3.0,
+            tabs: const [
+              Tab(child: Text("Cliente", style: TextStyle(fontWeight: FontWeight.bold))),
+              Tab(child: Text("Prestador", style: TextStyle(fontWeight: FontWeight.bold))),
+            ],
           ),
         ),
         body: TabBarView(
@@ -429,37 +522,40 @@ class _CadastroPageState extends State<CadastroPage>
           children: [_formClienteWidget(), _formPrestadorWidget()],
         ),
         bottomNavigationBar: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.fromLTRB(24.0, 8.0, 24.0, 24.0),
           child: ElevatedButton(
             onPressed: () {
               final abaAtual = _tabController.index;
-              if (abaAtual == 0) {
+              if (abaAtual == 0) { // Aba Cliente
                 if (_formCliente.currentState!.validate()) {
                   _cadastrarCliente();
                 } else {
-                  _mostrarErro(
-                    "Por favor, preencha todos os campos corretamente.",
-                  );
+                  _mostrarErro("Por favor, corrija os erros no formulário.");
                 }
-              } else {
+              } else { // Aba Prestador
                 if (_formPrestador.currentState!.validate()) {
                   _cadastrarPrestador();
                 } else {
-                  _mostrarErro(
-                    "Por favor, preencha todos os campos corretamente.",
-                  );
+                  _mostrarErro("Por favor, corrija os erros no formulário.");
                 }
               }
             },
             style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              textStyle: TextStyle(
-                fontSize: 18,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: primaryColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              elevation: 2,
+            ),
+            child: const Text(
+              "CADASTRAR",
+              style: TextStyle(
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
+                color: Colors.white,
               ),
             ),
-            child: Text("CADASTRAR"),
           ),
         ),
       ),
