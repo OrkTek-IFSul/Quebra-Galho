@@ -29,11 +29,13 @@ class _HomePageState extends State<HomePage> {
 
   int? usuarioId;
   String? nomeUsuario; // Adicione esta variável
+  String? _profileImageUrl;
 
   @override
   void initState() {
     super.initState();
     _checkLoginStatus();
+    _loadProfileImage();
     _loadNomeUsuario(); // Chame aqui
     _loadInitialData();
     searchController.addListener(_debouncedSearch);
@@ -202,6 +204,33 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Future<void> _loadProfileImage() async {
+    if (!isLoggedIn) return;
+    
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('usuario_id');
+      if (userId == null) return;
+
+      final response = await http.get(
+        Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$userId'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final imagemPerfil = data['imagemPerfil'];
+        
+        if (imagemPerfil != null && imagemPerfil.isNotEmpty) {
+          setState(() {
+            _profileImageUrl = 'https://${ApiConfig.baseUrl}/$imagemPerfil?ts=${DateTime.now().millisecondsSinceEpoch}';
+          });
+        }
+      }
+    } catch (e) {
+      print('Erro ao carregar imagem de perfil: $e');
+    }
+  }
+
   // --- WIDGETS ---
 
   /// Constrói os chips de categoria.
@@ -243,16 +272,15 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: isLoggedIn
-            ? Text('Olá, ${nomeUsuario ?? ''}')
-            : const Text(''),
+        title: const Text(''), // Remove o "Olá, {Usuario}"
         actions: [
-          if (isLoggedIn)
+          if (isLoggedIn) ...[
+            // Ícone de notificações
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Container(
                 decoration: const BoxDecoration(
-                  color: Color(0xFFF0F0F0), // cinza claro
+                  color: Color(0xFFF0F0F0),
                   shape: BoxShape.circle,
                 ),
                 child: IconButton(
@@ -263,28 +291,65 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Color(0xFFF0F0F0), // cinza claro
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                icon: Icon(isLoggedIn ? Icons.logout : Icons.login),
-                tooltip: isLoggedIn ? 'Sair' : 'Entrar',
-                onPressed: isLoggedIn
-                    ? _logout
-                    : () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const LoginPage()),
+            // Foto de perfil do usuário (substitui o ícone de logout)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: GestureDetector(
+                onTap: _logout, // Mantém a funcionalidade de logout
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0F0F0),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.grey[300]!,
+                      width: 1,
+                    ),
+                  ),
+                  child: _profileImageUrl != null
+                      ? ClipOval(
+                          child: Image.network(
+                            _profileImageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(
+                              Icons.person,
+                              color: Colors.black87,
+                              size: 24,
+                            ),
+                          ),
+                        )
+                      : const Icon(
+                          Icons.person,
+                          color: Colors.black87,
+                          size: 24,
                         ),
-                color: Colors.black87,
-                splashRadius: 24,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 12), // Espaçamento extra à direita do último ícone
+          ] else ...[
+            // Botão de login para usuários não logados
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF0F0F0),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.login),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                  ),
+                  color: Colors.black87,
+                  splashRadius: 24,
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(width: 12), // Espaçamento à direita
         ],
       ),
       body: Padding(

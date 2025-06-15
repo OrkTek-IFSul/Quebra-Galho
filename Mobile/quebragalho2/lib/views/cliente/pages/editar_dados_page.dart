@@ -24,7 +24,7 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
 
   final maskTelefone = MaskTextInputFormatter(
     mask: '(##) #####-####',
-    filter: { "#": RegExp(r'[0-9]') },
+    filter: {"#": RegExp(r'[0-9]')},
     type: MaskAutoCompletionType.lazy,
   );
 
@@ -35,7 +35,6 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
   }
 
   Future<void> _inicializar() async {
-    
     final id = await obterIdUsuario();
     if (id == null) {
       if (!mounted) return;
@@ -144,7 +143,8 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Editar Dados"),
+        centerTitle: true,
+        title: Text ("Editar Dados", style: TextStyle(fontWeight: FontWeight.bold),),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -158,48 +158,67 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(20.0),
+          : SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                
+                  const SizedBox(height: 14),
+
+                  const Text("Nome completo"),
+                  const SizedBox(height: 8),
                   TextField(
                     controller: _nomeController,
-                    decoration: const InputDecoration(
-                      labelText: "Nome completo",
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: _customInputDecoration("Digite seu nome completo"),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
+
+                  const Text("Telefone"),
+                  const SizedBox(height: 8),
                   TextField(
                     controller: _telefoneController,
                     keyboardType: TextInputType.number,
                     inputFormatters: [maskTelefone],
-                    decoration: const InputDecoration(
-                      labelText: "Telefone",
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: _customInputDecoration("(00) 00000-0000"),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
+
+                  const Text("Email"),
+                  const SizedBox(height: 8),
                   TextField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: "Email",
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: _customInputDecoration("exemplo@email.com"),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
+
+                  const Text("CPF"),
+                  const SizedBox(height: 8),
                   TextField(
                     controller: TextEditingController(text: _cpf),
                     enabled: false,
-                    decoration: const InputDecoration(
-                      labelText: "CPF",
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: _customInputDecoration("123.456.789-00"),
                   ),
+                  const SizedBox(height: 32),
+
+              
                 ],
               ),
             ),
+    );
+  }
+
+  InputDecoration _customInputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      filled: true,
+      fillColor: const Color.fromARGB(255, 230, 230, 230),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
     );
   }
 }
