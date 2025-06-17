@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/services.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+
 import 'package:quebragalho2/api_config.dart';
 import 'package:quebragalho2/views/cliente/pages/login_page.dart';
 
@@ -15,14 +18,22 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
   final nomeController = TextEditingController();
   final telefoneController = TextEditingController();
   final emailController = TextEditingController();
+  final descricaoController = TextEditingController();
+  final documentoController = TextEditingController();
 
-  List<String> tags = [];
   String? horaInicioSelecionada;
   String? horaFimSelecionada;
 
   bool isLoading = true;
   int? idUsuario;
   int? idPrestador;
+
+  final telefoneMask = MaskTextInputFormatter(mask: '(##) #####-####', filter: {"#": RegExp(r'\d')});
+  final documentoMask = MaskTextInputFormatter(
+    mask: '###.###.###-##',
+    filter: {"#": RegExp(r'\d')},
+    type: MaskAutoCompletionType.lazy,
+  );
 
   @override
   void initState() {
@@ -31,23 +42,21 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
   }
 
   void inicializar() async {
-    final id = await obterIdUsuario();
-    if (id == null) {
+    final usuarioId = await obterIdUsuario();
+    final prestadorId = await obterIdPrestador();
+
+    if (usuarioId == null || prestadorId == null) {
       setState(() => isLoading = false);
       return;
     }
 
-    setState(() {
-      idUsuario = id;
-      idPrestador = id;
-    });
+    idUsuario = usuarioId;
+    idPrestador = prestadorId;
 
     await carregarDados();
   }
 
   Future<void> carregarDados() async {
-    if (idUsuario == null || idPrestador == null) return;
-
     try {
       final usuarioResp = await http.get(
         Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$idUsuario'),
@@ -55,37 +64,21 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
       final prestadorResp = await http.get(
         Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/perfil/$idPrestador'),
       );
-      final tagPrestadorResp = await http.get(
-        Uri.parse('https://${ApiConfig.baseUrl}/api/tag-prestador/prestador/$idPrestador'),
-      );
 
-      if (usuarioResp.statusCode == 200 &&
-          prestadorResp.statusCode == 200 &&
-          tagPrestadorResp.statusCode == 200) {
+      if (usuarioResp.statusCode == 200 && prestadorResp.statusCode == 200) {
         final usuario = jsonDecode(usuarioResp.body);
         final prestador = jsonDecode(prestadorResp.body);
-        final List tagIds = jsonDecode(tagPrestadorResp.body);
-
-        final List<String> tagNomes = [];
-
-        for (var idTag in tagIds) {
-          final tagResp = await http.get(
-            Uri.parse('https://${ApiConfig.baseUrl}/api/tags/$idTag'),
-          );
-
-          if (tagResp.statusCode == 200) {
-            final tagData = jsonDecode(tagResp.body);
-            tagNomes.add(tagData['nome']);
-          }
-        }
 
         setState(() {
           nomeController.text = usuario['nome'];
-          telefoneController.text = usuario['telefone'];
+          telefoneController.text = telefoneMask.maskText(usuario['telefone']);
           emailController.text = usuario['email'];
-          horaInicioSelecionada = prestador['data_hora_inicio'];
-          horaFimSelecionada = prestador['data_hora_fim'];
-          tags = tagNomes;
+          documentoController.text = documentoMask.maskText(usuario['documento']);
+          descricaoController.text = prestador['descricao'] ?? '';
+          horaInicioSelecionada =
+              prestador['horarioInicio']?.toString().substring(11, 16);
+          horaFimSelecionada =
+              prestador['horarioFim']?.toString().substring(11, 16);
           isLoading = false;
         });
       } else {
@@ -117,55 +110,14 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
     return lista;
   }
 
-  void abrirModalAdicionarTag() {
-    final TextEditingController novaTagController = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Wrap(
-              children: [
-                const Text('Adicionar nova tag',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                const Text('Digite o nome da nova tag',
-                    style: TextStyle(fontSize: 14, color: Colors.grey)),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: novaTagController,
-                  decoration: const InputDecoration(labelText: 'Nova tag'),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    final novaTag = novaTagController.text.trim();
-                    if (novaTag.isNotEmpty && !tags.contains(novaTag)) {
-                      setState(() => tags.add(novaTag));
-                      Navigator.pop(context);
-                    }
-                  },
-                  child: const Text('Adicionar'),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   Future<void> salvarDados() async {
     if (idUsuario == null || idPrestador == null) return;
 
     final nome = nomeController.text.trim();
-    final telefone = telefoneController.text.trim();
+    final telefone = telefoneMask.getUnmaskedText();
     final email = emailController.text.trim();
+    final documento = documentoMask.getUnmaskedText();
+    final descricao = descricaoController.text.trim();
 
     if (horaInicioSelecionada == null || horaFimSelecionada == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -181,27 +133,31 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
       return;
     }
 
+    final horarioInicio = '2025-06-17T$horaInicioSelecionada';
+    final horarioFim = '2025-06-17T$horaFimSelecionada';
+
     try {
-      await http.put(
-        Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/$idUsuario'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'nome': nome, 'telefone': telefone, 'email': email}),
-      );
+      final prestadorBody = jsonEncode({
+        'descricao': descricao,
+        'usuario': {
+          'id': idUsuario,
+          'nome': nome,
+          'email': email,
+          'telefone': telefone,
+          'documento': documento,
+        },
+        'horarioInicio': horarioInicio,
+        'horarioFim': horarioFim,
+      });
 
       await http.put(
-        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/$idPrestador'),
+        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/perfil/$idPrestador'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'data_hora_inicio': horaInicioSelecionada,
-          'data_hora_fim': horaFimSelecionada
-        }),
+        body: prestadorBody,
       );
-
-      // Tags novas podem precisar de outro endpoint (POST para tag-prestador).
-      // Você pode implementar essa lógica separadamente.
 
       if (mounted) {
-        Navigator.pop(context); // Volta para a tela anterior
+        Navigator.pop(context);
       }
     } catch (e) {
       debugPrint('Erro ao salvar dados: $e');
@@ -243,33 +199,27 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
             TextField(
               controller: telefoneController,
               decoration: const InputDecoration(labelText: 'Telefone'),
+              keyboardType: TextInputType.number,
+              inputFormatters: [telefoneMask],
             ),
             const SizedBox(height: 12),
             TextField(
               controller: emailController,
               decoration: const InputDecoration(labelText: 'Email'),
             ),
-            const SizedBox(height: 24),
-
-            const Text('Tags', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: [
-                for (int i = 0; i < tags.length; i++)
-                  Chip(
-                    label: Text(tags[i]),
-                    onDeleted: () => setState(() => tags.removeAt(i)),
-                  ),
-                if (tags.length < 3)
-                  ActionChip(
-                    label: const Text('+ adicionar'),
-                    onPressed: abrirModalAdicionarTag,
-                  ),
-              ],
+            const SizedBox(height: 12),
+            TextField(
+              controller: documentoController,
+              decoration: const InputDecoration(labelText: 'Documento'),
+              keyboardType: TextInputType.number,
+              inputFormatters: [documentoMask],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: descricaoController,
+              decoration: const InputDecoration(labelText: 'Descrição do serviço'),
             ),
             const SizedBox(height: 24),
-
             const Text('Horário Disponível',
                 style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
@@ -285,11 +235,7 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
                               child: Text(h),
                             ))
                         .toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        horaInicioSelecionada = value;
-                      });
-                    },
+                    onChanged: (value) => setState(() => horaInicioSelecionada = value),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -303,11 +249,7 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
                               child: Text(h),
                             ))
                         .toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        horaFimSelecionada = value;
-                      });
-                    },
+                    onChanged: (value) => setState(() => horaFimSelecionada = value),
                   ),
                 ),
               ],

@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:quebragalho2/api_config.dart';
@@ -50,8 +49,9 @@ class _PerfilPageState extends State<PerfilPage> {
       debugPrint('Corpo da resposta: ${response.body}');
 
       if (response.statusCode == 200) {
+        final decoded = jsonDecode(utf8.decode(response.bodyBytes));
         setState(() {
-          prestador = jsonDecode(response.body);
+          prestador = decoded;
           carregando = false;
         });
       } else {
@@ -64,14 +64,11 @@ class _PerfilPageState extends State<PerfilPage> {
       debugPrint('Stacktrace: $stacktrace');
       setState(() {
         carregando = false;
-        prestador = {
-          'erro': e.toString(),
-        };
+        prestador = {'erro': e.toString()};
       });
     }
   }
 
-  // Função para navegar e atualizar dados ao voltar
   Future<void> _navegarEAtualizar(Widget page) async {
     await Navigator.push(context, MaterialPageRoute(builder: (_) => page));
     if (idPrestador != null) {
@@ -79,11 +76,11 @@ class _PerfilPageState extends State<PerfilPage> {
     }
   }
 
-  // Função para desabilitar (excluir) serviço via API
   Future<void> desabilitarServico(int idServico) async {
     if (idPrestador == null) return;
 
-    final url = 'https://${ApiConfig.baseUrl}/api/prestador/perfil/desabilitar/$idServico';
+    final url =
+        'https://${ApiConfig.baseUrl}/api/prestador/perfil/desabilitar/$idServico';
     try {
       final response = await http.put(Uri.parse(url));
       debugPrint('Desabilitar serviço status: ${response.statusCode}');
@@ -94,7 +91,11 @@ class _PerfilPageState extends State<PerfilPage> {
         await carregarPerfil(idPrestador!);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Falha ao desabilitar serviço. Status: ${response.statusCode}')),
+          SnackBar(
+            content: Text(
+              'Falha ao desabilitar serviço. Status: ${response.statusCode}',
+            ),
+          ),
         );
       }
     } catch (e) {
@@ -108,9 +109,7 @@ class _PerfilPageState extends State<PerfilPage> {
   @override
   Widget build(BuildContext context) {
     if (carregando) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (prestador == null) {
@@ -133,13 +132,13 @@ class _PerfilPageState extends State<PerfilPage> {
       );
     }
 
-    final nome = prestador?['nome'] ?? 'Sem nome';
+    final nomeUsuario = prestador?['usuario']?['nome'] ?? 'Sem nome';
     final descricao = prestador?['descricao'] ?? '';
-    final usuario = prestador?['usuario'];
-    final idUsuario = usuario?['id'];
-    final imagemPerfil = (idUsuario != null)
-        ? 'https://${ApiConfig.baseUrl}/api/usuarios/$idUsuario/imagem'
-        : '';
+    final idUsuario = prestador?['usuario']?['id'];
+    final imagemPerfil =
+        (idUsuario != null && prestador?['usuario']?['imagemPerfil'] != null)
+            ? 'https://${ApiConfig.baseUrl}/${prestador!['usuario']['imagemPerfil']}'
+            : '';
 
     final List servicos = prestador?['servicos'] ?? [];
     final List tags = prestador?['tags'] ?? [];
@@ -156,10 +155,13 @@ class _PerfilPageState extends State<PerfilPage> {
                 CircleAvatar(
                   radius: 40,
                   backgroundImage:
-                      (imagemPerfil.isNotEmpty) ? NetworkImage(imagemPerfil) : null,
-                  child: imagemPerfil.isEmpty
-                      ? const Icon(Icons.person, size: 40)
-                      : null,
+                      (imagemPerfil.isNotEmpty)
+                          ? NetworkImage(imagemPerfil)
+                          : null,
+                  child:
+                      imagemPerfil.isEmpty
+                          ? const Icon(Icons.person, size: 40)
+                          : null,
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -167,7 +169,7 @@ class _PerfilPageState extends State<PerfilPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        nome,
+                        nomeUsuario,
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -180,11 +182,12 @@ class _PerfilPageState extends State<PerfilPage> {
                       const SizedBox(height: 8),
                       Wrap(
                         spacing: 8,
-                        children: tags
-                            .map<Widget>(
-                              (tag) => Chip(label: Text(tag['nome'] ?? '')),
-                            )
-                            .toList(),
+                        children:
+                            tags
+                                .map<Widget>(
+                                  (tag) => Chip(label: Text(tag['nome'] ?? '')),
+                                )
+                                .toList(),
                       ),
                       const SizedBox(height: 8),
                       ElevatedButton.icon(
@@ -210,7 +213,9 @@ class _PerfilPageState extends State<PerfilPage> {
                 ElevatedButton.icon(
                   onPressed: () {
                     if (idPrestador != null) {
-                      _navegarEAtualizar(AdicionarServico(idPrestador: idPrestador!));
+                      _navegarEAtualizar(
+                        AdicionarServico(idPrestador: idPrestador!),
+                      );
                     }
                   },
                   icon: const Icon(Icons.add),
@@ -220,32 +225,38 @@ class _PerfilPageState extends State<PerfilPage> {
             ),
             const SizedBox(height: 8),
             Expanded(
-              child: servicos.isEmpty
-                  ? const Center(child: Text('Nenhum serviço cadastrado.'))
-                  : ListView.builder(
-                      itemCount: servicos.length,
-                      itemBuilder: (context, index) {
-                        final servico = servicos[index];
-                        return ServicoCard(
-                          nome: servico['nome'] ?? '',
-                          valor: servico['valor'] ?? 0,
-                          onDelete: () {
-                            desabilitarServico(servico['id']);
-                          },
-                          onTap: () {
-                            _navegarEAtualizar(
-                              EditarServico(
-                                idPrestador: idPrestador!,
-                                idServico: servico['id'],
-                                nomeInicial: servico['nome'] ?? '',
-                                descricaoInicial: servico['descricao'] ?? '',
-                                valorInicial: servico['valor'] ?? 0,
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
+              child:
+                  servicos.isEmpty
+                      ? const Center(child: Text('Nenhum serviço cadastrado.'))
+                      : ListView.builder(
+                        itemCount: servicos.length,
+                        itemBuilder: (context, index) {
+                          final servico = servicos[index];
+                          final List<int> tagsServico =
+                              tags.map<int>((tag) => tag['id'] as int).toList();
+
+                          return ServicoCard(
+                            nome: servico['nome'] ?? '',
+                            valor: servico['preco']?.toDouble() ?? 0,
+                            onDelete: () {
+                              desabilitarServico(servico['id']);
+                            },
+                            onTap: () {
+                              _navegarEAtualizar(
+                                EditarServico(
+                                  idPrestador: idPrestador!,
+                                  idServico: servico['id'],
+                                  nomeInicial: servico['nome'] ?? '',
+                                  descricaoInicial: servico['descricao'] ?? '',
+                                  valorInicial:
+                                      servico['preco']?.toDouble() ?? 0,
+                                  tagsServico: tagsServico,
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
             ),
           ],
         ),

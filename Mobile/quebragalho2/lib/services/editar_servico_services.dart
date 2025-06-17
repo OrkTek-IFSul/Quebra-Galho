@@ -5,7 +5,6 @@
 /// Descrição: Serviço de edição de serviços, onde o prestador pode atualizar os detalhes de um serviço específico, como nome, descrição e valor.
 /// Versão: 1.0.0
 ///
-library;
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:quebragalho2/api_config.dart';
@@ -22,7 +21,8 @@ class EditarServicoService {
     required int idServico,
     required String nome,
     required String descricao,
-    required double valor,  // mudou para double
+    required double valor,
+    List<Map<String, dynamic>>? tags, // parâmetro opcional para tags
   }) async {
     try {
       final response = await http.put(
@@ -31,8 +31,8 @@ class EditarServicoService {
         body: jsonEncode({
           'nome': nome,
           'descricao': descricao,
-          'preco': valor,  // já é double, envia direto
-          'tags': [],
+          'preco': valor,
+          'tags': tags ?? [], // se tags não fornecida, envia lista vazia
         }),
       );
       return response.statusCode == 200;
