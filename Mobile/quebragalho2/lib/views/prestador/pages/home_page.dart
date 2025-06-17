@@ -1,9 +1,10 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:quebragalho2/api_config.dart';
-import 'package:quebragalho2/views/cliente/pages/login_page.dart'; // Para obterIdPrestador()
+import 'package:quebragalho2/views/cliente/pages/login_page.dart';
 import 'package:quebragalho2/views/prestador/pages/detalhes_solicitacao.dart';
 import 'package:quebragalho2/views/prestador/widgets/solicitacao_cliente_card.dart';
 
@@ -18,11 +19,47 @@ class _HomePageState extends State<HomePage> {
   List<dynamic> solicitacoes = [];
   bool isLoading = true;
   int? idPrestador;
+  bool isLoggedIn = false;
+  String? nomeUsuario;
 
   @override
   void initState() {
     super.initState();
+    _checkLoginStatus();
+    _loadNomeUsuario();
     carregarSolicitacoesDoPrestador();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    setState(() {
+      isLoggedIn = token != null && token.isNotEmpty;
+    });
+  }
+
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+
+    if (!mounted) return;
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+      (route) => false,
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Logout realizado com sucesso')),
+    );
+  }
+
+  Future<void> _loadNomeUsuario() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      nomeUsuario = prefs.getString('user_name') ?? '';
+    });
   }
 
   Future<void> carregarSolicitacoesDoPrestador() async {
@@ -70,7 +107,51 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Lista de Solicitações')),
+      appBar: AppBar(
+        title: isLoggedIn
+            ? Text('Olá, ${nomeUsuario ?? ''}')
+            : const Text('Solicitações'),
+        actions: [
+          if (isLoggedIn)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF0F0F0),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.notifications_none),
+                  onPressed: () {},
+                  color: Colors.black87,
+                  splashRadius: 24,
+                ),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFFF0F0F0),
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: Icon(isLoggedIn ? Icons.logout : Icons.login),
+                tooltip: isLoggedIn ? 'Sair' : 'Entrar',
+                onPressed: isLoggedIn
+                    ? _logout
+                    : () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const LoginPage()),
+                        ),
+                color: Colors.black87,
+                splashRadius: 24,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+        ],
+      ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(

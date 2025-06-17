@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/services.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+
 import 'package:quebragalho2/api_config.dart';
 
 // O import abaixo não é usado diretamente, mas foi mantido conforme o arquivo original.
@@ -19,14 +22,22 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
   final nomeController = TextEditingController();
   final telefoneController = TextEditingController();
   final emailController = TextEditingController();
+  final descricaoController = TextEditingController();
+  final documentoController = TextEditingController();
 
-  List<String> tags = [];
   String? horaInicioSelecionada;
   String? horaFimSelecionada;
 
   bool isLoading = true;
   int? idUsuario;
   int? idPrestador;
+
+  final telefoneMask = MaskTextInputFormatter(mask: '(##) #####-####', filter: {"#": RegExp(r'\d')});
+  final documentoMask = MaskTextInputFormatter(
+    mask: '###.###.###-##',
+    filter: {"#": RegExp(r'\d')},
+    type: MaskAutoCompletionType.lazy,
+  );
 
   @override
   void initState() {
@@ -51,10 +62,13 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
         idPrestador = idP;
       });
     }
+
+
     await carregarDados();
   }
 
   Future<void> carregarDados() async {
+
     // Método com pequena correção para carregar os horários.
     if (idUsuario == null || idPrestador == null) return;
 
@@ -65,15 +79,11 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
       final prestadorResp = await http.get(
         Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/perfil/$idPrestador'),
       );
-      final tagPrestadorResp = await http.get(
-        Uri.parse('https://${ApiConfig.baseUrl}/api/tag-prestador/prestador/$idPrestador'),
-      );
 
-      if (usuarioResp.statusCode == 200 &&
-          prestadorResp.statusCode == 200 &&
-          tagPrestadorResp.statusCode == 200) {
+      if (usuarioResp.statusCode == 200 && prestadorResp.statusCode == 200) {
         final usuario = jsonDecode(usuarioResp.body);
         final prestador = jsonDecode(prestadorResp.body);
+
         final List tagIds = jsonDecode(tagPrestadorResp.body);
         final List<String> tagNomes = [];
 
@@ -99,6 +109,7 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
             isLoading = false;
           });
         }
+
       } else {
         throw Exception('Erro ao carregar dados do backend.');
       }
@@ -165,12 +176,15 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
     );
   }
 
+
   Future<void> salvarDados() async {
     // Método existente, sem alterações.
     if (idUsuario == null || idPrestador == null) return;
     final nome = nomeController.text.trim();
-    final telefone = telefoneController.text.trim();
+    final telefone = telefoneMask.getUnmaskedText();
     final email = emailController.text.trim();
+    final documento = documentoMask.getUnmaskedText();
+    final descricao = descricaoController.text.trim();
 
     if (horaInicioSelecionada == null || horaFimSelecionada == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Preencha os horários!')));
@@ -180,22 +194,44 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('O horário de fim deve ser maior que o de início.')));
       return;
     }
+
     try {
       await http.put(
         Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/$idUsuario'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'nome': nome, 'telefone': telefone, 'email': email}),
       );
+
+    final horarioInicio = '2025-06-17T$horaInicioSelecionada';
+    final horarioFim = '2025-06-17T$horaFimSelecionada';
+
+    try {
+      final prestadorBody = jsonEncode({
+        'descricao': descricao,
+        'usuario': {
+          'id': idUsuario,
+          'nome': nome,
+          'email': email,
+          'telefone': telefone,
+          'documento': documento,
+        },
+        'horarioInicio': horarioInicio,
+        'horarioFim': horarioFim,
+      });
+
       await http.put(
         Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/perfil/$idPrestador'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'data_hora_inicio': horaInicioSelecionada,
-          'data_hora_fim': horaFimSelecionada
-        }),
+        body: prestadorBody,
       );
+
       // Aqui você implementaria a lógica para salvar/atualizar as tags.
       if (mounted) Navigator.pop(context, true); // Retorna true para indicar sucesso
+
+      if (mounted) {
+        Navigator.pop(context);
+      }
+
     } catch (e) {
       debugPrint('Erro ao salvar dados: $e');
     }
@@ -293,6 +329,7 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+
             buildTextField(label: 'Nome', controller: nomeController),
             const SizedBox(height: 20),
             buildTextField(label: 'Telefone', controller: telefoneController, keyboardType: TextInputType.phone),
@@ -346,6 +383,7 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
               ),
             ),
             const SizedBox(height: 24),
+
             const Divider(),
             const SizedBox(height: 24),
             const Text('Horário de Atendimento', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
@@ -368,6 +406,7 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
                         ),
                       ),
                     ],
+
                   ),
                 ),
                 const SizedBox(width: 24),
@@ -387,6 +426,8 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
                         ),
                       ),
                     ],
+
+
                   ),
                 ),
               ],

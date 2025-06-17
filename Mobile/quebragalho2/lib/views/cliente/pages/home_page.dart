@@ -392,45 +392,45 @@ class _HomePageState extends State<HomePage> {
                           )
                         )
                       : ListView.builder(
-                          itemCount: _prestadoresFiltrados.length,
-                          itemBuilder: (context, index) {
-                            final prestador = _prestadoresFiltrados[index];
-                            final String imageUrl = prestador['imagemPerfil'] as String? ?? '';
-                            // O nome agora virá decodificado corretamente
-                            final String nome = prestador['nome'] as String? ?? 'Nome Indisponível';
-                            final List<String> tags = (prestador['tags'] as List?)
-                                    ?.map((tag) => (tag is Map && tag['nome'] != null) ? tag['nome'].toString() : '')
-                                    .where((tagNome) => tagNome.isNotEmpty)
-                                    .toList() ??
-                                [];
-                            final double rating = (prestador['mediaAvaliacoes'] as num?)?.toDouble() ?? 0.0;
-                            final int? prestadorId = prestador['id'] as int?;
-                            return PrestadorHomeCard(
-                              imageUrl: imageUrl,
-                              name: nome,
-                              categories: tags,
-                              rating: rating,
-                              onTap: () {
-                                if (prestadorId != null) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          PrestadorDetalhesPage(
-                                            id: prestadorId,
-                                            isLoggedIn: isLoggedIn,
-                                            ),
-                                    ),
-                                  );
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('ID do prestador indisponível.'))
-                                  );
-                                }
-                              },
-                            );
-                          },
-                        ),
+  itemCount: _prestadoresFiltrados.length,
+  itemBuilder: (context, index) {
+    final prestador = _prestadoresFiltrados[index];
+    final String imageUrl = prestador['imagemPerfil'] as String? ?? '';
+    final String nome = prestador['nome'] as String? ?? 'Nome Indisponível';
+    final List<String> tags = (prestador['tags'] as List?)
+            ?.map((tag) => (tag is Map && tag['nome'] != null) ? tag['nome'].toString() : '')
+            .where((tagNome) => tagNome.isNotEmpty)
+            .toList() ??
+        [];
+    final double rating = (prestador['mediaAvaliacoes'] as num?)?.toDouble() ?? 0.0;
+    final int? prestadorId = prestador['id'] as int?;
+
+    return PrestadorHomeCard(
+      imageUrl: imageUrl,
+      name: nome,
+      categories: tags,
+      rating: rating,
+      onTap: () {
+        if (prestadorId != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PrestadorDetalhesPage(
+                id: prestadorId,
+                isLoggedIn: isLoggedIn,
+              ),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('ID do prestador indisponível.')),
+          );
+        }
+      },
+    );
+  },
+),
+
             ),
           ],
         ),

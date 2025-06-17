@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+
 import 'package:quebragalho2/api_config.dart';
 import 'package:quebragalho2/views/prestador/pages/editar_meus_dados.dart';
 
@@ -30,6 +31,7 @@ class _MeusDadosState extends State<MeusDados> {
   }
 
   Future<void> inicializarDados() async {
+
     // Esta função permanece inalterada
     final usuarioId = await obterIdUsuario(); // método já existente
     final prestadorId = await obterIdPrestador(); // supondo que exista este método
@@ -50,6 +52,7 @@ class _MeusDadosState extends State<MeusDados> {
       });
     }
 
+
     await carregarDados();
   }
 
@@ -61,11 +64,9 @@ class _MeusDadosState extends State<MeusDados> {
       final usuarioResp = await http.get(
         Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$idUsuario'),
       );
-
       final prestadorResp = await http.get(
         Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/perfil/$idPrestador'),
       );
-
       final tagPrestadorResp = await http.get(
         Uri.parse('https://${ApiConfig.baseUrl}/api/tag-prestador/prestador/$idPrestador'),
       );
@@ -73,7 +74,12 @@ class _MeusDadosState extends State<MeusDados> {
       if (usuarioResp.statusCode == 200 &&
           prestadorResp.statusCode == 200 &&
           tagPrestadorResp.statusCode == 200) {
-        final List tagIds = jsonDecode(tagPrestadorResp.body);
+
+        final usuarioJson = jsonDecode(utf8.decode(usuarioResp.bodyBytes));
+        final prestadorJson = jsonDecode(utf8.decode(prestadorResp.bodyBytes));
+        final List tagIds = jsonDecode(utf8.decode(tagPrestadorResp.bodyBytes));
+
+
         List<String> tagNomes = [];
 
         for (var idTag in tagIds) {
@@ -82,10 +88,11 @@ class _MeusDadosState extends State<MeusDados> {
           );
 
           if (tagResp.statusCode == 200) {
-            final tagData = jsonDecode(tagResp.body);
+            final tagData = jsonDecode(utf8.decode(tagResp.bodyBytes));
             tagNomes.add(tagData['nome']);
           }
         }
+
 
         if (mounted) {
           setState(() {
@@ -95,6 +102,7 @@ class _MeusDadosState extends State<MeusDados> {
             isLoading = false;
           });
         }
+
       } else {
         throw Exception('Erro nas respostas: '
             'Usuário(${usuarioResp.statusCode}), '
@@ -148,7 +156,10 @@ class _MeusDadosState extends State<MeusDados> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const EditarMeusDados()),
-              );
+              ).then((_) {
+                setState(() => isLoading = true);
+                carregarDados(); // Atualiza ao voltar
+              });
             },
           ),
         ],

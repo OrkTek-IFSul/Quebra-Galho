@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:quebragalho2/api_config.dart';
@@ -51,8 +50,9 @@ class _PerfilPageState extends State<PerfilPage> {
       debugPrint('Corpo da resposta: ${response.body}');
 
       if (response.statusCode == 200) {
+        final decoded = jsonDecode(utf8.decode(response.bodyBytes));
         setState(() {
-          prestador = jsonDecode(response.body);
+          prestador = decoded;
           carregando = false;
         });
       } else {
@@ -70,7 +70,6 @@ class _PerfilPageState extends State<PerfilPage> {
     }
   }
 
-  // Função para navegar e atualizar dados ao voltar
   Future<void> _navegarEAtualizar(Widget page) async {
     await Navigator.push(context, MaterialPageRoute(builder: (_) => page));
     if (idPrestador != null) {
@@ -78,7 +77,6 @@ class _PerfilPageState extends State<PerfilPage> {
     }
   }
 
-  // Função para desabilitar (excluir) serviço via API
   Future<void> desabilitarServico(int idServico) async {
     if (idPrestador == null) return;
 
@@ -223,6 +221,7 @@ class _PerfilPageState extends State<PerfilPage> {
     final imagemPerfil =
         (idUsuario != null)
             ? 'https://${ApiConfig.baseUrl}/api/usuarios/$idUsuario/imagem'
+
             : '';
 
     final List servicos = prestador?['servicos'] ?? [];
@@ -257,7 +256,7 @@ class _PerfilPageState extends State<PerfilPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        nome,
+                        nomeUsuario,
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -305,6 +304,7 @@ class _PerfilPageState extends State<PerfilPage> {
                 _navegarEAtualizar(AdicionarServico(idPrestador: idPrestador!));
               },
               subtitle: 'Adicione novos serviços para seus clientes em seu perfil.',
+
             ),
 
             // Linha 'Migrar prestador'
@@ -327,9 +327,13 @@ class _PerfilPageState extends State<PerfilPage> {
                         itemCount: servicos.length,
                         itemBuilder: (context, index) {
                           final servico = servicos[index];
+
+                          final List<int> tagsServico =
+                              tags.map<int>((tag) => tag['id'] as int).toList();
+
                           return ServicoCard(
                             nome: servico['nome'] ?? '',
-                            valor: servico['valor'] ?? 0,
+                            valor: servico['preco']?.toDouble() ?? 0,
                             onDelete: () {
                               desabilitarServico(servico['id']);
                             },
@@ -340,7 +344,9 @@ class _PerfilPageState extends State<PerfilPage> {
                                   idServico: servico['id'],
                                   nomeInicial: servico['nome'] ?? '',
                                   descricaoInicial: servico['descricao'] ?? '',
-                                  valorInicial: servico['valor'] ?? 0,
+                                  valorInicial:
+                                      servico['preco']?.toDouble() ?? 0,
+                                  tagsServico: tagsServico,
                                 ),
                               );
                             },
