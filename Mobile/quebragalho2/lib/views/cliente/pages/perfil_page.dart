@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:quebragalho2/services/perfil_page_services.dart';
 import 'package:quebragalho2/views/cliente/pages/editar_dados_page.dart';
+import 'package:quebragalho2/views/cliente/pages/login_page.dart';
 import 'package:quebragalho2/views/cliente/pages/minhas_solicitacoes_page.dart';
 import 'package:quebragalho2/api_config.dart';
 import 'package:quebragalho2/views/cliente/widgets/modal_cadastro_prestador.dart';
+import 'package:quebragalho2/views/cliente/widgets/dialog_migrar_prestador.dart';
 import 'package:http/http.dart' as http;
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import 'package:quebragalho2/views/prestador/pages/navegacao_prestador.dart'; // Importação da tela de navegação do prestador
 
 
 class PerfilPage extends StatefulWidget {
@@ -21,6 +24,7 @@ class PerfilPage extends StatefulWidget {
 class _PerfilPageState extends State<PerfilPage> {
   Future<Map<String, dynamic>>? _dadosUsuario;
   XFile? _imagemSelecionada;
+  int? idP;
 
   // Máscara para o telefone
   final _maskTelefone = MaskTextInputFormatter(
@@ -39,12 +43,18 @@ class _PerfilPageState extends State<PerfilPage> {
   void initState() {
     super.initState();
     _carregarDados();
+    _obterIdPrestador();
   }
 
   void _carregarDados() {
     setState(() {
       _dadosUsuario = PerfilPageService().buscarPerfilUsuario(widget.usuarioId);
     });
+  }
+
+  Future<void> _obterIdPrestador() async {
+    idP = await obterIdPrestador();
+    setState(() {}); // Atualiza o estado para refletir o idP
   }
 
   // --- MÉTODOS DE LÓGICA (permanecem inalterados) ---
@@ -310,20 +320,19 @@ class _PerfilPageState extends State<PerfilPage> {
                     },
                   ),
                   _buildListTile(
-                    icon: Icons.swap_horiz_rounded,
-                    title: "Migrar para prestador",
+                    title: 'Migrar para prestador',
+                    icon: Icons.swap_horiz,
                     subtitle:
-                        "Mude seu perfil para prestador, tenha acesso a novas ferramentas e comece a atender clientes pelo app.",
+                        "Altere para conta do modo prestador para acessar novas funções e poder oferecer serviços",
                     onTap: () async {
-                      final isPrestador =
-                          await _verificarPrestador(widget.usuarioId);
-                      if (mounted) {
-                        if (isPrestador) {
-                          Navigator.pushReplacementNamed(
-                              context, '/navegacaoPrestador');
-                        } else {
-                          showCadastroPrestadorModal(context);
+                      final isPrestador = await _verificarPrestador(widget.usuarioId);
+                      if (isPrestador) {
+                        final idPrestador = await obterIdPrestador();
+                        if (idPrestador != null && context.mounted) {
+                          showMigrarParaPrestadorDialog(context, idPrestador);
                         }
+                      } else {
+                        showCadastroPrestadorModal(context);
                       }
                     },
                   ),

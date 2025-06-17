@@ -8,6 +8,7 @@ import 'package:quebragalho2/views/prestador/pages/editar_servico.dart';
 import 'package:quebragalho2/views/prestador/pages/meus_dados.dart';
 import 'package:quebragalho2/views/prestador/widgets/servico_card.dart';
 import 'package:quebragalho2/views/cliente/pages/login_page.dart'; // Para obterIdPrestador()
+import 'package:quebragalho2/views/cliente/pages/navegacao_cliente.dart';
 
 class PerfilPage extends StatefulWidget {
   const PerfilPage({super.key});
@@ -64,9 +65,7 @@ class _PerfilPageState extends State<PerfilPage> {
       debugPrint('Stacktrace: $stacktrace');
       setState(() {
         carregando = false;
-        prestador = {
-          'erro': e.toString(),
-        };
+        prestador = {'erro': e.toString()};
       });
     }
   }
@@ -83,7 +82,8 @@ class _PerfilPageState extends State<PerfilPage> {
   Future<void> desabilitarServico(int idServico) async {
     if (idPrestador == null) return;
 
-    final url = 'https://${ApiConfig.baseUrl}/api/prestador/perfil/desabilitar/$idServico';
+    final url =
+        'https://${ApiConfig.baseUrl}/api/prestador/perfil/desabilitar/$idServico';
     try {
       final response = await http.put(Uri.parse(url));
       debugPrint('Desabilitar serviço status: ${response.statusCode}');
@@ -94,7 +94,11 @@ class _PerfilPageState extends State<PerfilPage> {
         await carregarPerfil(idPrestador!);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Falha ao desabilitar serviço. Status: ${response.statusCode}')),
+          SnackBar(
+            content: Text(
+              'Falha ao desabilitar serviço. Status: ${response.statusCode}',
+            ),
+          ),
         );
       }
     } catch (e) {
@@ -105,12 +109,91 @@ class _PerfilPageState extends State<PerfilPage> {
     }
   }
 
+  // NOVO: Widget para os itens da lista de opções
+  Widget _buildListTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 231, 231, 231),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: Colors.grey.shade800, size: 30),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Color(0xFF333333),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> showMigrarParaClienteDialog(BuildContext context) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Alterar para Cliente'),
+        content: const Text('Deseja alterar para sua conta de cliente?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('NÃO'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('SIM'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const NavegacaoCliente()),
+        (route) => false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (carregando) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (prestador == null) {
@@ -133,19 +216,23 @@ class _PerfilPageState extends State<PerfilPage> {
       );
     }
 
-    final nome = prestador?['nome'] ?? 'Sem nome';
+    final nome = prestador?['usuario']['nome'] ?? 'Sem nome';
     final descricao = prestador?['descricao'] ?? '';
     final usuario = prestador?['usuario'];
     final idUsuario = usuario?['id'];
-    final imagemPerfil = (idUsuario != null)
-        ? 'https://${ApiConfig.baseUrl}/api/usuarios/$idUsuario/imagem'
-        : '';
+    final imagemPerfil =
+        (idUsuario != null)
+            ? 'https://${ApiConfig.baseUrl}/api/usuarios/$idUsuario/imagem'
+            : '';
 
     final List servicos = prestador?['servicos'] ?? [];
     final List tags = prestador?['tags'] ?? [];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Perfil')),
+      appBar: AppBar(
+        title: const Text('Perfil', style: TextStyle(fontSize: 20)),
+        centerTitle: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -156,10 +243,13 @@ class _PerfilPageState extends State<PerfilPage> {
                 CircleAvatar(
                   radius: 40,
                   backgroundImage:
-                      (imagemPerfil.isNotEmpty) ? NetworkImage(imagemPerfil) : null,
-                  child: imagemPerfil.isEmpty
-                      ? const Icon(Icons.person, size: 40)
-                      : null,
+                      (imagemPerfil.isNotEmpty)
+                          ? NetworkImage(imagemPerfil)
+                          : null,
+                  child:
+                      imagemPerfil.isEmpty
+                          ? const Icon(Icons.person, size: 40)
+                          : null,
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -180,72 +270,83 @@ class _PerfilPageState extends State<PerfilPage> {
                       const SizedBox(height: 8),
                       Wrap(
                         spacing: 8,
-                        children: tags
-                            .map<Widget>(
-                              (tag) => Chip(label: Text(tag['nome'] ?? '')),
-                            )
-                            .toList(),
+                        children:
+                            tags
+                                .map<Widget>(
+                                  (tag) => Chip(label: Text(tag['nome'] ?? '')),
+                                )
+                                .toList(),
                       ),
                       const SizedBox(height: 8),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          _navegarEAtualizar(MeusDados());
-                        },
-                        icon: const Icon(Icons.edit),
-                        label: const Text('Meus dados'),
-                      ),
                     ],
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Serviços',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    if (idPrestador != null) {
-                      _navegarEAtualizar(AdicionarServico(idPrestador: idPrestador!));
-                    }
-                  },
-                  icon: const Icon(Icons.add),
-                  label: const Text('Adicionar'),
-                ),
-              ],
+            // Aqui entra o ListTile customizado
+            _buildListTile(
+              title: 'Editar meus dados',
+              icon: Icons.account_box_outlined,
+              onTap: () {
+                // ação desejada
+                // ação
+                _navegarEAtualizar(MeusDados());
+              },
+              subtitle: 'Precisa atualizar alguma informação? Altere seus dados de perfil de forma rápida e segura.',
             ),
-            const SizedBox(height: 8),
+            // Linha 'Add Serviços'
+            _buildListTile(
+              title: 'Adicionar Serviço',
+              icon: Icons.build_outlined,
+              onTap: () {
+                // ação desejada
+                // ação
+                _navegarEAtualizar(AdicionarServico(idPrestador: idPrestador!));
+              },
+              subtitle: 'Adicione novos serviços para seus clientes em seu perfil.',
+            ),
+
+            // Linha 'Migrar prestador'
+            _buildListTile(
+              title: 'Migrar para cliente',
+              icon: Icons.swap_horiz_rounded,
+              onTap: () {
+                // ação desejada
+                // ação
+                showMigrarParaClienteDialog(context);
+              },
+              subtitle: 'Mude seu perfil para Cliente, e faça solicitações de serviços pelo app.',
+            ),
+            Divider(),
             Expanded(
-              child: servicos.isEmpty
-                  ? const Center(child: Text('Nenhum serviço cadastrado.'))
-                  : ListView.builder(
-                      itemCount: servicos.length,
-                      itemBuilder: (context, index) {
-                        final servico = servicos[index];
-                        return ServicoCard(
-                          nome: servico['nome'] ?? '',
-                          valor: servico['valor'] ?? 0,
-                          onDelete: () {
-                            desabilitarServico(servico['id']);
-                          },
-                          onTap: () {
-                            _navegarEAtualizar(
-                              EditarServico(
-                                idPrestador: idPrestador!,
-                                idServico: servico['id'],
-                                nomeInicial: servico['nome'] ?? '',
-                                descricaoInicial: servico['descricao'] ?? '',
-                                valorInicial: servico['valor'] ?? 0,
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
+              child:
+                  servicos.isEmpty
+                      ? const Center(child: Text('Nenhum serviço cadastrado.'))
+                      : ListView.builder(
+                        itemCount: servicos.length,
+                        itemBuilder: (context, index) {
+                          final servico = servicos[index];
+                          return ServicoCard(
+                            nome: servico['nome'] ?? '',
+                            valor: servico['valor'] ?? 0,
+                            onDelete: () {
+                              desabilitarServico(servico['id']);
+                            },
+                            onTap: () {
+                              _navegarEAtualizar(
+                                EditarServico(
+                                  idPrestador: idPrestador!,
+                                  idServico: servico['id'],
+                                  nomeInicial: servico['nome'] ?? '',
+                                  descricaoInicial: servico['descricao'] ?? '',
+                                  valorInicial: servico['valor'] ?? 0,
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
             ),
           ],
         ),

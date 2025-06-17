@@ -295,7 +295,7 @@ class _HomePageState extends State<HomePage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: GestureDetector(
-                onTap: _logout, // Mantém a funcionalidade de logout
+                onTap: _logout,
                 child: Container(
                   width: 40,
                   height: 40,
@@ -308,22 +308,21 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   child: _profileImageUrl != null
-                      ? ClipOval(
-                          child: Image.network(
-                            _profileImageUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(
-                              Icons.person,
-                              color: Colors.black87,
-                              size: 24,
-                            ),
-                          ),
+                      ? CircleAvatar(
+                          backgroundImage: NetworkImage(_profileImageUrl!),
+                          onBackgroundImageError: (exception, stackTrace) {
+                            setState(() {
+                              _profileImageUrl = null;
+                            });
+                          },
                         )
-                      : const Icon(
-                          Icons.person,
-                          color: Colors.black87,
-                          size: 24,
+                      : const CircleAvatar(
+                          backgroundColor: Color(0xFFF0F0F0),
+                          child: Icon(
+                            Icons.person,
+                            color: Colors.black87,
+                            size: 24,
+                          ),
                         ),
                 ),
               ),

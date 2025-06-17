@@ -32,6 +32,7 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
 
   void inicializar() async {
     final id = await obterIdUsuario();
+    final idP = await obterIdPrestador();
     if (id == null) {
       setState(() => isLoading = false);
       return;
@@ -39,7 +40,7 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
 
     setState(() {
       idUsuario = id;
-      idPrestador = id;
+      idPrestador = idP;
     });
 
     await carregarDados();
@@ -80,11 +81,11 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
         }
 
         setState(() {
-          nomeController.text = usuario['nome'];
-          telefoneController.text = usuario['telefone'];
-          emailController.text = usuario['email'];
-          horaInicioSelecionada = prestador['data_hora_inicio'];
-          horaFimSelecionada = prestador['data_hora_fim'];
+          nomeController.text = prestador['usuario']['nome'];
+          telefoneController.text = prestador['usuario']['telefone'];
+          emailController.text = prestador['usuario']['email'];
+          /*horaInicioSelecionada = prestador['horarioInicio'];
+          horaFimSelecionada = prestador['horarioFim'];*/
           tags = tagNomes;
           isLoading = false;
         });
@@ -142,6 +143,7 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
                   decoration: const InputDecoration(labelText: 'Nova tag'),
                 ),
                 const SizedBox(height: 16),
+                //ADICIONAR TAGS
                 ElevatedButton(
                   onPressed: () {
                     final novaTag = novaTagController.text.trim();
@@ -189,7 +191,7 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
       );
 
       await http.put(
-        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/$idPrestador'),
+        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/perfil/$idPrestador'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'data_hora_inicio': horaInicioSelecionada,
