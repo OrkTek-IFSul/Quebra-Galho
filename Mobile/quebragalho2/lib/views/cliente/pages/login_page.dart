@@ -62,13 +62,16 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => carregando = false);
   }
 
-  Future<void> salvarPreferencias(String token, int idUsuario, {int? idPrestador}) async {
+  Future<void> salvarPreferencias(String token, int idUsuario, {int? idPrestador, String? nomeUsuario}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
     await prefs.setInt('usuario_id', idUsuario);
     await prefs.setString('token_criado_em', DateTime.now().toIso8601String());
     if (idPrestador != null) {
       await prefs.setInt('prestador_id', idPrestador);
+    }
+    if (nomeUsuario != null) {
+      await prefs.setString('nome_usuario', nomeUsuario);
     }
     await prefs.setBool('manter_logado', manterLogado);
   }
@@ -88,12 +91,23 @@ class _LoginPageState extends State<LoginPage> {
         final body = jsonDecode(response.body);
         final token = body['token'];
         final idUsuario = body['id_usuario'];
-        final idPrestador = body['id_prestador'];
-        await salvarPreferencias(token, idUsuario, idPrestador: idPrestador);
+        final nomeUsuario = body['nome'] ?? '';
+        final idPrestador = body['id_prestador']; // pode ser nulo
+
+        print('ID do usuário: $idUsuario');
+        print('ID do prestador: $idPrestador');
+
+        await salvarPreferencias(
+          token,
+          idUsuario,
+          idPrestador: idPrestador,
+          nomeUsuario: nomeUsuario,
+        );
+
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const NavegacaoCliente()),
+          MaterialPageRoute(builder: (_) => WelcomePage()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
