@@ -1,3 +1,5 @@
+library cadastro_page;
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -50,11 +52,10 @@ class _CadastroPageState extends State<CadastroPage>
     filter: {"#": RegExp(r'[0-9]')},
     type: MaskAutoCompletionType.lazy,
   );
-  
+
   // NOVO: Estado para controlar a visibilidade da senha
   bool _isPasswordObscured = true;
   bool _isConfirmPasswordObscured = true;
-
 
   @override
   void initState() {
@@ -178,16 +179,17 @@ class _CadastroPageState extends State<CadastroPage>
       "usuario": usuario,
     };
 
-    final request = http.MultipartRequest('POST', url)
-      ..fields['prestadorDTO'] = json.encode(prestadorDTO)
-      ..files.add(
-        await http.MultipartFile.fromPath(
-          'imagemDocumento',
-          _documentoImagem!.path,
-          filename: p.basename(_documentoImagem!.path),
-          contentType: MediaType('image', 'jpeg'),
-        ),
-      );
+    final request =
+        http.MultipartRequest('POST', url)
+          ..fields['prestadorDTO'] = json.encode(prestadorDTO)
+          ..files.add(
+            await http.MultipartFile.fromPath(
+              'imagemDocumento',
+              _documentoImagem!.path,
+              filename: p.basename(_documentoImagem!.path),
+              contentType: MediaType('image', 'jpeg'),
+            ),
+          );
 
     final response = await request.send();
     final respStr = await response.stream.bytesToString();
@@ -245,15 +247,16 @@ class _CadastroPageState extends State<CadastroPage>
             controller: controller,
             validator: validator,
             keyboardType: keyboardType,
-            inputFormatters:
-                inputFormatters?.cast<TextInputFormatter>(),
+            inputFormatters: inputFormatters?.cast<TextInputFormatter>(),
             obscureText: obscureText,
             decoration: InputDecoration(
               suffixIcon: suffixIcon,
               filled: true,
               fillColor: const Color.fromARGB(255, 235, 235, 235),
-              contentPadding:
-                  const EdgeInsets.symmetric(vertical: 15.0, horizontal: 12.0),
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: 15.0,
+                horizontal: 12.0,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12.0),
                 borderSide: BorderSide.none,
@@ -264,8 +267,10 @@ class _CadastroPageState extends State<CadastroPage>
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12.0),
-                borderSide:
-                    BorderSide(color: Theme.of(context).primaryColor, width: 2.0),
+                borderSide: BorderSide(
+                  color: Theme.of(context).primaryColor,
+                  width: 2.0,
+                ),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12.0),
@@ -309,36 +314,41 @@ class _CadastroPageState extends State<CadastroPage>
               height: 150,
               width: double.infinity,
               decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.0),
-                  border: Border.all(color: Colors.grey.shade300)),
-              child: imageFile == null
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.camera_alt_outlined,
-                              color: Colors.grey[600], size: 40),
-                          const SizedBox(height: 8),
-                          Text(
-                            placeholderText,
-                            style: TextStyle(color: Colors.grey[700]),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12.0),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child:
+                  imageFile == null
+                      ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.camera_alt_outlined,
+                              color: Colors.grey[600],
+                              size: 40,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              placeholderText,
+                              style: TextStyle(color: Colors.grey[700]),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      )
+                      : ClipRRect(
+                        borderRadius: BorderRadius.circular(12.0),
+                        child: Image.file(imageFile, fit: BoxFit.cover),
                       ),
-                    )
-                  : ClipRRect(
-                      borderRadius: BorderRadius.circular(12.0),
-                      child: Image.file(imageFile, fit: BoxFit.cover),
-                    ),
             ),
           ),
         ],
       ),
     );
   }
-  
+
   // ATUALIZADO: _formularioBase agora usa os novos widgets helpers
   Widget _formularioBase(
     GlobalKey<FormState> formKey, {
@@ -352,39 +362,47 @@ class _CadastroPageState extends State<CadastroPage>
           _buildCustomTextField(
             controller: _nomeController,
             label: "Nome completo",
-            validator: (value) =>
-                value == null || value.isEmpty ? "Informe o nome" : null,
+            validator:
+                (value) =>
+                    value == null || value.isEmpty ? "Informe o nome" : null,
           ),
           _buildCustomTextField(
             controller: _emailController,
             label: "Email",
             keyboardType: TextInputType.emailAddress,
-            validator: (value) =>
-                value == null || value.isEmpty ? "Informe o email" : null,
+            validator:
+                (value) =>
+                    value == null || value.isEmpty ? "Informe o email" : null,
           ),
           _buildCustomTextField(
             controller: _telefoneController,
             label: "Telefone",
             inputFormatters: [_maskTelefone],
             keyboardType: TextInputType.phone,
-            validator: (value) =>
-                value == null || value.isEmpty ? "Informe o telefone" : null,
+            validator:
+                (value) =>
+                    value == null || value.isEmpty
+                        ? "Informe o telefone"
+                        : null,
           ),
           _buildCustomTextField(
             controller: _cpfController,
             label: "CPF",
             inputFormatters: [_maskCpf],
             keyboardType: TextInputType.number,
-            validator: (value) =>
-                value == null || value.isEmpty ? "Informe o CPF" : null,
+            validator:
+                (value) =>
+                    value == null || value.isEmpty ? "Informe o CPF" : null,
           ),
           _buildCustomTextField(
             controller: _senhaController,
             label: "Senha",
             obscureText: _isPasswordObscured,
-            validator: (value) => value == null || value.length < 6
-                ? "Senha deve ter no mínimo 6 caracteres"
-                : null,
+            validator:
+                (value) =>
+                    value == null || value.length < 6
+                        ? "Senha deve ter no mínimo 6 caracteres"
+                        : null,
             suffixIcon: IconButton(
               icon: Icon(
                 _isPasswordObscured ? Icons.visibility_off : Icons.visibility,
@@ -401,8 +419,11 @@ class _CadastroPageState extends State<CadastroPage>
             controller: _confirmarSenhaController,
             label: "Confirmar Senha",
             obscureText: _isConfirmPasswordObscured,
-            validator: (value) =>
-                value != _senhaController.text ? "Senhas não coincidem" : null,
+            validator:
+                (value) =>
+                    value != _senhaController.text
+                        ? "Senhas não coincidem"
+                        : null,
             suffixIcon: IconButton(
               icon: Icon(
                 _isConfirmPasswordObscured
@@ -421,8 +442,11 @@ class _CadastroPageState extends State<CadastroPage>
             _buildCustomTextField(
               controller: _descricaoController,
               label: "Descrição dos serviços",
-              validator: (value) =>
-                  value == null || value.isEmpty ? "Informe a descrição" : null,
+              validator:
+                  (value) =>
+                      value == null || value.isEmpty
+                          ? "Informe a descrição"
+                          : null,
             ),
           _buildImagePicker(
             label: "Foto de perfil",
@@ -512,8 +536,18 @@ class _CadastroPageState extends State<CadastroPage>
             unselectedLabelColor: Colors.grey[600],
             indicatorWeight: 3.0,
             tabs: const [
-              Tab(child: Text("Cliente", style: TextStyle(fontWeight: FontWeight.bold))),
-              Tab(child: Text("Prestador", style: TextStyle(fontWeight: FontWeight.bold))),
+              Tab(
+                child: Text(
+                  "Cliente",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              Tab(
+                child: Text(
+                  "Prestador",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
             ],
           ),
         ),
@@ -526,13 +560,15 @@ class _CadastroPageState extends State<CadastroPage>
           child: ElevatedButton(
             onPressed: () {
               final abaAtual = _tabController.index;
-              if (abaAtual == 0) { // Aba Cliente
+              if (abaAtual == 0) {
+                // Aba Cliente
                 if (_formCliente.currentState!.validate()) {
                   _cadastrarCliente();
                 } else {
                   _mostrarErro("Por favor, corrija os erros no formulário.");
                 }
-              } else { // Aba Prestador
+              } else {
+                // Aba Prestador
                 if (_formPrestador.currentState!.validate()) {
                   _cadastrarPrestador();
                 } else {
