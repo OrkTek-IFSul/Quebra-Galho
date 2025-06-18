@@ -256,7 +256,7 @@ class _PerfilPageState extends State<PerfilPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        nomeUsuario,
+                        nome,
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,

@@ -1,15 +1,11 @@
 import 'dart:convert';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 import 'package:quebragalho2/api_config.dart';
-
-// O import abaixo não é usado diretamente, mas foi mantido conforme o arquivo original.
 import 'package:quebragalho2/views/cliente/pages/login_page.dart';
-import 'package:quebragalho2/views/prestador/widgets/modal_adicionar_tags.dart';
 
 class EditarMeusDados extends StatefulWidget {
   const EditarMeusDados({super.key});
@@ -45,10 +41,7 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
     inicializar();
   }
 
-  // --- MÉTODOS DE LÓGICA (PERMANECEM INALTERADOS) ---
-
   void inicializar() async {
-    // Método existente, sem alterações.
     final id = await obterIdUsuario();
     final idP = await obterIdPrestador();
     if (id == null || idP == null) {
@@ -63,13 +56,10 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
       });
     }
 
-
     await carregarDados();
   }
 
   Future<void> carregarDados() async {
-
-    // Método com pequena correção para carregar os horários.
     if (idUsuario == null || idPrestador == null) return;
 
     try {
@@ -84,28 +74,11 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
         final usuario = jsonDecode(usuarioResp.body);
         final prestador = jsonDecode(prestadorResp.body);
 
-        final List tagIds = jsonDecode(tagPrestadorResp.body);
-        final List<String> tagNomes = [];
-
-        for (var idTag in tagIds) {
-          final tagResp = await http.get(
-            Uri.parse('https://${ApiConfig.baseUrl}/api/tags/$idTag'),
-          );
-          if (tagResp.statusCode == 200) {
-            final tagData = jsonDecode(tagResp.body);
-            tagNomes.add(tagData['nome']);
-          }
-        }
-
         if (mounted) {
           setState(() {
             nomeController.text = prestador['usuario']['nome'] ?? '';
             telefoneController.text = prestador['usuario']['telefone'] ?? '';
             emailController.text = prestador['usuario']['email'] ?? '';
-            // CORREÇÃO: Carrega os horários salvos do prestador
-            /*horaInicioSelecionada = prestador['data_hora_inicio'];
-            horaFimSelecionada = prestador['data_hora_fim'];*/
-            tags = tagNomes;
             isLoading = false;
           });
         }
@@ -120,7 +93,6 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
   }
 
   List<String> gerarHorarios() {
-    // Método existente, sem alterações.
     List<String> lista = [];
     TimeOfDay hora = const TimeOfDay(hour: 8, minute: 0);
 
@@ -137,48 +109,7 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
     return lista;
   }
 
-  void abrirModalAdicionarTag() {
-    // Método existente, sem alterações.
-    final TextEditingController novaTagController = TextEditingController();
-    showModalBottomSheet(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 16, right: 16, top: 0),
-        child: Wrap(
-          children: [
-            const Text('Adicionar nova tag', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            TextField(
-              controller: novaTagController,
-              decoration: const InputDecoration(labelText: 'Nova tag'),
-              autofocus: true,
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  final novaTag = novaTagController.text.trim();
-                  if (novaTag.isNotEmpty && !tags.contains(novaTag) && tags.length < 3) {
-                    setState(() => tags.add(novaTag));
-                    Navigator.pop(context);
-                  }
-                },
-                child: const Text('Adicionar'),
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-
   Future<void> salvarDados() async {
-    // Método existente, sem alterações.
     if (idUsuario == null || idPrestador == null) return;
     final nome = nomeController.text.trim();
     final telefone = telefoneMask.getUnmaskedText();
@@ -202,10 +133,9 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
         body: jsonEncode({'nome': nome, 'telefone': telefone, 'email': email}),
       );
 
-    final horarioInicio = '2025-06-17T$horaInicioSelecionada';
-    final horarioFim = '2025-06-17T$horaFimSelecionada';
+      final horarioInicio = '2025-06-17T$horaInicioSelecionada';
+      final horarioFim = '2025-06-17T$horaFimSelecionada';
 
-    try {
       final prestadorBody = jsonEncode({
         'descricao': descricao,
         'usuario': {
@@ -225,12 +155,7 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
         body: prestadorBody,
       );
 
-      // Aqui você implementaria a lógica para salvar/atualizar as tags.
-      if (mounted) Navigator.pop(context, true); // Retorna true para indicar sucesso
-
-      if (mounted) {
-        Navigator.pop(context);
-      }
+      if (mounted) Navigator.pop(context, true);
 
     } catch (e) {
       debugPrint('Erro ao salvar dados: $e');
@@ -238,42 +163,14 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
   }
 
   int _horaToInt(String hora) {
-    // Método existente, sem alterações.
     final partes = hora.split(':');
     return int.parse(partes[0]) * 60 + int.parse(partes[1]);
   }
-
-  void _showAddTagsModal(BuildContext context, List<String> currentTags) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: ModalAdicionarTags(
-          selectedTags: currentTags,
-          onTagsSelected: (newTags) {
-            setState(() {
-              // Update your tags list here
-              tags = newTags;
-            });
-          },
-        ),
-      ),
-    );
-  }
-
-  // --- WIDGET BUILD (LAYOUT ATUALIZADO) ---
 
   @override
   Widget build(BuildContext context) {
     final opcoesHorario = gerarHorarios();
 
-    // Helper para criar os TextFields estilizados
     Widget buildTextField({
       required String label,
       required TextEditingController controller,
@@ -329,61 +226,12 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             buildTextField(label: 'Nome', controller: nomeController),
             const SizedBox(height: 20),
             buildTextField(label: 'Telefone', controller: telefoneController, keyboardType: TextInputType.phone),
             const SizedBox(height: 20),
             buildTextField(label: 'Email', controller: emailController, keyboardType: TextInputType.emailAddress),
             const SizedBox(height: 24),
-            const Divider(),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                const Text('Tags / Categorias', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                Text('Adicione até 3 tags', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8.0,
-              runSpacing: 8.0,
-              children: [
-                if (tags.length < 3)
-                  ActionChip(
-                    avatar: const Icon(Icons.add, size: 16),
-                    label: const Text('Tag'),
-                    onPressed: () => _showAddTagsModal(context, tags),
-                    backgroundColor: Colors.grey.shade100,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  ),
-                ...tags.map((tag) => Chip(
-                      label: Text(tag),
-                      onDeleted: () => setState(() => tags.remove(tag)),
-                      deleteIconColor: Colors.grey.shade700,
-                      backgroundColor: Colors.grey.shade100,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    )),
-              ],
-            ),
-            const SizedBox(height: 16),
-            RichText(
-              text: TextSpan(
-                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                children: [
-                  const TextSpan(text: 'Não achou sua tag? '),
-                  TextSpan(
-                    text: 'Crie uma nova',
-                    style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold),
-                    recognizer: TapGestureRecognizer()..onTap = abrirModalAdicionarTag,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
             const Divider(),
             const SizedBox(height: 24),
             const Text('Horário de Atendimento', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
@@ -406,7 +254,6 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
                         ),
                       ),
                     ],
-
                   ),
                 ),
                 const SizedBox(width: 24),
@@ -426,8 +273,6 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
                         ),
                       ),
                     ],
-
-
                   ),
                 ),
               ],
@@ -437,6 +282,4 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
       ),
     );
   }
-
- 
 }
