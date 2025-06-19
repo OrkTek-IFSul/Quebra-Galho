@@ -22,6 +22,10 @@ class _LoginPageState extends State<LoginPage> {
   bool carregando = true;
   bool _isPasswordObscured = true;
 
+  final http.Client client;
+
+  _LoginPageState({http.Client? client}) : client = client ?? http.Client();
+
   @override
   void initState() {
     super.initState();
@@ -62,7 +66,12 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => carregando = false);
   }
 
-  Future<void> salvarPreferencias(String token, int idUsuario, {int? idPrestador, String? nomeUsuario}) async {
+  Future<void> salvarPreferencias(
+    String token,
+    int idUsuario, {
+    int? idPrestador,
+    String? nomeUsuario,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
     await prefs.setInt('usuario_id', idUsuario);
@@ -115,19 +124,16 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao conectar: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao conectar: $e')));
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
     if (carregando) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -170,13 +176,13 @@ class _LoginPageState extends State<LoginPage> {
               Text(
                 'Faça o login abaixo para acessar as principais funções do aplicativo',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
               ),
               const SizedBox(height: 48),
-              const Text('Email', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Email',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               TextField(
                 controller: emailController,
@@ -189,11 +195,17 @@ class _LoginPageState extends State<LoginPage> {
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 12,
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
-              const Text('Password', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Password',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               TextField(
                 controller: senhaController,
@@ -206,10 +218,15 @@ class _LoginPageState extends State<LoginPage> {
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 12,
+                  ),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _isPasswordObscured ? Icons.visibility_off : Icons.visibility,
+                      _isPasswordObscured
+                          ? Icons.visibility_off
+                          : Icons.visibility,
                       color: Colors.grey[400],
                     ),
                     onPressed: () {
@@ -242,7 +259,10 @@ class _LoginPageState extends State<LoginPage> {
                           return Colors.grey[300];
                         }),
                       ),
-                      const Text('Manter conectado', style: TextStyle(color: Colors.black54)),
+                      const Text(
+                        'Manter conectado',
+                        style: TextStyle(color: Colors.black54),
+                      ),
                     ],
                   ),
                   TextButton(
@@ -284,7 +304,9 @@ class _LoginPageState extends State<LoginPage> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color.fromARGB(255, 49, 49, 49),
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: const BorderSide(color: Color.fromARGB(255, 77, 77, 77)),
+                  side: const BorderSide(
+                    color: Color.fromARGB(255, 77, 77, 77),
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -302,6 +324,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+
 // Funções de obter ID permanecem as mesmas
 Future<int?> obterIdUsuario() async {
   final prefs = await SharedPreferences.getInstance();
