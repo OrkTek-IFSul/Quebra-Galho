@@ -395,7 +395,9 @@ class _HomePageState extends State<HomePage> {
   itemCount: _prestadoresFiltrados.length,
   itemBuilder: (context, index) {
     final prestador = _prestadoresFiltrados[index];
-    final String imageUrl = prestador['imagemPerfil'] as String? ?? '';
+    final String imageUrl = (prestador['imagemPerfil'] != null && (prestador['imagemPerfil'] as String).isNotEmpty)
+    ? 'https://${ApiConfig.baseUrl}/${prestador['imagemPerfil']}'
+    : '';
     final String nome = prestador['nome'] as String? ?? 'Nome Indisponível';
     final List<String> tags = (prestador['tags'] as List?)
             ?.map((tag) => (tag is Map && tag['nome'] != null) ? tag['nome'].toString() : '')

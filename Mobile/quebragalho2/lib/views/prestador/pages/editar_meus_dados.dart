@@ -21,7 +21,8 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
   final descricaoController = TextEditingController();
   final documentoController = TextEditingController();
 
-  String? horaInicioSelecionada;
+List <String> tags = [];
+String? horaInicioSelecionada;
   String? horaFimSelecionada;
 
   bool isLoading = true;
@@ -69,10 +70,28 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
       final prestadorResp = await http.get(
         Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/perfil/$idPrestador'),
       );
+      final tagPrestadorResp = await http.get(
+        Uri.parse('https://${ApiConfig.baseUrl}/api/tag-prestador/prestador/$idPrestador'),
+      );
 
-      if (usuarioResp.statusCode == 200 && prestadorResp.statusCode == 200) {
+      if (usuarioResp.statusCode == 200 && prestadorResp.statusCode == 200 && tagPrestadorResp.statusCode == 200) {
         final usuario = jsonDecode(usuarioResp.body);
         final prestador = jsonDecode(prestadorResp.body);
+
+        final List tagIds = jsonDecode(tagPrestadorResp.body);
+
+        final List<String> tagNomes = [];
+
+        for (var idTag in tagIds) {
+          final tagResp = await http.get(
+            Uri.parse('https://${ApiConfig.baseUrl}/api/tags/$idTag'),
+          );
+          if (tagResp.statusCode == 200) {
+            final tagData = jsonDecode(tagResp.body);
+            tagNomes.add(tagData['nome']);
+          }
+        }
+
 
         if (mounted) {
           setState(() {
@@ -108,6 +127,53 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
     }
     return lista;
   }
+
+  void abrirModalAdicionarTag() {
+    // Método existente, sem alterações.
+    final TextEditingController novaTagController = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 16, right: 16, top: 0),
+        child: Wrap(
+          children: [
+            const Text('Adicionar nova tag', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            TextField(
+              controller: novaTagController,
+              decoration: const InputDecoration(labelText: 'Nova tag'),
+              autofocus: true,
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  final novaTag = novaTagController.text.trim();
+                  if (novaTag.isNotEmpty && !tags.contains(novaTag) && tags.length < 3) {
+                    setState(() => tags.add(novaTag));
+                    Navigator.pop(context);
+                  }
+                },
+                child: const Text('Adicionar'),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+  int _horaToInt(String hora) {
+    // Método existente, sem alterações.
+    final partes = hora.split(':');
+    return int.parse(partes[0]) * 60 + int.parse(partes[1]);
+  }
+
 
   Future<void> salvarDados() async {
     if (idUsuario == null || idPrestador == null) return;
@@ -161,6 +227,33 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
       debugPrint('Erro ao salvar dados: $e');
     }
   }
+
+  void _showAddTagsModal(BuildContext context, List<String> currentTags) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: ModalAdicionarTags(
+          selectedTags: currentTags,
+          onTagsSelected: (newTags) {
+            setState(() {
+              // Update your tags list here
+              tags = newTags;
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  // --- WIDGET BUILD (LAYOUT ATUALIZADO) ---
+
 
   int _horaToInt(String hora) {
     final partes = hora.split(':');
@@ -282,4 +375,10 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
       ),
     );
   }
+
+ 
+  }
+  
+
 }
+

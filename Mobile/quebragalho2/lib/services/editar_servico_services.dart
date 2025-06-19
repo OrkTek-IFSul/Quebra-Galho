@@ -21,6 +21,7 @@ class EditarServicoService {
     required int idServico,
     required String nome,
     required String descricao,
+    required int duracao,
     required double valor,
     List<Map<String, dynamic>>? tags, // parâmetro opcional para tags
   }) async {
@@ -32,6 +33,7 @@ class EditarServicoService {
           'nome': nome,
           'descricao': descricao,
           'preco': valor,
+          'duracaoMinutos': duracao,
           'tags': tags ?? [], // se tags não fornecida, envia lista vazia
         }),
       );

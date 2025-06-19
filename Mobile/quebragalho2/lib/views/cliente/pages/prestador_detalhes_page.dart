@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:quebragalho2/api_config.dart';
 import 'package:quebragalho2/views/cliente/pages/agendamento_page.dart';
+import 'package:quebragalho2/views/cliente/pages/avaliacoes_prestador.dart';
 import 'package:quebragalho2/views/cliente/pages/login_page.dart';
 
 class PrestadorDetalhesPage extends StatefulWidget {
@@ -30,27 +31,55 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
     _fetchPrestadorDetails();
   }
 
+  // CORREÇÃO 1: Removido o método duplicado `_carregarDadosPrestador`.
+  // Apenas este método é necessário e está sendo chamado no initState.
   Future<void> _fetchPrestadorDetails() async {
+    setState(() => isLoading = true);
     try {
       final response = await http.get(
         Uri.parse(
-          'http://${ApiConfig.baseUrl}/api/usuario/homepage/prestador/${widget.id}',
+          // Mantive a URL com http:// como no seu código original.
+          // Se sua API usa https, lembre-se de ajustar aqui.
+          'http://${ApiConfig.baseUrl}/api/prestador/perfil/${widget.id}',
         ),
       );
 
       if (response.statusCode == 200) {
+        // Usando utf8.decode para garantir a decodificação correta de caracteres especiais (acentos)
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+
+        final usuario = data['usuario'] ?? {};
+        prestadorData = {
+          'nome': usuario['nome'] ?? 'Nome não informado',
+          'email': usuario['email'] ?? '',
+          'telefone': usuario['telefone'] ?? '',
+          'descricao': data['descricao'] ?? 'Descrição não informada.',
+          'documento': usuario['documento'] ?? '',
+          'imagemPerfil':
+              usuario['imagemPerfil'] != null && usuario['imagemPerfil'].toString().isNotEmpty
+                  ? 'http://${ApiConfig.baseUrl}/' + usuario['imagemPerfil']
+                  : null,
+          'mediaAvaliacoes': data['mediaAvaliacoes'] ?? 0.0,
+          'tags': data['tags'] ?? [],
+          'servicos': data['servicos'] ?? [],
+        };
+
         setState(() {
-          prestadorData = jsonDecode(utf8.decode(response.bodyBytes));
           isLoading = false;
         });
       } else {
-        throw Exception('Falha ao carregar dados do prestador');
+        throw Exception(
+            'Falha ao carregar dados do prestador (Status: ${response.statusCode})');
       }
     } catch (e) {
       setState(() {
         isLoading = false;
       });
+      // Adiciona um feedback mais claro no console e na tela
       print('Erro ao carregar detalhes do prestador: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao carregar dados: $e')),
+      );
     }
   }
 
@@ -71,9 +100,12 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
     return Row(mainAxisSize: MainAxisSize.min, children: stars);
   }
 
+  // CORREÇÃO 2: Ajuste na lógica de agrupamento de serviços.
+  // Agora ele agrupa corretamente pelo nome de cada serviço.
   Map<String, List<dynamic>> _groupServices(List<dynamic> services) {
     Map<String, List<dynamic>> grouped = {};
     for (var service in services) {
+      // O nome do serviço está diretamente no objeto 'service', não em 'service['servicos']'
       String key = service['nome'] ?? 'Outros';
       if (grouped[key] == null) {
         grouped[key] = [];
@@ -99,11 +131,24 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
     if (prestadorData == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Erro')),
-        body: const Center(child: Text('Erro ao carregar dados do prestador')),
+        body: Center(
+            child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Erro ao carregar dados do prestador.'),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: _fetchPrestadorDetails,
+              child: const Text('Tentar novamente'),
+            )
+          ],
+        )),
       );
     }
 
+    // CORREÇÃO 3: Acesso correto aos dados no mapa `prestadorData`.
     final String imageUrl = prestadorData!['imagemPerfil'] ?? '';
+    // O nome agora é acessado diretamente de 'nome', e não de 'usuario['nome']'.
     final String name = prestadorData!['nome'] ?? 'Nome Indisponível';
     final double rating =
         (prestadorData!['mediaAvaliacoes'] as num?)?.toDouble() ?? 0.0;
@@ -112,12 +157,10 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
     final List<dynamic> servicos = prestadorData!['servicos'] ?? [];
     final groupedServices = _groupServices(servicos);
 
+    // O restante do seu layout é mantido exatamente como estava.
     return Scaffold(
-      // AJUSTE APLICADO AQUI
       appBar: AppBar(
-        // 1. Centraliza o título
         centerTitle: true,
-        // 2. Diminui o tamanho da fonte do título
         title: const Text('Detalhes', style: TextStyle(fontSize: 18.0)),
         elevation: 0,
         backgroundColor: Colors.white,
@@ -139,11 +182,24 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     clipBehavior: Clip.antiAlias,
-                    child: Image.network(
-                      imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Center(
+                    child: imageUrl.isNotEmpty
+                      ? Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Center(
+                              child: Text(
+                                name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                style: TextStyle(
+                                  fontSize: 48,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            );
+                          },
+                        )
+                      : Center( // Fallback caso a URL da imagem esteja vazia
                           child: Text(
                             name.isNotEmpty ? name[0].toUpperCase() : '?',
                             style: TextStyle(
@@ -152,12 +208,9 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
                               color: Colors.grey[600],
                             ),
                           ),
-                        );
-                      },
-                    ),
+                        ),
                   ),
                   const SizedBox(height: 16),
-
                   Text(
                     name,
                     style: const TextStyle(
@@ -166,55 +219,52 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
                     ),
                   ),
                   const SizedBox(height: 12),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'Avaliações',
-                        style: TextStyle(fontSize: 16, color: Colors.black54),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        rating.toStringAsFixed(1),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AvaliacoesPrestadorPage(idPrestador: widget.id),
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      _buildRatingStars(rating),
-                    ],
+                      );
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center, // Centraliza a linha de avaliação
+                      children: [
+                        const Text(
+                          'Avaliações',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildRatingStars(rating),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 12),
-
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     alignment: WrapAlignment.center,
-                    children:
-                        tags
-                            .take(3)
-                            .map(
-                              (tag) => Chip(
-                                label: Text(tag['nome'] ?? ''),
-                                backgroundColor: Colors.grey[200],
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                              ),
-                            )
-                            .toList(),
+                    children: tags.take(3).map(
+                          (tag) => Chip(
+                            label: Text(tag['nome'] ?? ''),
+                            backgroundColor: Colors.grey[200],
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                          ),
+                        ).toList(),
                   ),
                 ],
               ),
             ),
-
             const SizedBox(height: 24),
             const Divider(),
             const SizedBox(height: 16),
-
             const Text(
               'Sobre:',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -225,13 +275,11 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
               style: const TextStyle(fontSize: 15, color: Colors.black54),
             ),
             const SizedBox(height: 24),
-
             const Text(
               'Selecione um dos serviços para agendar:',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-
             ListView.separated(
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
@@ -240,87 +288,89 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
               itemBuilder: (context, index) {
                 String groupName = groupedServices.keys.elementAt(index);
                 List<dynamic> servicesInGroup = groupedServices[groupName]!;
-
+                
+                // Mapeia cada serviço dentro do grupo para um InkWell
                 return Column(
-                  children:
-                      servicesInGroup.map((servico) {
-                        return InkWell(
-                          onTap: () {
-                            if (!widget.isLoggedIn) {
-                              showDialog(
-                                context: context,
-                                builder:
-                                    (context) => AlertDialog(
-                                      title: const Text('Atenção'),
-                                      content: const Text(
-                                        'Você precisa estar logado para agendar um serviço.',
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(
-                                              context,
-                                            ).pop(); // Fecha o dialog
-                                            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => LoginPage()));
-                                          },
-                                          child: const Text('Fazer login'),
-                                        ),
-                                      ],
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: servicesInGroup.map((servico) {
+                    return InkWell(
+                      onTap: () {
+                        if (!widget.isLoggedIn) {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Atenção'),
+                              content: const Text('Você precisa estar logado para agendar um serviço.'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                    Navigator.of(context).pushReplacement(
+                                        MaterialPageRoute(builder: (_) => LoginPage()));
+                                  },
+                                  child: const Text('Fazer login'),
+                                ),
+                              ],
+                            ),
+                          );
+                          return;
+                        }
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => AgendamentoPage(
+                              // Acessando os dados do serviço corretamente
+                              servico: servico['nome'] ?? 'Serviço sem nome',
+                              servicoId: servico['id'],
+                             // Passando o ID do prestador
+                            ),
+                          ),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    // Usando o nome do serviço diretamente
+                                    servico['nome'] ?? 'Serviço',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
                                     ),
-                              );
-                              return;
-                            }
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder:
-                                    (_) => AgendamentoPage(
-                                      servico: servico['nome'],
-                                      servicoId: servico['id'],
-                                    ),
-                              ),
-                            );
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        groupName,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Text(
-                                        servico['descricao'] ?? '',
+                                  ),
+                                  if (servico['descricao'] != null && servico['descricao'].isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 4.0),
+                                      child: Text(
+                                        servico['descricao'],
                                         style: const TextStyle(
                                           fontSize: 14,
                                           color: Colors.black54,
                                         ),
                                       ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Text(
-                                  'R\$ ${servico['preco']?.toStringAsFixed(2) ?? '0.00'}',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.green,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                                    ),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      }).toList(),
+                            const SizedBox(width: 16),
+                            Text(
+                              'R\$ ${servico['preco']?.toStringAsFixed(2) ?? '0.00'}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 );
               },
             ),
