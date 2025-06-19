@@ -6,6 +6,7 @@
 /// Versão: 1.0.0
 ///
 library;
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -14,20 +15,22 @@ import 'package:mime/mime.dart';
 import 'package:quebragalho2/api_config.dart';
 
 class PerfilPageService {
-  final String baseUrl = 'https://${ApiConfig.baseUrl}/api/usuario/perfil'; // ajuste conforme necessário
+  final String baseUrl =
+      'https://${ApiConfig.baseUrl}/api/usuario/perfil'; // ajuste conforme necessário
+
+  final http.Client client;
+
+  PerfilPageService({http.Client? client}) : client = client ?? http.Client();
 
   Future<Map<String, dynamic>> buscarPerfilUsuario(int usuarioId) async {
-  final response = await http.get(
-    Uri.parse('$baseUrl/$usuarioId'),
-  );
+    final response = await http.get(Uri.parse('$baseUrl/$usuarioId'));
 
-  if (response.statusCode == 200) {
-    return jsonDecode(response.body);
-  } else {
-    throw Exception('Falha ao carregar perfil do usuário');
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Falha ao carregar perfil do usuário');
+    }
   }
-}
-
 
   Future<String?> uploadImagemPerfil(int usuarioId, File imagem) async {
     final uri = Uri.parse('$baseUrl/$usuarioId/imagem');
@@ -54,7 +57,9 @@ class PerfilPageService {
   }
 
   Future<bool> removerImagemPerfil(int usuarioId) async {
-    final response = await http.delete(Uri.parse('$baseUrl/$usuarioId/removerimagem'));
+    final response = await http.delete(
+      Uri.parse('$baseUrl/$usuarioId/removerimagem'),
+    );
 
     if (response.statusCode == 204) {
       return true;
@@ -65,7 +70,9 @@ class PerfilPageService {
   }
 
   Future<Map<String, dynamic>?> atualizarPerfilUsuario(
-      int usuarioId, Map<String, dynamic> dadosAtualizados) async {
+    int usuarioId,
+    Map<String, dynamic> dadosAtualizados,
+  ) async {
     final response = await http.put(
       Uri.parse('$baseUrl/atualizar/$usuarioId'),
       headers: {'Content-Type': 'application/json'},

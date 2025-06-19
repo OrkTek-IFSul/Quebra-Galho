@@ -22,13 +22,7 @@ void main() {
       ),
     ).thenAnswer((_) async => http.Response('{}', 201));
 
-    // Renderizamos la página con el client mockeado
-    await tester.pumpWidget(
-      MaterialApp(
-        home:
-            CadastroPage(), // <- si inyectás el client, usá CadastroPage(client: mockClient)
-      ),
-    );
+    await tester.pumpWidget(MaterialApp(home: CadastroPage()));
 
     await tester.pumpAndSettle();
 
