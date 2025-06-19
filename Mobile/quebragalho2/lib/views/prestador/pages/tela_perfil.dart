@@ -188,6 +188,29 @@ class _PerfilPageState extends State<PerfilPage> {
     }
   }
 
+  void _showConfirmDeleteDialog(BuildContext context, VoidCallback onConfirm) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remover serviço'),
+        content: const Text('Tem certeza que deseja remover?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Não'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              onConfirm();
+            },
+            child: const Text('Sim'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (carregando) {
@@ -256,7 +279,7 @@ class _PerfilPageState extends State<PerfilPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        nomeUsuario,
+                        nome,
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -334,8 +357,12 @@ class _PerfilPageState extends State<PerfilPage> {
                           return ServicoCard(
                             nome: servico['nome'] ?? '',
                             valor: servico['preco']?.toDouble() ?? 0,
+                            duracao: 0,
+                            descricao: '',
                             onDelete: () {
-                              desabilitarServico(servico['id']);
+                              _showConfirmDeleteDialog(context, () {
+                                desabilitarServico(servico['id']);
+                              });
                             },
                             onTap: () {
                               _navegarEAtualizar(
@@ -344,8 +371,8 @@ class _PerfilPageState extends State<PerfilPage> {
                                   idServico: servico['id'],
                                   nomeInicial: servico['nome'] ?? '',
                                   descricaoInicial: servico['descricao'] ?? '',
-                                  valorInicial:
-                                      servico['preco']?.toDouble() ?? 0,
+                                  valorInicial: servico['preco']?.toDouble() ?? 0,
+                                  duracao: 0,
                                   tagsServico: tagsServico,
                                 ),
                               );

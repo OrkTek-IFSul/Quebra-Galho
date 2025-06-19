@@ -111,7 +111,7 @@ class _PerfilPageState extends State<PerfilPage> {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14.0),
+        padding: const EdgeInsets.symmetric(vertical: 10.0),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -295,7 +295,7 @@ class _PerfilPageState extends State<PerfilPage> {
                     icon: Icons.list_alt_rounded,
                     title: "Minhas solicitações",
                     subtitle:
-                        "Encontre todas as suas solicitações já feitas. Acompanhe o status, veja os detalhes e fique por dentro de tudo.",
+                        "Encontre todas as suas solicitações já feitas. Acompanhe o status e veja os detalhes.",
                     onTap: () {
                       Navigator.push(
                         context,
@@ -319,6 +319,8 @@ class _PerfilPageState extends State<PerfilPage> {
                       ).then((_) => _carregarDados());
                     },
                   ),
+                  
+                  
                   _buildListTile(
                     title: 'Migrar para prestador',
                     icon: Icons.swap_horiz,

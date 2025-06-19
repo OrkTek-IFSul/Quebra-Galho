@@ -25,7 +25,8 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
   final descricaoController = TextEditingController();
   final documentoController = TextEditingController();
 
-  String? horaInicioSelecionada;
+List <String> tags = [];
+String? horaInicioSelecionada;
   String? horaFimSelecionada;
 
   bool isLoading = true;
@@ -79,12 +80,15 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
       final prestadorResp = await http.get(
         Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/perfil/$idPrestador'),
       );
+      final tagPrestadorResp = await http.get(
+        Uri.parse('https://${ApiConfig.baseUrl}/api/tag-prestador/prestador/$idPrestador'),
+      );
 
-      if (usuarioResp.statusCode == 200 && prestadorResp.statusCode == 200) {
+      if (usuarioResp.statusCode == 200 && prestadorResp.statusCode == 200 && tagPrestadorResp.statusCode == 200) {
         final usuario = jsonDecode(usuarioResp.body);
         final prestador = jsonDecode(prestadorResp.body);
-
         final List tagIds = jsonDecode(tagPrestadorResp.body);
+
         final List<String> tagNomes = [];
 
         for (var idTag in tagIds) {
@@ -177,6 +181,12 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
   }
 
 
+  int _horaToInt(String hora) {
+    // Método existente, sem alterações.
+    final partes = hora.split(':');
+    return int.parse(partes[0]) * 60 + int.parse(partes[1]);
+  }
+
   Future<void> salvarDados() async {
     // Método existente, sem alterações.
     if (idUsuario == null || idPrestador == null) return;
@@ -205,7 +215,6 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
     final horarioInicio = '2025-06-17T$horaInicioSelecionada';
     final horarioFim = '2025-06-17T$horaFimSelecionada';
 
-    try {
       final prestadorBody = jsonEncode({
         'descricao': descricao,
         'usuario': {
@@ -235,12 +244,6 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
     } catch (e) {
       debugPrint('Erro ao salvar dados: $e');
     }
-  }
-
-  int _horaToInt(String hora) {
-    // Método existente, sem alterações.
-    final partes = hora.split(':');
-    return int.parse(partes[0]) * 60 + int.parse(partes[1]);
   }
 
   void _showAddTagsModal(BuildContext context, List<String> currentTags) {
@@ -439,4 +442,5 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
   }
 
  
-}
+  }
+  
