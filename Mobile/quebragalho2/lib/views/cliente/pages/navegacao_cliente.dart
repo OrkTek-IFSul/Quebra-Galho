@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:quebragalho2/views/cliente/pages/chat_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:quebragalho2/views/cliente/pages/home_page.dart';
 import 'package:quebragalho2/views/cliente/pages/perfil_page.dart';
@@ -14,6 +15,7 @@ class _NavegacaoClienteState extends State<NavegacaoCliente> {
   // Index da página selecionada
   int _selectedIndex = 0;
   int? usuarioId;
+  int prestadorId = 4;
 
   @override
   void initState() {
@@ -39,7 +41,9 @@ class _NavegacaoClienteState extends State<NavegacaoCliente> {
   // Lista de páginas da navegação
   List<Widget> get paginas => [
         const HomePage(),
-        if (usuarioId != null) PerfilPage(usuarioId: usuarioId!), // Passe o id aqui
+                if (usuarioId != null) ChatPage(clienteId: usuarioId!.toString(), prestadorId: prestadorId.toString()),
+        if (usuarioId != null) PerfilPage(usuarioId: usuarioId!),
+ // Passe o id aqui
       ];
 
   void _onTabTapped(int index) {
@@ -78,10 +82,17 @@ class _NavegacaoClienteState extends State<NavegacaoCliente> {
             ),
             IconButton(
               icon: Icon(
-                Icons.person,
+                Icons.chat_bubble_outline,
                 color: _selectedIndex == 1 ? Colors.black : Colors.grey[400],
               ),
               onPressed: () => _onTabTapped(1),
+            ),
+               IconButton(
+              icon: Icon(
+                Icons.person,
+                color: _selectedIndex == 2 ? Colors.black : Colors.grey[400],
+              ),
+              onPressed: () => _onTabTapped(2),
             ),
           ],
         ),

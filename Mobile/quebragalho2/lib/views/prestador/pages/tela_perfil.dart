@@ -163,20 +163,21 @@ class _PerfilPageState extends State<PerfilPage> {
   Future<void> showMigrarParaClienteDialog(BuildContext context) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Alterar para Cliente'),
-        content: const Text('Deseja alterar para sua conta de cliente?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('NÃO'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Alterar para Cliente'),
+            content: const Text('Deseja alterar para sua conta de cliente?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('NÃO'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('SIM'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('SIM'),
-          ),
-        ],
-      ),
     );
 
     if (result == true) {
@@ -191,23 +192,24 @@ class _PerfilPageState extends State<PerfilPage> {
   void _showConfirmDeleteDialog(BuildContext context, VoidCallback onConfirm) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Remover serviço'),
-        content: const Text('Tem certeza que deseja remover?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Não'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Remover serviço'),
+            content: const Text('Tem certeza que deseja remover?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Não'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  onConfirm();
+                },
+                child: const Text('Sim'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              onConfirm();
-            },
-            child: const Text('Sim'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -240,11 +242,11 @@ class _PerfilPageState extends State<PerfilPage> {
     final nome = prestador?['usuario']['nome'] ?? 'Sem nome';
     final descricao = prestador?['descricao'] ?? '';
     final usuario = prestador?['usuario'];
+
     final idUsuario = usuario?['id'];
     final imagemPerfil =
         (idUsuario != null)
             ? 'https://${ApiConfig.baseUrl}/api/usuarios/$idUsuario/imagem'
-
             : '';
 
     final List servicos = prestador?['servicos'] ?? [];
@@ -315,7 +317,8 @@ class _PerfilPageState extends State<PerfilPage> {
                 // ação
                 _navegarEAtualizar(MeusDados());
               },
-              subtitle: 'Precisa atualizar alguma informação? Altere seus dados de perfil de forma rápida e segura.',
+              subtitle:
+                  'Precisa atualizar alguma informação? Altere seus dados de perfil de forma rápida e segura.',
             ),
             // Linha 'Add Serviços'
             _buildListTile(
@@ -326,8 +329,8 @@ class _PerfilPageState extends State<PerfilPage> {
                 // ação
                 _navegarEAtualizar(AdicionarServico(idPrestador: idPrestador!));
               },
-              subtitle: 'Adicione novos serviços para seus clientes em seu perfil.',
-
+              subtitle:
+                  'Adicione novos serviços para seus clientes em seu perfil.',
             ),
 
             // Linha 'Migrar prestador'
@@ -339,7 +342,8 @@ class _PerfilPageState extends State<PerfilPage> {
                 // ação
                 showMigrarParaClienteDialog(context);
               },
-              subtitle: 'Mude seu perfil para Cliente, e faça solicitações de serviços pelo app.',
+              subtitle:
+                  'Mude seu perfil para Cliente, e faça solicitações de serviços pelo app.',
             ),
             Divider(),
             Expanded(
@@ -350,15 +354,14 @@ class _PerfilPageState extends State<PerfilPage> {
                         itemCount: servicos.length,
                         itemBuilder: (context, index) {
                           final servico = servicos[index];
-
-                          final List<int> tagsServico =
-                              tags.map<int>((tag) => tag['id'] as int).toList();
+                          final List tagsServico = servico['tags'] ?? [];
 
                           return ServicoCard(
                             nome: servico['nome'] ?? '',
                             valor: servico['preco']?.toDouble() ?? 0,
-                            duracao: 0,
-                            descricao: '',
+                            duracao: servico['duracao'] ?? 0,
+                            descricao: servico['descricao'] ?? '',
+                            tags: tagsServico, // Passe as tags do serviço aqui
                             onDelete: () {
                               _showConfirmDeleteDialog(context, () {
                                 desabilitarServico(servico['id']);
@@ -371,9 +374,13 @@ class _PerfilPageState extends State<PerfilPage> {
                                   idServico: servico['id'],
                                   nomeInicial: servico['nome'] ?? '',
                                   descricaoInicial: servico['descricao'] ?? '',
-                                  valorInicial: servico['preco']?.toDouble() ?? 0,
-                                  duracao: 0,
-                                  tagsServico: tagsServico,
+                                  valorInicial:
+                                      servico['preco']?.toDouble() ?? 0,
+                                  duracao: servico['duracao'] ?? 0,
+                                  tagsServico:
+                                      tagsServico
+                                          .map<int>((tag) => tag['id'] as int)
+                                          .toList(),
                                 ),
                               );
                             },
