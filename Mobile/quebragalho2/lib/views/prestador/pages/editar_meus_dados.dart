@@ -6,6 +6,7 @@ import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 import 'package:quebragalho2/api_config.dart';
 import 'package:quebragalho2/views/cliente/pages/login_page.dart';
+import 'package:quebragalho2/views/prestador/widgets/modal_adicionar_tags.dart';
 
 class EditarMeusDados extends StatefulWidget {
   const EditarMeusDados({super.key});
@@ -255,10 +256,6 @@ String? horaInicioSelecionada;
   // --- WIDGET BUILD (LAYOUT ATUALIZADO) ---
 
 
-  int _horaToInt(String hora) {
-    final partes = hora.split(':');
-    return int.parse(partes[0]) * 60 + int.parse(partes[1]);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -376,9 +373,4 @@ String? horaInicioSelecionada;
     );
   }
 
- 
-  }
-  
-
 }
-
