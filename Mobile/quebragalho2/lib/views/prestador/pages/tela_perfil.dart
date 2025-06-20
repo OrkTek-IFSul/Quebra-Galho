@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:quebragalho2/api_config.dart';
 import 'package:quebragalho2/views/prestador/pages/adicionar_servico.dart';
 import 'package:quebragalho2/views/prestador/pages/editar_servico.dart';
+import 'package:quebragalho2/views/prestador/pages/lista_avaliacoes.dart';
 import 'package:quebragalho2/views/prestador/pages/meus_dados.dart';
 import 'package:quebragalho2/views/prestador/widgets/servico_card.dart';
 import 'package:quebragalho2/views/cliente/pages/login_page.dart'; // Para obterIdPrestador()
@@ -256,6 +257,22 @@ class _PerfilPageState extends State<PerfilPage> {
       appBar: AppBar(
         title: const Text('Perfil', style: TextStyle(fontSize: 20)),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.feedback_outlined),
+            tooltip: 'Ver feedbacks',
+            onPressed: idPrestador == null
+                ? null
+                : () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ListaAvaliacoesPage(idPrestador: idPrestador!),
+                      ),
+                    );
+                  },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
