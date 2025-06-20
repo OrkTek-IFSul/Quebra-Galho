@@ -4,6 +4,7 @@ class ServicoCard extends StatelessWidget {
   final String nome;
   final String descricao;
   final double valor;
+  final List tags;
   final int duracao;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
@@ -14,6 +15,7 @@ class ServicoCard extends StatelessWidget {
     required this.descricao,
     required this.valor,
     required this.duracao,
+    required this.tags,
     this.onTap,
     this.onDelete
   }) : super(key: key);

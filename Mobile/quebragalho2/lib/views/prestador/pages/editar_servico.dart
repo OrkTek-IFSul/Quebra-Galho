@@ -70,6 +70,10 @@ class _EditarServicoState extends State<EditarServico> {
       tagsSelecionadas.addAll(widget.tagsServico!);
     }
 
+    // Aqui está o ajuste:
+    final allowedDurations = [30, 60, 90, 120];
+    _selectedDuration = allowedDurations.contains(widget.duracao) ? widget.duracao! : 30;
+
     if (_idPrestador == null) {
       _loadIds();
     }
@@ -128,6 +132,7 @@ class _EditarServicoState extends State<EditarServico> {
   final descricao = descricaoController.text.trim();
   final valorText = valorController.text.replaceAll(',', '.');
   final valor = double.tryParse(valorText);
+  final duracao = _selectedDuration;
 
   if (valor == null) {
    ScaffoldMessenger.of(context).showSnackBar(
@@ -145,16 +150,22 @@ class _EditarServicoState extends State<EditarServico> {
 
   setState(() => _isSaving = true);
 
-  final tagsJson = tagsSelecionadas.map((id) => {'id': id}).toList();
+  final tagsJson = tagsSelecionadas.map((id) {
+  final tag = tagsDisponiveis.firstWhere((t) => t['id'] == id);
+  return {
+    'id': tag['id'],
+    'nome': tag['nome'],
+  };
+}).toList();
 
   final sucesso = await _servicoService.atualizarServico(
    idPrestador: _idPrestador!,
    idServico: _idServico!,
    nome: nome,
    descricao: descricao,
-   duracao: 0,
+   duracao: duracao,
    valor: valor,
-   tags: tagsJson,
+   tags: tagsJson, // Agora com id e nome
   );
 
   setState(() => _isSaving = false);
