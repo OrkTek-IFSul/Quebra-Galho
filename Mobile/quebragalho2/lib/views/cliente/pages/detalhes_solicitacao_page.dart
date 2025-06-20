@@ -21,6 +21,7 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
   Map<String, dynamic>? _servicoData;
   bool _servicoAvaliadoLocalmente = false;
   int? _usuarioId;
+  bool _servicoFinalizado = false;
 
   @override
   void initState() {
@@ -117,9 +118,6 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
       final Map<String, dynamic> requestBody = {
         "nota": _avaliacaoEstrelas,
         "comentario": _comentarioController.text.trim(),
-        "data": formattedDate,
-        "nomeServico": _servicoData!['nome_servico'] ?? 'N/A',
-        "nomeUsuario": _usuarioId.toString(),
       };
 
       final response = await http.post(
@@ -144,6 +142,40 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
       _mostrarErro('Erro ao enviar avaliação: $e');
     }
   }
+
+  Future<void> _finalizarServico() async {
+  try {
+    final response = await http.put(
+      Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage/agendamento/finalizar/${widget.agendamentoId}'),
+    );
+    if (response.statusCode == 200) {
+      setState(() {
+        _servicoFinalizado = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Serviço finalizado com sucesso!')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao finalizar serviço: ${response.body}')),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Erro ao finalizar serviço: $e')),
+    );
+  }
+}
+
+  bool get podeFinalizarServico {
+  if (_servicoData == null || _servicoData!['horario'] == null) return false;
+  try {
+    final horarioAgendado = DateTime.parse(_servicoData!['horario']);
+    return DateTime.now().isAfter(horarioAgendado);
+  } catch (e) {
+    return false;
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -238,46 +270,88 @@ class _DetalhesSolicitacaoPageState extends State<DetalhesSolicitacaoPage> {
                 ),
               )
             else if (statusAceito == true) ...[
-              const Text("Avalie o serviço prestado:",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (index) {
-                  return IconButton(
-                    icon: Icon(
-                      index < _avaliacaoEstrelas ? Icons.star : Icons.star_border,
-                      color: Colors.amber,
-                      size: 32,
+              if (!_servicoFinalizado) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24.0),
+                  child: Center(
+                    child: Text(
+                      "A avaliação do serviço só pode ser feita após o horário agendado e mediante a finalização do cliente. Quando disponível, aperte o botão Finalizar Serviço e conclua sua avaliação.",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[700],
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    onPressed: () => setState(() => _avaliacaoEstrelas = index + 1),
-                  );
-                }),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _comentarioController,
-                maxLines: 4,
-                decoration: InputDecoration(
-                  hintText: "Escreva um comentário (opcional)...",
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _enviarAvaliacao,
-                  icon: const Icon(Icons.check_circle_outline, color: Colors.white),
-                  label: const Text("AVALIAR",
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    backgroundColor: Theme.of(context).primaryColor,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
-              ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: podeFinalizarServico
+                        ? () {
+                            setState(() {
+                              _servicoFinalizado = true;
+                            });
+                          }
+                        : null,
+                    icon: const Icon(Icons.check, color: Colors.white),
+                    label: const Text(
+                      "FINALIZAR SERVIÇO",
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      backgroundColor: podeFinalizarServico ? Colors.green : Colors.grey,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              ] else ...[
+                const Text("Avalie o serviço prestado:",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(5, (index) {
+                    return IconButton(
+                      icon: Icon(
+                        index < _avaliacaoEstrelas ? Icons.star : Icons.star_border,
+                        color: Colors.amber,
+                        size: 32,
+                      ),
+                      onPressed: () => setState(() => _avaliacaoEstrelas = index + 1),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _comentarioController,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    hintText: "Escreva um comentário (opcional)...",
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _enviarAvaliacao,
+                    icon: const Icon(Icons.check_circle_outline, color: Colors.white),
+                    label: const Text(
+                      "AVALIAR",
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      backgroundColor: Theme.of(context).primaryColor,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              ],
             ] else
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24.0),

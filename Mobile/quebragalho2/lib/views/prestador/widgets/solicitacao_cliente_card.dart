@@ -81,7 +81,7 @@ class _SolicitacaoClienteCardState extends State<SolicitacaoClienteCard> {
 
     try {
       final response = await http.put(
-        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/pedidoservico/${widget.idAgendamento}/rejeitar'),
+        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/pedidoservico/${widget.idAgendamento}/recusar'),
       );
 
       if (response.statusCode == 200) {
