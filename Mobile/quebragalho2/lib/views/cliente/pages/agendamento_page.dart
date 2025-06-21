@@ -1,26 +1,19 @@
-///
-/// Perfil View - Quebra Galho App
-/// By Jean Carlo | Orktek
-/// github.com/jeankeitwo16
-/// Descrição: Página de agendamento de serviços, onde o usuário pode selecionar uma data e horário disponíveis para agendar um serviço específico.
-/// Versão: 1.0.0
-///
-library;
 import 'package:flutter/material.dart';
-import 'package:quebragalho2/views/cliente/pages/tela_confirmacao_solicitacao.dart'; // Verifique este arquivo também
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
-// Importa a config da API
-import '../../../services/agendamento_page_services.dart'; // Verifique este arquivo também
+import 'package:quebragalho2/views/cliente/pages/tela_confirmacao_solicitacao.dart';
+import 'package:quebragalho2/services/agendamento_page_services.dart';
 import 'login_page.dart';
 
 class AgendamentoPage extends StatefulWidget {
   final String servico;
   final int servicoId;
+  final int prestadorId;
 
   const AgendamentoPage({
     required this.servico,
     required this.servicoId,
+    required this.prestadorId,
     super.key,
   });
 
@@ -31,14 +24,18 @@ class AgendamentoPage extends StatefulWidget {
 class _AgendamentoPageState extends State<AgendamentoPage> {
   late DateTime _selectedDay;
   String? _selectedTime;
-  final List<String> _horariosDisponiveis = [
-    '08:00', '09:00', '10:00', '11:00',
-    '13:00', '14:00', '15:00', '16:00'
-  ];
-  final AgendamentoPageService _service = AgendamentoPageService();
-  List<DateTime> _horariosIndisponiveis = [];
-  bool _loading = true; // começa true enquanto carrega usuário e horários
 
+  int? _duracaoServico;
+  DateTime? _horarioInicioPrestador;
+  DateTime? _horarioFimPrestador;
+
+  final AgendamentoPageService _service = AgendamentoPageService();
+
+  List<DateTime> _horariosDisponiveisAPI = [];
+  List<String> _horariosDisponiveis = [];
+  List<DateTime> _horariosIndisponiveis = [];
+
+  bool _loading = true;
   int? _usuarioId;
 
   @override
@@ -63,25 +60,102 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
       _usuarioId = id;
     });
 
-    await _carregarHorariosIndisponiveis();
+    await _refreshForSelectedDay();
+
+    setState(() => _loading = false);
   }
 
-  Future<void> _carregarHorariosIndisponiveis() async {
-    setState(() => _loading = true);
+  Future<void> _refreshForSelectedDay() async {
+    if (!mounted) return;
+    setState(() {
+      _loading = true;
+      _horariosDisponiveisAPI.clear();
+      _horariosDisponiveis.clear();
+      _horariosIndisponiveis.clear();
+      _selectedTime = null;
+    });
+
+    await _carregarDadosPrestadorEHorario();
+    await _carregarHorariosDisponiveis();
+    _gerarHorariosDisponiveis();
+  }
+
+  Future<void> _carregarDadosPrestadorEHorario() async {
     try {
-      final result = await _service.listarHorariosIndisponiveis(widget.servicoId);
-      setState(() => _horariosIndisponiveis = result);
+      final dadosPrestador = await _service.buscarDadosPrestador(widget.prestadorId);
+      DateTime horarioInicioAPI = DateTime.parse(dadosPrestador['horarioInicio']);
+      DateTime horarioFimAPI = DateTime.parse(dadosPrestador['horarioFim']);
+
+      final servicos = dadosPrestador['servicos'] as List<dynamic>;
+      final servicoSelecionado = servicos.firstWhere((s) => s['id'] == widget.servicoId);
+      int duracao = servicoSelecionado['duracao'] as int;
+
+      _horarioInicioPrestador = DateTime(
+        _selectedDay.year,
+        _selectedDay.month,
+        _selectedDay.day,
+        horarioInicioAPI.hour,
+        horarioInicioAPI.minute,
+      );
+      _horarioFimPrestador = DateTime(
+        _selectedDay.year,
+        _selectedDay.month,
+        _selectedDay.day,
+        horarioFimAPI.hour,
+        horarioFimAPI.minute,
+      );
+
+      setState(() {
+        _duracaoServico = duracao;
+      });
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar horários: $e')),
+          SnackBar(content: Text('Erro ao carregar dados do prestador: $e')),
         );
       }
-    } finally {
+    }
+  }
+
+  Future<void> _carregarHorariosDisponiveis() async {
+    try {
+      final horarios = await _service.listarHorariosDisponiveis(widget.servicoId, _selectedDay);
+      setState(() {
+        _horariosDisponiveisAPI = horarios;
+      });
+    } catch (e) {
       if (mounted) {
-        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar horários disponíveis: $e')),
+        );
       }
     }
+  }
+
+  void _gerarHorariosDisponiveis() {
+    if (_duracaoServico == null || _horarioInicioPrestador == null || _horarioFimPrestador == null) return;
+
+    List<String> horariosGerados = [];
+    DateTime horarioAtual = _horarioInicioPrestador!;
+
+    while (horarioAtual.add(Duration(minutes: _duracaoServico!)).isBefore(_horarioFimPrestador!) ||
+        horarioAtual.add(Duration(minutes: _duracaoServico!)).isAtSameMomentAs(_horarioFimPrestador!)) {
+      bool estaDisponivelNaApi = _horariosDisponiveisAPI.any((horaApi) =>
+        horaApi.year == horarioAtual.year &&
+        horaApi.month == horarioAtual.month &&
+        horaApi.day == horarioAtual.day &&
+        horaApi.hour == horarioAtual.hour &&
+        horaApi.minute == horarioAtual.minute);
+
+      if (estaDisponivelNaApi) {
+        horariosGerados.add(DateFormat('HH:mm').format(horarioAtual));
+      }
+      horarioAtual = horarioAtual.add(Duration(minutes: _duracaoServico!));
+    }
+
+    setState(() {
+      _horariosDisponiveis = horariosGerados;
+    });
   }
 
   bool _isHorarioIndisponivel(String hora) {
@@ -147,15 +221,13 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro: ${e.toString()}'),
+            content: Text('Erro: \${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _loading = false);
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -163,7 +235,7 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Agendar', style: TextStyle(fontSize: 16)),
+        title: const Text('Agendar', style: TextStyle(fontSize: 16)),
         centerTitle: true,
       ),
       body: _loading
@@ -177,12 +249,10 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
                     firstDay: DateTime.now(),
                     lastDay: DateTime.now().add(const Duration(days: 60)),
                     selectedDayPredicate: (day) => isSameDay(day, _selectedDay),
-                    onDaySelected: (selectedDay, focusedDay) {
-                      setState(() {
-                        _selectedDay = selectedDay;
-                        _selectedTime = null;
-                      });
-                      _carregarHorariosIndisponiveis();
+                    onDaySelected: (selectedDay, focusedDay) async {
+                      setState(() => _selectedDay = selectedDay);
+                      await _refreshForSelectedDay();
+                      setState(() => _loading = false);
                     },
                     calendarStyle: CalendarStyle(
                       todayDecoration: BoxDecoration(
@@ -216,7 +286,7 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
                       child: Text(
                         _selectedTime == null
                             ? 'SELECIONE UM HORÁRIO'
-                            : 'CONFIRMAR AGENDAMENTO PARA $_selectedTime',
+                            : 'CONFIRMAR AGENDAMENTO PARA \$_selectedTime',
                         style: const TextStyle(color: Colors.white),
                       ),
                     ),

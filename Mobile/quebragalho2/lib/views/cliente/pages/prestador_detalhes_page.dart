@@ -321,6 +321,7 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
                               // Acessando os dados do serviço corretamente
                               servico: servico['nome'] ?? 'Serviço sem nome',
                               servicoId: servico['id'],
+                              prestadorId: widget.id, // Passando o ID do prestador
                              // Passando o ID do prestador
                             ),
                           ),
