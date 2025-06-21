@@ -1,32 +1,47 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter/services.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import 'package:flutter/services.dart';
 
 import 'package:quebragalho2/api_config.dart';
 import 'package:quebragalho2/views/cliente/pages/login_page.dart';
-import 'package:quebragalho2/views/prestador/widgets/modal_adicionar_tags.dart';
 
 class EditarMeusDados extends StatefulWidget {
-  const EditarMeusDados({super.key});
+  final String nome;
+  final String telefone;
+  final String email;
+  final String documento;
+  final String descricao;
+  final String? horarioInicio; // ISO string ou null
+  final String? horarioFim;    // ISO string ou null
+
+  const EditarMeusDados({
+    super.key,
+    required this.nome,
+    required this.telefone,
+    required this.email,
+    required this.documento,
+    required this.descricao,
+    this.horarioInicio,
+    this.horarioFim,
+  });
 
   @override
   State<EditarMeusDados> createState() => _EditarMeusDadosState();
 }
 
 class _EditarMeusDadosState extends State<EditarMeusDados> {
-  final nomeController = TextEditingController();
-  final telefoneController = TextEditingController();
-  final emailController = TextEditingController();
-  final descricaoController = TextEditingController();
-  final documentoController = TextEditingController();
+  late TextEditingController nomeController;
+  late TextEditingController telefoneController;
+  late TextEditingController emailController;
+  late TextEditingController descricaoController;
+  late TextEditingController documentoController;
 
-List <String> tags = [];
-String? horaInicioSelecionada;
+  String? horaInicioSelecionada;
   String? horaFimSelecionada;
 
-  bool isLoading = true;
+  bool isLoading = false;
   int? idUsuario;
   int? idPrestador;
 
@@ -40,75 +55,40 @@ String? horaInicioSelecionada;
   @override
   void initState() {
     super.initState();
-    inicializar();
-  }
 
-  void inicializar() async {
-    final id = await obterIdUsuario();
-    final idP = await obterIdPrestador();
-    if (id == null || idP == null) {
-      if (mounted) setState(() => isLoading = false);
-      return;
+    nomeController = TextEditingController(text: widget.nome);
+    telefoneController = TextEditingController(text: widget.telefone);
+    emailController = TextEditingController(text: widget.email);
+    descricaoController = TextEditingController(text: widget.descricao);
+    documentoController = TextEditingController(text: widget.documento);
+
+    // Preenche os horários com a parte "HH:mm" se existir
+    if (widget.horarioInicio != null) {
+      try {
+        horaInicioSelecionada = widget.horarioInicio!.substring(11, 16);
+      } catch (_) {
+        horaInicioSelecionada = null;
+      }
+    }
+    if (widget.horarioFim != null) {
+      try {
+        horaFimSelecionada = widget.horarioFim!.substring(11, 16);
+      } catch (_) {
+        horaFimSelecionada = null;
+      }
     }
 
+    carregarIds();
+  }
+
+  Future<void> carregarIds() async {
+    final id = await obterIdUsuario();
+    final idP = await obterIdPrestador();
     if (mounted) {
       setState(() {
         idUsuario = id;
         idPrestador = idP;
       });
-    }
-
-    await carregarDados();
-  }
-
-  Future<void> carregarDados() async {
-    if (idUsuario == null || idPrestador == null) return;
-
-    try {
-      final usuarioResp = await http.get(
-        Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$idUsuario'),
-      );
-      final prestadorResp = await http.get(
-        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/perfil/$idPrestador'),
-      );
-      final tagPrestadorResp = await http.get(
-        Uri.parse('https://${ApiConfig.baseUrl}/api/tag-prestador/prestador/$idPrestador'),
-      );
-
-      if (usuarioResp.statusCode == 200 && prestadorResp.statusCode == 200 && tagPrestadorResp.statusCode == 200) {
-        final usuario = jsonDecode(usuarioResp.body);
-        final prestador = jsonDecode(prestadorResp.body);
-
-        final List tagIds = jsonDecode(tagPrestadorResp.body);
-
-        final List<String> tagNomes = [];
-
-        for (var idTag in tagIds) {
-          final tagResp = await http.get(
-            Uri.parse('https://${ApiConfig.baseUrl}/api/tags/$idTag'),
-          );
-          if (tagResp.statusCode == 200) {
-            final tagData = jsonDecode(tagResp.body);
-            tagNomes.add(tagData['nome']);
-          }
-        }
-
-
-        if (mounted) {
-          setState(() {
-            nomeController.text = prestador['usuario']['nome'] ?? '';
-            telefoneController.text = prestador['usuario']['telefone'] ?? '';
-            emailController.text = prestador['usuario']['email'] ?? '';
-            isLoading = false;
-          });
-        }
-
-      } else {
-        throw Exception('Erro ao carregar dados do backend.');
-      }
-    } catch (e) {
-      debugPrint('Erro ao carregar dados: $e');
-      if (mounted) setState(() => isLoading = false);
     }
   }
 
@@ -129,55 +109,14 @@ String? horaInicioSelecionada;
     return lista;
   }
 
-  void abrirModalAdicionarTag() {
-    // Método existente, sem alterações.
-    final TextEditingController novaTagController = TextEditingController();
-    showModalBottomSheet(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 16, right: 16, top: 0),
-        child: Wrap(
-          children: [
-            const Text('Adicionar nova tag', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            TextField(
-              controller: novaTagController,
-              decoration: const InputDecoration(labelText: 'Nova tag'),
-              autofocus: true,
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  final novaTag = novaTagController.text.trim();
-                  if (novaTag.isNotEmpty && !tags.contains(novaTag) && tags.length < 3) {
-                    setState(() => tags.add(novaTag));
-                    Navigator.pop(context);
-                  }
-                },
-                child: const Text('Adicionar'),
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-
   int _horaToInt(String hora) {
-    // Método existente, sem alterações.
     final partes = hora.split(':');
     return int.parse(partes[0]) * 60 + int.parse(partes[1]);
   }
 
-
   Future<void> salvarDados() async {
     if (idUsuario == null || idPrestador == null) return;
+
     final nome = nomeController.text.trim();
     final telefone = telefoneMask.getUnmaskedText();
     final email = emailController.text.trim();
@@ -185,11 +124,15 @@ String? horaInicioSelecionada;
     final descricao = descricaoController.text.trim();
 
     if (horaInicioSelecionada == null || horaFimSelecionada == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Preencha os horários!')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preencha os horários!')),
+      );
       return;
     }
     if (_horaToInt(horaFimSelecionada!) <= _horaToInt(horaInicioSelecionada!)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('O horário de fim deve ser maior que o de início.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('O horário de fim deve ser maior que o de início.')),
+      );
       return;
     }
 
@@ -200,8 +143,8 @@ String? horaInicioSelecionada;
         body: jsonEncode({'nome': nome, 'telefone': telefone, 'email': email}),
       );
 
-      final horarioInicio = '2025-06-17T$horaInicioSelecionada';
-      final horarioFim = '2025-06-17T$horaFimSelecionada';
+      final horarioInicio = '2025-06-17T$horaInicioSelecionada:00'; // completando segundos
+      final horarioFim = '2025-06-17T$horaFimSelecionada:00';
 
       final prestadorBody = jsonEncode({
         'descricao': descricao,
@@ -223,77 +166,46 @@ String? horaInicioSelecionada;
       );
 
       if (mounted) Navigator.pop(context, true);
-
     } catch (e) {
       debugPrint('Erro ao salvar dados: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao salvar dados.')),
+      );
     }
   }
 
-  void _showAddTagsModal(BuildContext context, List<String> currentTags) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
+  Widget buildTextField({
+    required String label,
+    required TextEditingController controller,
+    TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.grey.shade100,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.0),
+              borderSide: BorderSide.none,
+            ),
+          ),
         ),
-        child: ModalAdicionarTags(
-          selectedTags: currentTags,
-          onTagsSelected: (newTags) {
-            setState(() {
-              // Update your tags list here
-              tags = newTags;
-            });
-          },
-        ),
-      ),
+      ],
     );
   }
-
-  // --- WIDGET BUILD (LAYOUT ATUALIZADO) ---
-
-
 
   @override
   Widget build(BuildContext context) {
     final opcoesHorario = gerarHorarios();
-
-    Widget buildTextField({
-      required String label,
-      required TextEditingController controller,
-      TextInputType keyboardType = TextInputType.text,
-    }) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-          const SizedBox(height: 8),
-          TextField(
-            controller: controller,
-            keyboardType: keyboardType,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: Colors.grey.shade100,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.0),
-                borderSide: BorderSide.none,
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-
-    if (isLoading) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Editar dados'), elevation: 0),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -318,9 +230,44 @@ String? horaInicioSelecionada;
           children: [
             buildTextField(label: 'Nome', controller: nomeController),
             const SizedBox(height: 20),
-            buildTextField(label: 'Telefone', controller: telefoneController, keyboardType: TextInputType.phone),
+            buildTextField(
+              label: 'Telefone',
+              controller: telefoneController,
+              keyboardType: TextInputType.phone,
+              inputFormatters: [telefoneMask],
+            ),
             const SizedBox(height: 20),
-            buildTextField(label: 'Email', controller: emailController, keyboardType: TextInputType.emailAddress),
+            buildTextField(
+              label: 'Email',
+              controller: emailController,
+              keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 20),
+            Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    const Text('Documento', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+    const SizedBox(height: 8),
+    TextField(
+      controller: documentoController,
+      readOnly: true,
+      keyboardType: TextInputType.number,
+      inputFormatters: [documentoMask],
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.grey.shade100,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.0),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    ),
+  ],
+),
+
+            const SizedBox(height: 20),
+            buildTextField(label: 'Descrição', controller: descricaoController),
             const SizedBox(height: 24),
             const Divider(),
             const SizedBox(height: 24),
@@ -372,5 +319,4 @@ String? horaInicioSelecionada;
       ),
     );
   }
-
 }

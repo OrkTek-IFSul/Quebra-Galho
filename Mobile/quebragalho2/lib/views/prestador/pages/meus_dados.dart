@@ -1,12 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-
+import 'package:intl/intl.dart';
 import 'package:quebragalho2/api_config.dart';
 import 'package:quebragalho2/views/prestador/pages/editar_meus_dados.dart';
-
-// O import abaixo não é usado diretamente neste widget, mas foi mantido
-// conforme o arquivo original.
 import 'package:quebragalho2/views/cliente/pages/login_page.dart';
 
 class MeusDados extends StatefulWidget {
@@ -31,10 +28,8 @@ class _MeusDadosState extends State<MeusDados> {
   }
 
   Future<void> inicializarDados() async {
-
-    // Esta função permanece inalterada
-    final usuarioId = await obterIdUsuario(); // método já existente
-    final prestadorId = await obterIdPrestador(); // supondo que exista este método
+    final usuarioId = await obterIdUsuario();
+    final prestadorId = await obterIdPrestador();
 
     if (usuarioId == null || prestadorId == null) {
       if (mounted) {
@@ -52,12 +47,10 @@ class _MeusDadosState extends State<MeusDados> {
       });
     }
 
-
     await carregarDados();
   }
 
   Future<void> carregarDados() async {
-    // Esta função permanece inalterada
     if (idUsuario == null || idPrestador == null) return;
 
     try {
@@ -74,11 +67,9 @@ class _MeusDadosState extends State<MeusDados> {
       if (usuarioResp.statusCode == 200 &&
           prestadorResp.statusCode == 200 &&
           tagPrestadorResp.statusCode == 200) {
-
         final usuarioJson = jsonDecode(utf8.decode(usuarioResp.bodyBytes));
         final prestadorJson = jsonDecode(utf8.decode(prestadorResp.bodyBytes));
         final List tagIds = jsonDecode(utf8.decode(tagPrestadorResp.bodyBytes));
-
 
         List<String> tagNomes = [];
 
@@ -93,16 +84,14 @@ class _MeusDadosState extends State<MeusDados> {
           }
         }
 
-
         if (mounted) {
           setState(() {
-            usuario = jsonDecode(usuarioResp.body);
-            prestador = jsonDecode(prestadorResp.body);
+            usuario = usuarioJson;
+            prestador = prestadorJson;
             tags = tagNomes;
             isLoading = false;
           });
         }
-
       } else {
         throw Exception('Erro nas respostas: '
             'Usuário(${usuarioResp.statusCode}), '
@@ -118,7 +107,6 @@ class _MeusDadosState extends State<MeusDados> {
       }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -136,15 +124,20 @@ class _MeusDadosState extends State<MeusDados> {
       );
     }
 
-    final String horarioAtendimento = (prestador!['data_hora_inicio'] != null && prestador!['data_hora_fim'] != null)
-        ? '${prestador!['data_hora_inicio']} - ${prestador!['data_hora_fim']}'
-        : 'Horário não definido';
+    final String horarioAtendimento;
+    if (prestador!['horarioInicio'] != null && prestador!['horarioFim'] != null) {
+      final inicio = DateTime.parse(prestador!['horarioInicio']);
+      final fim = DateTime.parse(prestador!['horarioFim']);
+      final formatador = DateFormat.Hm(); // formato 24h, ex: 14:30
+      horarioAtendimento = '${formatador.format(inicio)} - ${formatador.format(fim)}';
+    } else {
+      horarioAtendimento = 'Horário não definido';
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
-      // AppBar reintroduzido conforme solicitado
       appBar: AppBar(
-        title: const Text('Meus Dados', style: TextStyle(fontWeight: FontWeight.bold),),
+        title: const Text('Meus Dados', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 1.0,
@@ -155,10 +148,20 @@ class _MeusDadosState extends State<MeusDados> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const EditarMeusDados()),
+                MaterialPageRoute(
+                  builder: (context) => EditarMeusDados(
+                    nome: prestador!['usuario']['nome'] ?? '',
+                    telefone: prestador!['usuario']['telefone'] ?? '',
+                    email: prestador!['usuario']['email'] ?? '',
+                    documento: prestador!['usuario']['documento'] ?? '',
+                    descricao: prestador!['descricao'] ?? '',
+                    horarioInicio: prestador!['horarioInicio'],
+                    horarioFim: prestador!['horarioFim'],
+                  ),
+                ),
               ).then((_) {
                 setState(() => isLoading = true);
-                carregarDados(); // Atualiza ao voltar
+                carregarDados();
               });
             },
           ),
@@ -170,7 +173,6 @@ class _MeusDadosState extends State<MeusDados> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Subtítulo
               Center(
                 child: Text(
                   'Essas são as suas informações que os clientes poderão acessar em seu perfil',
@@ -180,8 +182,15 @@ class _MeusDadosState extends State<MeusDados> {
               ),
               const SizedBox(height: 40),
 
-              // Seção de Informações do Usuário
-              Text('Nome', style: TextStyle(fontSize: 20, color: const Color.fromARGB(255, 0, 0, 0), fontWeight: FontWeight.bold)),
+              // Nome
+              Text(
+                'Nome',
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 4),
               Text(
                 prestador!['usuario']['nome'] ?? 'Não informado',
@@ -189,15 +198,33 @@ class _MeusDadosState extends State<MeusDados> {
               ),
               const SizedBox(height: 28),
 
-              Text('Telefone', style: TextStyle(fontSize: 20, color: const Color.fromARGB(255, 0, 0, 0), fontWeight: FontWeight.bold)),
+              // Telefone
+              Text(
+                'Telefone',
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 4),
               Text(
-                prestador!['usuario']['telefone'] ?? 'Não informado',
+                prestador!['usuario']['telefone']?.isNotEmpty == true
+                    ? prestador!['usuario']['telefone']
+                    : 'Não informado',
                 style: const TextStyle(fontSize: 18, color: Colors.black87),
               ),
               const SizedBox(height: 28),
 
-              Text('Email', style: TextStyle(fontSize: 20,color: const Color.fromARGB(255, 0, 0, 0), fontWeight: FontWeight.bold)),
+              // Email
+              Text(
+                'Email',
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 4),
               Text(
                 prestador!['usuario']['email'] ?? 'Não informado',
@@ -205,32 +232,87 @@ class _MeusDadosState extends State<MeusDados> {
               ),
               const SizedBox(height: 28),
 
-              // Divisor
+              // Documento (novo)
+              Text(
+                'Documento',
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                prestador!['usuario']['documento']?.isNotEmpty == true
+                    ? prestador!['usuario']['documento']
+                    : 'Não informado',
+                style: const TextStyle(fontSize: 18, color: Colors.black87),
+              ),
+              const SizedBox(height: 28),
+
+              // Descrição (novo)
+              Text(
+                'Descrição',
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                prestador!['descricao']?.isNotEmpty == true
+                    ? prestador!['descricao']
+                    : 'Não informado',
+                style: const TextStyle(fontSize: 18, color: Colors.black87),
+              ),
+              const SizedBox(height: 28),
+
               const Divider(thickness: 1, height: 40),
 
-              // Seção de Tags
-              Text('Tags / Categorias', style: TextStyle(fontSize: 18, color: const Color.fromARGB(255, 0, 0, 0), fontWeight: FontWeight.bold)),
+              // Tags
+              Text(
+                'Tags / Categorias',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 16),
               if (tags.isNotEmpty)
                 Wrap(
                   spacing: 8.0,
                   runSpacing: 8.0,
-                  children: tags.map((tag) => Chip(
-                        label: Text(tag, style: const TextStyle(color: Colors.black87)),
-                        backgroundColor: Colors.grey[200],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          side: BorderSide.none,
+                  children: tags
+                      .map(
+                        (tag) => Chip(
+                          label: Text(tag, style: const TextStyle(color: Colors.black87)),
+                          backgroundColor: Colors.grey[200],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      )).toList(),
+                      )
+                      .toList(),
                 )
               else
-                const Text('Nenhuma tag cadastrada.', style: TextStyle(color: Color.fromARGB(195, 0, 0, 0), fontSize: 18)),
+                const Text(
+                  'Nenhuma tag cadastrada.',
+                  style: TextStyle(color: Colors.black54, fontSize: 18),
+                ),
               const SizedBox(height: 32),
 
-              // Seção de Horário
-              Text('Horário de Atendimento', style: TextStyle(fontSize: 18, color:  Color.fromARGB(195, 0, 0, 0), fontWeight: FontWeight.bold)),
+              // Horário de atendimento
+              Text(
+                'Horário de Atendimento',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.black54,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 4),
               Text(
                 horarioAtendimento,
