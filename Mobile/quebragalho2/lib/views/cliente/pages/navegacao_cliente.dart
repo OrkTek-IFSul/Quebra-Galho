@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:quebragalho2/views/cliente/pages/chat_list_page.dart';
 import 'package:quebragalho2/views/cliente/pages/chat_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:quebragalho2/views/cliente/pages/home_page.dart';
@@ -15,7 +16,7 @@ class _NavegacaoClienteState extends State<NavegacaoCliente> {
   // Index da página selecionada
   int _selectedIndex = 0;
   int? usuarioId;
-  int prestadorId = 4;
+  int? prestadorId;
 
   @override
   void initState() {
@@ -40,8 +41,8 @@ class _NavegacaoClienteState extends State<NavegacaoCliente> {
 
   // Lista de páginas da navegação
   List<Widget> get paginas => [
-        const HomePage(),
-                if (usuarioId != null) ChatPage(clienteId: usuarioId!.toString(), prestadorId: prestadorId.toString()),
+        HomePage(),
+        if (usuarioId != null) ChatListScreen(usuarioId: usuarioId!),
         if (usuarioId != null) PerfilPage(usuarioId: usuarioId!),
  // Passe o id aqui
       ];

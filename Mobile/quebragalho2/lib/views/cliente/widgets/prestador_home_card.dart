@@ -43,19 +43,7 @@ class PrestadorHomeCard extends StatelessWidget {
                       if (loadingProgress == null) return child;
                       return const Center(child: CircularProgressIndicator(strokeWidth: 2));
                     },
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        alignment: Alignment.center,
-                        child: Text(
-                          name.isNotEmpty ? name[0].toUpperCase() : '?',
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      );
-                    },
+                 
                   ),
                 ),
                 const SizedBox(width: 12),
