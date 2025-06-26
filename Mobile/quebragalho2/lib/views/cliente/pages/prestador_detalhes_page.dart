@@ -40,7 +40,7 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
         Uri.parse(
           // Mantive a URL com http:// como no seu código original.
           // Se sua API usa https, lembre-se de ajustar aqui.
-          'http://${ApiConfig.baseUrl}/api/prestador/perfil/${widget.id}',
+          'https://${ApiConfig.baseUrl}/api/prestador/perfil/${widget.id}',
         ),
       );
 
@@ -56,8 +56,9 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
           'descricao': data['descricao'] ?? 'Descrição não informada.',
           'documento': usuario['documento'] ?? '',
           'imagemPerfil':
-              usuario['imagemPerfil'] != null && usuario['imagemPerfil'].toString().isNotEmpty
-                  ? 'http://${ApiConfig.baseUrl}/' + usuario['imagemPerfil']
+              usuario['imagemPerfil'] != null &&
+                      usuario['imagemPerfil'].toString().isNotEmpty
+                  ? 'https://${ApiConfig.baseUrl}/' + usuario['imagemPerfil']
                   : null,
           'mediaAvaliacoes': data['mediaAvaliacoes'] ?? 0.0,
           'tags': data['tags'] ?? [],
@@ -69,7 +70,8 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
         });
       } else {
         throw Exception(
-            'Falha ao carregar dados do prestador (Status: ${response.statusCode})');
+          'Falha ao carregar dados do prestador (Status: ${response.statusCode})',
+        );
       }
     } catch (e) {
       setState(() {
@@ -77,10 +79,100 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
       });
       // Adiciona um feedback mais claro no console e na tela
       print('Erro ao carregar detalhes do prestador: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao carregar dados: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao carregar dados: $e')));
     }
+  }
+
+  void _mostrarDialogoDenuncia(BuildContext context) {
+    final List<String> tipos = ['Conta', 'Resposta', 'Avaliação'];
+    String? tipoSelecionado;
+    TextEditingController motivoController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Denunciar Prestador'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: 'Tipo'),
+                items:
+                    tipos.map((tipo) {
+                      return DropdownMenuItem(value: tipo, child: Text(tipo));
+                    }).toList(),
+                onChanged: (value) {
+                  tipoSelecionado = value;
+                },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: motivoController,
+                decoration: const InputDecoration(labelText: 'Motivo'),
+                maxLines: 2,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            ElevatedButton(
+              child: const Text('Enviar'),
+              onPressed: () async {
+                if (tipoSelecionado == null || motivoController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Preencha todos os campos')),
+                  );
+                  return;
+                }
+
+                // Exemplo de IDs (substitua conforme seu app)
+                final denuncianteId = 5; // ID do usuário logado
+                final denunciadoId = widget.id;
+                final idConteudoDenunciado = widget.id;
+
+                final body = {
+                  "tipo": tipoSelecionado,
+                  "motivo": motivoController.text,
+                  "idConteudoDenunciado": idConteudoDenunciado,
+                  "denunciante": denuncianteId,
+                  "denunciado": denunciadoId,
+                };
+
+                final response = await http.post(
+                  Uri.parse('https://${ApiConfig.baseUrl}/api/denuncia'),
+                  headers: {"Content-Type": "application/json"},
+                  body: jsonEncode(body),
+                );
+
+                Navigator.of(context).pop();
+
+                if (response.statusCode == 200 || response.statusCode == 201) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Denúncia enviada com sucesso!'),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Erro ao denunciar: ${response.statusCode}',
+                      ),
+                    ),
+                  );
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildRatingStars(double rating) {
@@ -132,17 +224,18 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
       return Scaffold(
         appBar: AppBar(title: const Text('Erro')),
         body: Center(
-            child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Erro ao carregar dados do prestador.'),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _fetchPrestadorDetails,
-              child: const Text('Tentar novamente'),
-            )
-          ],
-        )),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('Erro ao carregar dados do prestador.'),
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: _fetchPrestadorDetails,
+                child: const Text('Tentar novamente'),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -182,12 +275,28 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     clipBehavior: Clip.antiAlias,
-                    child: imageUrl.isNotEmpty
-                      ? Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Center(
+                    child:
+                        imageUrl.isNotEmpty
+                            ? Image.network(
+                              imageUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Center(
+                                  child: Text(
+                                    name.isNotEmpty
+                                        ? name[0].toUpperCase()
+                                        : '?',
+                                    style: TextStyle(
+                                      fontSize: 48,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                );
+                              },
+                            )
+                            : Center(
+                              // Fallback caso a URL da imagem esteja vazia
                               child: Text(
                                 name.isNotEmpty ? name[0].toUpperCase() : '?',
                                 style: TextStyle(
@@ -196,19 +305,7 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
                                   color: Colors.grey[600],
                                 ),
                               ),
-                            );
-                          },
-                        )
-                      : Center( // Fallback caso a URL da imagem esteja vazia
-                          child: Text(
-                            name.isNotEmpty ? name[0].toUpperCase() : '?',
-                            style: TextStyle(
-                              fontSize: 48,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey[600],
                             ),
-                          ),
-                        ),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -224,12 +321,17 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => AvaliacoesPrestadorPage(idPrestador: widget.id),
+                          builder:
+                              (_) => AvaliacoesPrestadorPage(
+                                idPrestador: widget.id,
+                              ),
                         ),
                       );
                     },
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center, // Centraliza a linha de avaliação
+                      mainAxisAlignment:
+                          MainAxisAlignment
+                              .center, // Centraliza a linha de avaliação
                       children: [
                         const Text(
                           'Avaliações',
@@ -248,16 +350,20 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
                     spacing: 8,
                     runSpacing: 8,
                     alignment: WrapAlignment.center,
-                    children: tags.take(3).map(
-                          (tag) => Chip(
-                            label: Text(tag['nome'] ?? ''),
-                            backgroundColor: Colors.grey[200],
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                          ),
-                        ).toList(),
+                    children:
+                        tags
+                            .take(3)
+                            .map(
+                              (tag) => Chip(
+                                label: Text(tag['nome'] ?? ''),
+                                backgroundColor: Colors.grey[200],
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                              ),
+                            )
+                            .toList(),
                   ),
                 ],
               ),
@@ -274,6 +380,16 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
               descricao,
               style: const TextStyle(fontSize: 15, color: Colors.black54),
             ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () => _mostrarDialogoDenuncia(context),
+              icon: const Icon(Icons.report_problem_outlined),
+              label: const Text('Denunciar'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade100,
+                foregroundColor: Colors.red.shade900,
+              ),
+            ),
             const SizedBox(height: 24),
             const Text(
               'Selecione um dos serviços para agendar:',
@@ -288,90 +404,107 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
               itemBuilder: (context, index) {
                 String groupName = groupedServices.keys.elementAt(index);
                 List<dynamic> servicesInGroup = groupedServices[groupName]!;
-                
+
                 // Mapeia cada serviço dentro do grupo para um InkWell
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: servicesInGroup.map((servico) {
-                    return InkWell(
-                      onTap: () {
-                        if (!widget.isLoggedIn) {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Atenção'),
-                              content: const Text('Você precisa estar logado para agendar um serviço.'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                    Navigator.of(context).pushReplacement(
-                                        MaterialPageRoute(builder: (_) => LoginPage()));
-                                  },
-                                  child: const Text('Fazer login'),
+                  children:
+                      servicesInGroup.map((servico) {
+                        return InkWell(
+                          onTap: () {
+                            if (!widget.isLoggedIn) {
+                              showDialog(
+                                context: context,
+                                builder:
+                                    (context) => AlertDialog(
+                                      title: const Text('Atenção'),
+                                      content: const Text(
+                                        'Você precisa estar logado para agendar um serviço.',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                            Navigator.of(
+                                              context,
+                                            ).pushReplacement(
+                                              MaterialPageRoute(
+                                                builder: (_) => LoginPage(),
+                                              ),
+                                            );
+                                          },
+                                          child: const Text('Fazer login'),
+                                        ),
+                                      ],
+                                    ),
+                              );
+                              return;
+                            }
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder:
+                                    (_) => AgendamentoPage(
+                                      // Acessando os dados do serviço corretamente
+                                      servico:
+                                          servico['nome'] ?? 'Serviço sem nome',
+                                      servicoId: servico['id'],
+                                      prestadorId:
+                                          widget
+                                              .id, // Passando o ID do prestador
+                                      // Passando o ID do prestador
+                                    ),
+                              ),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        // Usando o nome do serviço diretamente
+                                        servico['nome'] ?? 'Serviço',
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      if (servico['descricao'] != null &&
+                                          servico['descricao'].isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 4.0,
+                                          ),
+                                          child: Text(
+                                            servico['descricao'],
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.black54,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Text(
+                                  'R\$ ${servico['preco']?.toStringAsFixed(2) ?? '0.00'}',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ],
                             ),
-                          );
-                          return;
-                        }
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => AgendamentoPage(
-                              // Acessando os dados do serviço corretamente
-                              servico: servico['nome'] ?? 'Serviço sem nome',
-                              servicoId: servico['id'],
-                              prestadorId: widget.id, // Passando o ID do prestador
-                             // Passando o ID do prestador
-                            ),
                           ),
                         );
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    // Usando o nome do serviço diretamente
-                                    servico['nome'] ?? 'Serviço',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  if (servico['descricao'] != null && servico['descricao'].isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 4.0),
-                                      child: Text(
-                                        servico['descricao'],
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.black54,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Text(
-                              'R\$ ${servico['preco']?.toStringAsFixed(2) ?? '0.00'}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.green,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                      }).toList(),
                 );
               },
             ),

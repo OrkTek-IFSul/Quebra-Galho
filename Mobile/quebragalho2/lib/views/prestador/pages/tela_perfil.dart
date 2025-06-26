@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:quebragalho2/api_config.dart';
 import 'package:quebragalho2/views/prestador/pages/adicionar_servico.dart';
+import 'package:quebragalho2/views/prestador/pages/denuncias_aceitas_page.dart';
 import 'package:quebragalho2/views/prestador/pages/editar_servico.dart';
 import 'package:quebragalho2/views/prestador/pages/lista_avaliacoes.dart';
 import 'package:quebragalho2/views/prestador/pages/meus_dados.dart';
@@ -261,16 +262,20 @@ class _PerfilPageState extends State<PerfilPage> {
           IconButton(
             icon: const Icon(Icons.feedback_outlined),
             tooltip: 'Ver feedbacks',
-            onPressed: idPrestador == null
-                ? null
-                : () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ListaAvaliacoesPage(idPrestador: idPrestador!),
-                      ),
-                    );
-                  },
+            onPressed:
+                idPrestador == null
+                    ? null
+                    : () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (_) => ListaAvaliacoesPage(
+                                idPrestador: idPrestador!,
+                              ),
+                        ),
+                      );
+                    },
           ),
         ],
       ),
@@ -362,6 +367,21 @@ class _PerfilPageState extends State<PerfilPage> {
               subtitle:
                   'Mude seu perfil para Cliente, e faça solicitações de serviços pelo app.',
             ),
+            _buildListTile(
+              title: 'Ver Denúncias Aceitas',
+              icon: Icons.report_outlined,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder:
+                        (_) => DenunciasAceitasPage(idPrestador: idPrestador!),
+                  ),
+                );
+              },
+              subtitle: 'Visualize as denúncias aceitas contra seu perfil.',
+            ),
+
             Divider(),
             Expanded(
               child:
