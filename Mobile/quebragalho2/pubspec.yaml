@@ -15,7 +15,9 @@ dependencies:
   shared_preferences: ^2.2.2
   http: ^0.13.6
   mask_text_input_formatter: ^2.9.0
-  cloud_firestore: ^5.6.9
+  firebase_core: ^2.30.0
+  cloud_firestore: ^4.17.5
+  firebase_messaging: ^14.7.10
 
 dev_dependencies:
   flutter_test:

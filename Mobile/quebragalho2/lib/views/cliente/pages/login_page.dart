@@ -1,12 +1,13 @@
 import 'dart:convert';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:quebragalho2/api_config.dart';
 import 'package:quebragalho2/views/cliente/pages/cadastro_page.dart';
 import 'package:quebragalho2/views/cliente/pages/navegacao_cliente.dart';
 import 'package:quebragalho2/views/cliente/pages/tela_selecao_tipo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:quebragalho2/api_config.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -77,49 +78,57 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> fazerLogin() async {
-    final email = emailController.text;
-    final senha = senhaController.text;
+  final email = emailController.text;
+  final senha = senhaController.text;
 
-    try {
-      final response = await http.post(
-        Uri.parse('https://${ApiConfig.baseUrl}/auth/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'senha': senha}),
-      );
+  try {
+    final response = await http.post(
+      Uri.parse('https://${ApiConfig.baseUrl}/auth/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'senha': senha}),
+    );
 
-      if (response.statusCode == 200) {
-        final body = jsonDecode(response.body);
-        final token = body['token'];
-        final idUsuario = body['id_usuario'];
-        final nomeUsuario = body['nome'] ?? '';
-        final idPrestador = body['id_prestador']; // pode ser nulo
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body);
+      final token = body['token'];
+      final idUsuario = body['id_usuario'];
+      final nomeUsuario = body['nome'] ?? '';
+      final idPrestador = body['id_prestador'];
 
-        print('ID do usuário: $idUsuario');
-        print('ID do prestador: $idPrestador');
+      await salvarPreferencias(token, idUsuario, idPrestador: idPrestador, nomeUsuario: nomeUsuario);
 
-        await salvarPreferencias(
-          token,
-          idUsuario,
-          idPrestador: idPrestador,
-          nomeUsuario: nomeUsuario,
-        );
+      // PEGAR O TOKEN FCM
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+      print('Token FCM: $fcmToken');
 
-        if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => WelcomePage()),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email ou senha inválidos')),
-        );
+      if (fcmToken != null) {
+        // ENVIAR O TOKEN PARA O BACKEND
+        final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/getToken/$idUsuario?token=$fcmToken');
+        final tokenResponse = await http.put(uri);
+
+        if (tokenResponse.statusCode == 200 || tokenResponse.statusCode == 204) {
+          print('Token FCM enviado com sucesso.');
+        } else {
+          print('Falha ao enviar token FCM: ${tokenResponse.statusCode}');
+        }
       }
-    } catch (e) {
+
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const WelcomePage()),
+      );
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao conectar: $e')),
+        const SnackBar(content: Text('Email ou senha inválidos')),
       );
     }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Erro ao conectar: $e')),
+    );
   }
+}
 
 
   @override
