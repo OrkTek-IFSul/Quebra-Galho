@@ -108,6 +108,29 @@ class _MeusDadosState extends State<MeusDados> {
     }
   }
 
+  String formatarTelefone(String telefone) {
+    final numeros = telefone.replaceAll(RegExp(r'\D'), '');
+    if (numeros.length == 11) {
+      return '(${numeros.substring(0, 2)}) ${numeros.substring(2, 7)}-${numeros.substring(7)}';
+    } else if (numeros.length == 10) {
+      return '(${numeros.substring(0, 2)}) ${numeros.substring(2, 6)}-${numeros.substring(6)}';
+    }
+    return telefone;
+  }
+
+  String formatarDocumento(String documento) {
+    final numeros = documento.replaceAll(RegExp(r'\D'), '');
+
+    if (numeros.length == 11) {
+      // CPF: 000.000.000-00
+      return '${numeros.substring(0, 3)}.${numeros.substring(3, 6)}.${numeros.substring(6, 9)}-${numeros.substring(9)}';
+    } else if (numeros.length == 14) {
+      // CNPJ: 00.000.000/0000-00
+      return '${numeros.substring(0, 2)}.${numeros.substring(2, 5)}.${numeros.substring(5, 8)}/${numeros.substring(8, 12)}-${numeros.substring(12)}';
+    }
+    return documento; // sem formatação se tamanho não for 11 nem 14
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -183,145 +206,91 @@ class _MeusDadosState extends State<MeusDados> {
               const SizedBox(height: 40),
 
               // Nome
-              Text(
-                'Nome',
-                style: TextStyle(
-                  fontSize: 20,
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Text('Nome', style: _labelStyle()),
               const SizedBox(height: 4),
-              Text(
-                prestador!['usuario']['nome'] ?? 'Não informado',
-                style: const TextStyle(fontSize: 18, color: Colors.black87),
-              ),
+              Text(prestador!['usuario']['nome'] ?? 'Não informado', style: _valueStyle()),
               const SizedBox(height: 28),
 
               // Telefone
-              Text(
-                'Telefone',
-                style: TextStyle(
-                  fontSize: 20,
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Text('Telefone', style: _labelStyle()),
               const SizedBox(height: 4),
               Text(
                 prestador!['usuario']['telefone']?.isNotEmpty == true
-                    ? prestador!['usuario']['telefone']
+                    ? formatarTelefone(prestador!['usuario']['telefone'])
                     : 'Não informado',
-                style: const TextStyle(fontSize: 18, color: Colors.black87),
+                style: _valueStyle(),
               ),
               const SizedBox(height: 28),
 
               // Email
-              Text(
-                'Email',
-                style: TextStyle(
-                  fontSize: 20,
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Text('Email', style: _labelStyle()),
               const SizedBox(height: 4),
-              Text(
-                prestador!['usuario']['email'] ?? 'Não informado',
-                style: const TextStyle(fontSize: 18, color: Colors.black87),
-              ),
+              Text(prestador!['usuario']['email'] ?? 'Não informado', style: _valueStyle()),
               const SizedBox(height: 28),
 
-              // Documento (novo)
-              Text(
-                'Documento',
-                style: TextStyle(
-                  fontSize: 20,
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              // Documento
+              Text('Documento', style: _labelStyle()),
               const SizedBox(height: 4),
               Text(
                 prestador!['usuario']['documento']?.isNotEmpty == true
-                    ? prestador!['usuario']['documento']
+                    ? formatarDocumento(prestador!['usuario']['documento'])
                     : 'Não informado',
-                style: const TextStyle(fontSize: 18, color: Colors.black87),
+                style: _valueStyle(),
               ),
               const SizedBox(height: 28),
 
-              // Descrição (novo)
-              Text(
-                'Descrição',
-                style: TextStyle(
-                  fontSize: 20,
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              // Descrição
+              Text('Descrição', style: _labelStyle()),
               const SizedBox(height: 4),
               Text(
                 prestador!['descricao']?.isNotEmpty == true
                     ? prestador!['descricao']
                     : 'Não informado',
-                style: const TextStyle(fontSize: 18, color: Colors.black87),
+                style: _valueStyle(),
               ),
               const SizedBox(height: 28),
 
               const Divider(thickness: 1, height: 40),
 
               // Tags
-              Text(
-                'Tags / Categorias',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Text('Tags / Categorias', style: _labelStyle(fontSize: 18)),
               const SizedBox(height: 16),
               if (tags.isNotEmpty)
                 Wrap(
                   spacing: 8.0,
                   runSpacing: 8.0,
                   children: tags
-                      .map(
-                        (tag) => Chip(
-                          label: Text(tag, style: const TextStyle(color: Colors.black87)),
-                          backgroundColor: Colors.grey[200],
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                      )
+                      .map((tag) => Chip(
+                            label: Text(tag, style: const TextStyle(color: Colors.black87)),
+                            backgroundColor: Colors.grey[200],
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          ))
                       .toList(),
                 )
               else
-                const Text(
-                  'Nenhuma tag cadastrada.',
-                  style: TextStyle(color: Colors.black54, fontSize: 18),
-                ),
+                const Text('Nenhuma tag cadastrada.',
+                    style: TextStyle(color: Colors.black54, fontSize: 18)),
               const SizedBox(height: 32),
 
-              // Horário de atendimento
-              Text(
-                'Horário de Atendimento',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.black54,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              // Horário
+              Text('Horário de Atendimento', style: _labelStyle(fontSize: 18, color: Colors.black54)),
               const SizedBox(height: 4),
-              Text(
-                horarioAtendimento,
-                style: const TextStyle(fontSize: 18, color: Colors.black87),
-              ),
+              Text(horarioAtendimento, style: _valueStyle()),
             ],
           ),
         ),
       ),
     );
+  }
+
+  TextStyle _labelStyle({double fontSize = 20, Color color = Colors.black}) {
+    return TextStyle(fontSize: fontSize, color: color, fontWeight: FontWeight.bold);
+  }
+
+  TextStyle _valueStyle() {
+    return const TextStyle(fontSize: 18, color: Colors.black87);
   }
 }

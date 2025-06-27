@@ -55,6 +55,30 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Future<void> _confirmLogout() async {
+    final bool? confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmação de Logout'),
+        content: const Text('Deseja realmente sair da sua conta?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Sair'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar == true) {
+      _logout();
+    }
+  }
+
   Future<void> _loadNomeUsuario() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -139,7 +163,7 @@ class _HomePageState extends State<HomePage> {
                 icon: Icon(isLoggedIn ? Icons.logout : Icons.login),
                 tooltip: isLoggedIn ? 'Sair' : 'Entrar',
                 onPressed: isLoggedIn
-                    ? _logout
+                    ? _confirmLogout
                     : () => Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => const LoginPage()),

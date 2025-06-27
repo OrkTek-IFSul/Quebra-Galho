@@ -6,7 +6,6 @@ import 'package:quebragalho2/api_config.dart';
 import 'package:quebragalho2/services/editar_servico_services.dart';
 import 'package:quebragalho2/views/cliente/pages/login_page.dart'; // para obterIdPrestador()
 
-// Sua classe EditarServico (Widget) permanece a mesma...
 class EditarServico extends StatefulWidget {
   final String nomeInicial;
   final String descricaoInicial;

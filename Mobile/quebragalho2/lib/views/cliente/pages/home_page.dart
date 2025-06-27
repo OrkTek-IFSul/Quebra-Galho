@@ -193,6 +193,30 @@ class _HomePageState extends State<HomePage> {
     _loadInitialData();
   }
 
+  Future<void> _confirmLogout() async {
+    final bool? confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmação de Logout'),
+        content: const Text('Deseja realmente sair da sua conta?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Sair'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar == true) {
+      _logout();
+    }
+  }
+
   Future<void> carregarUsuarioId() async {
     // Implemente a busca do ID do usuário se necessário
   }
@@ -295,7 +319,7 @@ class _HomePageState extends State<HomePage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: GestureDetector(
-                onTap: _logout,
+                onTap: _confirmLogout,
                 child: Container(
                   width: 40,
                   height: 40,
