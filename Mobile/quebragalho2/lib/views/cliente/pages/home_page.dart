@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:quebragalho2/views/cliente/pages/login_page.dart';
 
 import 'package:quebragalho2/views/cliente/pages/prestador_detalhes_page.dart';
+import 'package:quebragalho2/views/cliente/widgets/popular_card_home.dart';
 import 'package:quebragalho2/views/cliente/widgets/prestador_home_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -28,16 +29,13 @@ class _HomePageState extends State<HomePage> {
   Timer? _debounce;
 
   int? usuarioId;
-  String? nomeUsuario; // Adicione esta variável
+  String? nomeUsuario;
   String? _profileImageUrl;
 
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus();
-    _loadProfileImage();
-    _loadNomeUsuario(); // Chame aqui
-    _loadInitialData();
+    _initializeData();
     searchController.addListener(_debouncedSearch);
   }
 
@@ -47,6 +45,22 @@ class _HomePageState extends State<HomePage> {
     searchController.removeListener(_debouncedSearch);
     searchController.dispose();
     super.dispose();
+  }
+
+  // --- MÉTODOS DE INICIALIZAÇÃO ---
+
+  /// Inicializa os dados na ordem correta
+  Future<void> _initializeData() async {
+    // Primeiro verifica o status de login
+    await _checkLoginStatus();
+
+    // Se estiver logado, carrega os dados do usuário
+    if (isLoggedIn) {
+      await Future.wait([_loadNomeUsuario(), _loadProfileImage()]);
+    }
+
+    // Por último, carrega os dados da página
+    await _loadInitialData();
   }
 
   // --- MÉTODOS DE LÓGICA E DADOS ---
@@ -87,17 +101,20 @@ class _HomePageState extends State<HomePage> {
     if (!isLoading) setState(() => isLoading = true);
 
     try {
-      final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage/prestadores');
+      final uri = Uri.parse(
+        'https://${ApiConfig.baseUrl}/api/usuario/homepage/prestadores',
+      );
       final response = await http.get(uri);
 
       if (response.statusCode == 200) {
-        // AJUSTE DE DECODIFICAÇÃO APLICADO AQUI
         final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
         setState(() {
           _prestadoresFiltrados = data;
         });
       } else {
-        print('Falha ao carregar prestadores: ${response.statusCode} ${response.body}');
+        print(
+          'Falha ao carregar prestadores: ${response.statusCode} ${response.body}',
+        );
         setState(() => _prestadoresFiltrados = []);
       }
     } catch (e) {
@@ -114,25 +131,28 @@ class _HomePageState extends State<HomePage> {
 
     try {
       final queryParams = {
-        if (searchController.text.trim().isNotEmpty) 'nome': searchController.text.trim(),
+        if (searchController.text.trim().isNotEmpty)
+          'nome': searchController.text.trim(),
         if (selectedTags.isNotEmpty) 'tags': selectedTags.join(','),
         'page': '0',
         'size': '10',
       };
 
-      final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage/buscar')
-          .replace(queryParameters: queryParams);
+      final uri = Uri.parse(
+        'https://${ApiConfig.baseUrl}/api/usuario/homepage/buscar',
+      ).replace(queryParameters: queryParams);
 
       final response = await http.get(uri);
 
       if (response.statusCode == 200) {
-        // AJUSTE DE DECODIFICAÇÃO APLICADO AQUI
         final data = jsonDecode(utf8.decode(response.bodyBytes));
         setState(() {
           _prestadoresFiltrados = data['content'] ?? [];
         });
       } else {
-        print('Falha ao buscar prestadores: ${response.statusCode} ${response.body}');
+        print(
+          'Falha ao buscar prestadores: ${response.statusCode} ${response.body}',
+        );
         setState(() => _prestadoresFiltrados = []);
       }
     } catch (e) {
@@ -142,89 +162,166 @@ class _HomePageState extends State<HomePage> {
       if (mounted) setState(() => isLoading = false);
     }
   }
-  
+
   /// Busca as categorias/tags disponíveis.
   Future<void> fetchCategorias() async {
     try {
-      final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage/tags');
+      final uri = Uri.parse(
+        'https://${ApiConfig.baseUrl}/api/usuario/homepage/tags',
+      );
       final response = await http.get(uri);
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
         setState(() {
-          categories = [
-            'Todos',
-            ...data.map((tag) => tag['nome'].toString()),
-          ];
+          categories = ['Todos', ...data.map((tag) => tag['nome'].toString())];
         });
       } else {
-        print('Falha ao carregar categorias: ${response.statusCode} ${response.body}');
+        print(
+          'Falha ao carregar categorias: ${response.statusCode} ${response.body}',
+        );
       }
     } catch (e) {
       print('Erro ao carregar categorias: $e');
     }
   }
-  
-  // --- MÉTODOS DE AUTENTICAÇÃO E OUTROS (sem alterações) ---
-  
+
+  // --- MÉTODOS DE AUTENTICAÇÃO E OUTROS ---
+
   Future<void> _checkLoginStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    setState(() {
-      isLoggedIn = token != null && token.isNotEmpty;
-    });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      final userId = prefs.getInt('usuario_id');
+
+      if (mounted) {
+        setState(() {
+          isLoggedIn = token != null && token.isNotEmpty;
+          usuarioId = userId;
+        });
+      }
+
+      print('Status de login: $isLoggedIn, Usuario ID: $usuarioId'); // Debug
+    } catch (e) {
+      print('Erro ao verificar status de login: $e');
+      if (mounted) {
+        setState(() {
+          isLoggedIn = false;
+          usuarioId = null;
+        });
+      }
+    }
   }
 
-  Future<void> _logout() async {
+  Future<void> _confirmLogout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
-    
+
     if (!mounted) return;
-    
+
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => const LoginPage()),
       (route) => false,
     );
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Logout realizado com sucesso')),
     );
-    _loadInitialData();
-  }
-
-  Future<void> carregarUsuarioId() async {
-    // Implemente a busca do ID do usuário se necessário
+    _initializeData();
   }
 
   Future<void> _loadNomeUsuario() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      nomeUsuario = prefs.getString('user_name') ?? '';
-    });
+    if (!isLoggedIn || usuarioId == null) {
+      print('Usuário não logado ou ID não encontrado'); // Debug
+      return;
+    }
+
+    try {
+      print('Carregando nome do usuário para ID: $usuarioId'); // Debug
+
+      final response = await http.get(
+        Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$usuarioId'),
+      );
+
+      print('Status da resposta (nome): ${response.statusCode}'); // Debug
+
+      if (response.statusCode == 200) {
+        // Aplicando a decodificação UTF-8 aqui também
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        print('Dados recebidos (nome): $data'); // Debug
+
+        if (mounted) {
+          setState(() {
+            nomeUsuario = data['nome']?.toString() ?? 'Usuário';
+          });
+        }
+        print('Nome carregado: $nomeUsuario'); // Debug
+      } else {
+        print(
+          'Erro ao carregar nome: ${response.statusCode} - ${response.body}',
+        );
+        if (mounted) {
+          setState(() {
+            nomeUsuario = 'Usuário';
+          });
+        }
+      }
+    } catch (e) {
+      print('Erro ao carregar nome do usuário: $e');
+      if (mounted) {
+        setState(() {
+          nomeUsuario = 'Usuário';
+        });
+      }
+    }
   }
 
   Future<void> _loadProfileImage() async {
-    if (!isLoggedIn) return;
-    
+    if (!isLoggedIn || usuarioId == null) {
+      print('Usuário não logado ou ID não encontrado para imagem'); // Debug
+      return;
+    }
+
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final userId = prefs.getInt('usuario_id');
-      if (userId == null) return;
+      print('Carregando imagem do usuário para ID: $usuarioId'); // Debug
 
       final response = await http.get(
-        Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$userId'),
+        Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$usuarioId'),
       );
 
+      print('Status da resposta (imagem): ${response.statusCode}'); // Debug
+
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        // Aplicando a decodificação UTF-8 aqui também
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        print('Dados recebidos (imagem): $data'); // Debug
+
         final imagemPerfil = data['imagemPerfil'];
-        
-        if (imagemPerfil != null && imagemPerfil.isNotEmpty) {
-          setState(() {
-            _profileImageUrl = 'https://${ApiConfig.baseUrl}/$imagemPerfil?ts=${DateTime.now().millisecondsSinceEpoch}';
-          });
+        print('Caminho da imagem: $imagemPerfil'); // Debug
+
+        if (imagemPerfil != null && imagemPerfil.toString().isNotEmpty) {
+          final imageUrl =
+              'https://${ApiConfig.baseUrl}/$imagemPerfil?ts=${DateTime.now().millisecondsSinceEpoch}';
+          print('URL final da imagem: $imageUrl'); // Debug
+
+          if (mounted) {
+            setState(() {
+              _profileImageUrl = imageUrl;
+            });
+          }
+        } else {
+          print('Imagem de perfil não encontrada ou vazia');
+          if (mounted) {
+            setState(() {
+              _profileImageUrl = null;
+            });
+          }
         }
+      } else {
+        print(
+          'Erro ao carregar imagem: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       print('Erro ao carregar imagem de perfil: $e');
@@ -235,25 +332,24 @@ class _HomePageState extends State<HomePage> {
 
   /// Constrói os chips de categoria.
   Widget _buildCategoryChip(String category) {
-    final isSelected = category == 'Todos'
-        ? selectedTags.isEmpty
-        : selectedTags.contains(category);
+    final isSelected =
+        category == 'Todos'
+            ? selectedTags.isEmpty
+            : selectedTags.contains(category);
 
     return ChoiceChip(
       label: Text(
         category,
-        style: TextStyle(
-          color: isSelected ? Colors.white : Colors.black, // texto branco se selecionado
-        ),
+        style: TextStyle(color: isSelected ? Colors.white : Colors.black),
       ),
-      selectedColor: Colors.black, // selecionado fica preto
+      selectedColor: Colors.black,
       backgroundColor: Colors.grey[200],
       selected: isSelected,
       onSelected: (bool selected) {
         setState(() {
           if (category == 'Todos') {
             selectedTags.clear();
-            searchController.clear(); // opcional: limpa busca ao selecionar 'Todos'
+            searchController.clear();
           } else {
             if (selected) {
               selectedTags.add(category);
@@ -272,7 +368,67 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text(''), // Remove o "Olá, {Usuario}"
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title:
+            isLoggedIn
+                ? Row(
+                  children: [
+                    const SizedBox(height: 10),
+                    // Foto de perfil ou avatar padrão
+                    _profileImageUrl != null
+                        ? GestureDetector(
+                            onTap: _confirmLogout,
+                            child: CircleAvatar(
+                              radius: 25,
+                              backgroundImage: NetworkImage(_profileImageUrl!),
+                              backgroundColor: Colors.transparent,
+                              onBackgroundImageError: (exception, stackTrace) {
+                                print('Erro ao carregar imagem: $exception');
+                              },
+                            ),
+                          )
+                        : GestureDetector(
+                            onTap: _confirmLogout,
+                            child: const CircleAvatar(
+                              radius: 25,
+                              backgroundColor: Color(0xFFF0F0F0),
+                              child: Icon(Icons.person, color: Colors.black87),
+                            ),
+                          ),
+                    const SizedBox(width: 12),
+                    // Textos de boas-vindas
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Bem-vindo,',
+                            style: TextStyle(fontSize: 14, color: Colors.grey),
+                          ),
+                          Text(
+                            nomeUsuario ?? 'Carregando...',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+                : const Text(
+                  '',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
         actions: [
           if (isLoggedIn) ...[
             // Ícone de notificações
@@ -291,42 +447,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-            // Foto de perfil do usuário (substitui o ícone de logout)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: GestureDetector(
-                onTap: _logout,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0F0F0),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.grey[300]!,
-                      width: 1,
-                    ),
-                  ),
-                  child: _profileImageUrl != null
-                      ? CircleAvatar(
-                          backgroundImage: NetworkImage(_profileImageUrl!),
-                          onBackgroundImageError: (exception, stackTrace) {
-                            setState(() {
-                              _profileImageUrl = null;
-                            });
-                          },
-                        )
-                      : const CircleAvatar(
-                          backgroundColor: Color(0xFFF0F0F0),
-                          child: Icon(
-                            Icons.person,
-                            color: Colors.black87,
-                            size: 24,
-                          ),
-                        ),
-                ),
-              ),
-            ),
           ] else ...[
             // Botão de login para usuários não logados
             Padding(
@@ -338,17 +458,20 @@ class _HomePageState extends State<HomePage> {
                 ),
                 child: IconButton(
                   icon: const Icon(Icons.login),
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginPage()),
-                  ),
+                  onPressed:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginPage(),
+                        ),
+                      ),
                   color: Colors.black87,
                   splashRadius: 24,
                 ),
               ),
             ),
           ],
-          const SizedBox(width: 12), // Espaçamento à direita
+          const SizedBox(width: 12),
         ],
       ),
       body: Padding(
@@ -356,13 +479,26 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Row(
+              children: [
+                Text(
+                  "O que você precisa pra hoje?",
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12),
             TextField(
               controller: searchController,
               decoration: InputDecoration(
-                hintText: 'Buscar prestador...',
+                hintText: 'Pesquise pelo nome do usuário ou empresa',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
@@ -376,63 +512,100 @@ class _HomePageState extends State<HomePage> {
                 scrollDirection: Axis.horizontal,
                 itemCount: categories.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, index) =>
-                    _buildCategoryChip(categories[index]),
+                itemBuilder:
+                    (context, index) => _buildCategoryChip(categories[index]),
               ),
             ),
             const SizedBox(height: 12),
-            Expanded(
-              child: isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _prestadoresFiltrados.isEmpty
-                      ? const Center(
-                          child: Text(
-                            'Nenhum prestador encontrado.\nTente ajustar sua busca ou filtros.',
-                            textAlign: TextAlign.center,
-                          )
-                        )
-                      : ListView.builder(
-  itemCount: _prestadoresFiltrados.length,
-  itemBuilder: (context, index) {
-    final prestador = _prestadoresFiltrados[index];
-    final String imageUrl = (prestador['imagemPerfil'] != null && (prestador['imagemPerfil'] as String).isNotEmpty)
-    ? 'https://${ApiConfig.baseUrl}/${prestador['imagemPerfil']}'
-    : '';
-    final String nome = prestador['nome'] as String? ?? 'Nome Indisponível';
-    final List<String> tags = (prestador['tags'] as List?)
-            ?.map((tag) => (tag is Map && tag['nome'] != null) ? tag['nome'].toString() : '')
-            .where((tagNome) => tagNome.isNotEmpty)
-            .toList() ??
-        [];
-    final double rating = (prestador['mediaAvaliacoes'] as num?)?.toDouble() ?? 0.0;
-    final int? prestadorId = prestador['id'] as int?;
-
-    return PrestadorHomeCard(
-      imageUrl: imageUrl,
-      name: nome,
-      categories: tags,
-      rating: rating,
-      onTap: () {
-        if (prestadorId != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PrestadorDetalhesPage(
-                id: prestadorId,
-                isLoggedIn: isLoggedIn,
-              ),
+            Column(
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.bolt, color: const Color.fromARGB(255, 63, 63, 63)),
+                    Text(
+                      'Prestadores',
+                      style: TextStyle(
+                        color: const Color.fromARGB(255, 112, 112, 112),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+               
+              ],
             ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('ID do prestador indisponível.')),
-          );
-        }
-      },
-    );
-  },
-),
+            Expanded(
+              child:
+                  isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _prestadoresFiltrados.isEmpty
+                      ? const Center(
+                        child: Text(
+                          'Nenhum prestador encontrado.\nTente ajustar sua busca ou filtros.',
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                      : ListView.builder(
+                        itemCount: _prestadoresFiltrados.length,
+                        itemBuilder: (context, index) {
+                          final prestador = _prestadoresFiltrados[index];
+                          final String imageUrl =
+                              (prestador['imagemPerfil'] != null &&
+                                      (prestador['imagemPerfil'] as String)
+                                          .isNotEmpty)
+                                  ? 'https://${ApiConfig.baseUrl}/${prestador['imagemPerfil']}'
+                                  : '';
+                          final String nome =
+                              prestador['nome'] as String? ??
+                              'Nome Indisponível';
+                          final List<String> tags =
+                              (prestador['tags'] as List?)
+                                  ?.map(
+                                    (tag) =>
+                                        (tag is Map && tag['nome'] != null)
+                                            ? tag['nome'].toString()
+                                            : '',
+                                  )
+                                  .where((tagNome) => tagNome.isNotEmpty)
+                                  .toList() ??
+                              [];
+                          final double rating =
+                              (prestador['mediaAvaliacoes'] as num?)
+                                  ?.toDouble() ??
+                              0.0;
+                          final int? prestadorId = prestador['id'] as int?;
 
+                          return PrestadorHomeCard(
+                            imageUrl: imageUrl,
+                            name: nome,
+                            categories: tags,
+                            rating: rating,
+                            onTap: () {
+                              if (prestadorId != null) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => PrestadorDetalhesPage(
+                                          id: prestadorId,
+                                          isLoggedIn: isLoggedIn,
+                                        ),
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'ID do prestador indisponível.',
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                          );
+                        },
+                      ),
             ),
           ],
         ),
