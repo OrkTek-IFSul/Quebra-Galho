@@ -41,18 +41,19 @@ class _NavegacaoClienteState extends State<NavegacaoCliente> {
 
   // Lista de páginas da navegação
   List<Widget> get paginas => [
-        HomePage(),
-        if (usuarioId != null) ChatListScreen(usuarioId: usuarioId!),
-        if (usuarioId != null) PerfilPage(usuarioId: usuarioId!),
- // Passe o id aqui
-      ];
+    HomePage(),
+    if (usuarioId != null) ChatListScreen(usuarioId: usuarioId!),
+    if (usuarioId != null) PerfilPage(usuarioId: usuarioId!),
+    // Passe o id aqui
+  ];
 
   void _onTabTapped(int index) {
     // Verifica se usuário está logado antes de ir para perfil
-    if (index == 1 && usuarioId == null) {
+    if ((index == 1 || index == 2) && usuarioId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Você precisa estar logado para acessar o perfil')),
+          content: Text('Você precisa estar logado para acessar o perfil'),
+        ),
       );
       return;
     }
@@ -65,10 +66,7 @@ class _NavegacaoClienteState extends State<NavegacaoCliente> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: paginas,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: paginas),
       bottomNavigationBar: BottomAppBar(
         shape: const CircularNotchedRectangle(),
         child: Row(
@@ -88,7 +86,7 @@ class _NavegacaoClienteState extends State<NavegacaoCliente> {
               ),
               onPressed: () => _onTabTapped(1),
             ),
-               IconButton(
+            IconButton(
               icon: Icon(
                 Icons.person,
                 color: _selectedIndex == 2 ? Colors.black : Colors.grey[400],
