@@ -166,16 +166,38 @@ class _PerfilPageState extends State<PerfilPage> {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Alterar para Cliente'),
-            content: const Text('Deseja alterar para sua conta de cliente?'),
+            title: Center(
+              child: Text(
+                'Alterar para Cliente',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            content: const Text(
+              'Deseja migrar para sua \nconta de cliente?',
+              textAlign: TextAlign.center,
+            ),
+            actionsAlignment: MainAxisAlignment.center,
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('NÃO'),
+                child: const Text('NÃO', style: TextStyle(color: Colors.black)),
               ),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                  elevation: 0,
+                ),
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('SIM'),
+                child: const Text(
+                  'SIM',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),
@@ -195,19 +217,38 @@ class _PerfilPageState extends State<PerfilPage> {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Remover serviço'),
-            content: const Text('Tem certeza que deseja remover?'),
+            title: Center(
+              child: Text(
+                'Removendo serviço',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            content: const Text(
+              'Tem certeza que deseja remover?',
+              textAlign: TextAlign.center,
+            ),
+            actionsAlignment: MainAxisAlignment.center,
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Não'),
+                child: const Text('NÃO', style: TextStyle(color: Colors.black)),
               ),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                  elevation: 0,
+                ),
                 onPressed: () {
                   Navigator.of(context).pop();
                   onConfirm();
                 },
-                child: const Text('Sim'),
+                child: const Text('SIM', style: TextStyle(fontWeight: FontWeight.bold),),
               ),
             ],
           ),
@@ -255,22 +296,26 @@ class _PerfilPageState extends State<PerfilPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Perfil', style: TextStyle(fontSize: 20)),
+        title: const Text('Perfil', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.feedback_outlined),
             tooltip: 'Ver feedbacks',
-            onPressed: idPrestador == null
-                ? null
-                : () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ListaAvaliacoesPage(idPrestador: idPrestador!),
-                      ),
-                    );
-                  },
+            onPressed:
+                idPrestador == null
+                    ? null
+                    : () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (_) => ListaAvaliacoesPage(
+                                idPrestador: idPrestador!,
+                              ),
+                        ),
+                      );
+                    },
           ),
         ],
       ),

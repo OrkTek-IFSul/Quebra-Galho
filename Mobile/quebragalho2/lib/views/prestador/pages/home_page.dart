@@ -109,7 +109,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: isLoggedIn
-            ? Text('Olá, ${nomeUsuario ?? ''}')
+            ? Text('Serviços', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),)
             : const Text('Solicitações'),
         actions: [
           if (isLoggedIn)

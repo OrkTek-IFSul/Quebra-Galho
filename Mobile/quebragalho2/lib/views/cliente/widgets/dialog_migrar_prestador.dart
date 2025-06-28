@@ -5,16 +5,50 @@ Future<void> showMigrarParaPrestadorDialog(BuildContext context, int id_prestado
   final result = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Alterar para Prestador'),
-      content: const Text('Você deseja alterar para modo prestador?'),
+      title: Center(
+        child: Text(
+          'Alterar para Prestador',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+      content: const Text(
+        'Você deseja migrar para \nmodo prestador?',
+        textAlign: TextAlign.center,
+      ),
+      actionsAlignment: MainAxisAlignment.center,
       actions: [
-        TextButton(
+        OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Colors.transparent),
+            backgroundColor: Colors.transparent,
+            foregroundColor: Colors.black,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          ),
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('NÃO'),
+          child: const Text(
+            'NÃO',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
         ),
         ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(2),
+            ),
+            elevation: 0,
+          ),
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('SIM'),
+          child: const Text(
+            'SIM',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
         ),
       ],
     ),

@@ -29,7 +29,8 @@ flutter:
   assets:
     - assets/confetti.json
     - assets/welcome.json
-    - assets/images/
+    - assets/images/logo.png
+    - assets/images/illustracao_telaselecaoperfil.png
 
   fonts:
     - family: Manrope
