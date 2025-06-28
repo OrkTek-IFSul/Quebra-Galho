@@ -265,12 +265,12 @@ class _EditarServicoState extends State<EditarServico> {
               const SizedBox(height: 8),
               TextFormField(
                 controller: descricaoController,
-                maxLength: 45,
+                maxLength: 250,
                 maxLines: 2,
                 decoration: _buildInputDecoration('Descrição do serviço'),
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'Informe a descrição';
-                  if (v.trim().length > 45) return 'Máximo de 45 caracteres';
+                  if (v.trim().length > 250) return 'Máximo de 250 caracteres';
                   return null;
                 },
               ),
