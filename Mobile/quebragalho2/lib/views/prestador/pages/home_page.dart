@@ -178,51 +178,55 @@ class _HomePageState extends State<HomePage> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: solicitacoes.length,
-              itemBuilder: (context, index) {
-                final solicitacao = solicitacoes[index];
+          : RefreshIndicator(
+              onRefresh: () async {
+                await carregarSolicitacoesDoPrestador();
+              },
+              child: ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: solicitacoes.length,
+                itemBuilder: (context, index) {
+                  final solicitacao = solicitacoes[index];
 
-                final DateTime dataHora = DateTime.parse(
-                  solicitacao['dataHoraAgendamento'],
-                );
-                final String dataHoraFormatada =
-                    '${dataHora.day}/${dataHora.month}/${dataHora.year} às ${dataHora.hour}:${dataHora.minute.toString().padLeft(2, '0')}';
+                  final DateTime dataHora = DateTime.parse(
+                    solicitacao['dataHoraAgendamento'],
+                  );
+                  final String dataHoraFormatada =
+                      '${dataHora.day}/${dataHora.month}/${dataHora.year} às ${dataHora.hour}:${dataHora.minute.toString().padLeft(2, '0')}';
 
-                return SolicitacaoClienteCard(
-                  nome: solicitacao['nomeDoUsuario'],
-                  fotoUrl:
-                      'https://${ApiConfig.baseUrl}/${solicitacao['fotoPerfilUsuario']}',
-                  idAgendamento: solicitacao['idAgendamento'],
-                  isConfirmed: solicitacao['statusPedidoAgendamento'] == true,
-                  isCanceled: solicitacao['statusPedidoAgendamento'] == false,
-                  onConfirm: () {
-                    if (idPrestador != null) {
-                      fetchSolicitacoes(idPrestador!);
-                    }
-                  },
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => DetalhesSolicitacaoPage(
-                          nome: solicitacao['nomeDoUsuario'],
-                          fotoUrl:
-                              'https://${ApiConfig.baseUrl}/${solicitacao['fotoPerfilUsuario']}',
-                          servico: solicitacao['nomeServico'],
-                          dataHora: dataHoraFormatada,
-                          valorTotal: solicitacao['precoServico'].toDouble(),
-                          idAgendamento: solicitacao['idAgendamento'],
-                        ),
-                      ),
-                    ).then((_) {
+                  return SolicitacaoClienteCard(
+                    nome: solicitacao['nomeDoUsuario'],
+                    fotoUrl: 'https://${ApiConfig.baseUrl}/${solicitacao['fotoPerfilUsuario']}',
+                    idAgendamento: solicitacao['idAgendamento'],
+                    isConfirmed: solicitacao['statusPedidoAgendamento'] == true,
+                    isCanceled: solicitacao['statusPedidoAgendamento'] == false,
+                    onConfirm: () {
                       if (idPrestador != null) {
                         fetchSolicitacoes(idPrestador!);
                       }
-                    });
-                  },
-                );
-              },
+                    },
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => DetalhesSolicitacaoPage(
+                            nome: solicitacao['nomeDoUsuario'],
+                            fotoUrl: 'https://${ApiConfig.baseUrl}/${solicitacao['fotoPerfilUsuario']}',
+                            servico: solicitacao['nomeServico'],
+                            dataHora: dataHoraFormatada,
+                            valorTotal: solicitacao['precoServico'].toDouble(),
+                            idAgendamento: solicitacao['idAgendamento'],
+                          ),
+                        ),
+                      ).then((_) {
+                        if (idPrestador != null) {
+                          fetchSolicitacoes(idPrestador!);
+                        }
+                      });
+                    },
+                  );
+                },
+              ),
             ),
     );
   }

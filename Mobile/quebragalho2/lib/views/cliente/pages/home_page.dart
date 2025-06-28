@@ -406,58 +406,65 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 12),
             Expanded(
-              child: isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _prestadoresFiltrados.isEmpty
-                      ? const Center(
-                          child: Text(
-                            'Nenhum prestador encontrado.\nTente ajustar sua busca ou filtros.',
-                            textAlign: TextAlign.center,
-                          )
-                        )
-                      : ListView.builder(
-  itemCount: _prestadoresFiltrados.length,
-  itemBuilder: (context, index) {
-    final prestador = _prestadoresFiltrados[index];
-    final String imageUrl = (prestador['imagemPerfil'] != null && (prestador['imagemPerfil'] as String).isNotEmpty)
-    ? 'https://${ApiConfig.baseUrl}/${prestador['imagemPerfil']}'
-    : '';
-    final String nome = prestador['nome'] as String? ?? 'Nome Indisponível';
-    final List<String> tags = (prestador['tags'] as List?)
-            ?.map((tag) => (tag is Map && tag['nome'] != null) ? tag['nome'].toString() : '')
-            .where((tagNome) => tagNome.isNotEmpty)
-            .toList() ??
-        [];
-    final double rating = (prestador['mediaAvaliacoes'] as num?)?.toDouble() ?? 0.0;
-    final int? prestadorId = prestador['id'] as int?;
+  child: RefreshIndicator(
+    onRefresh: () async {
+      await _loadInitialData(); // recarrega as categorias e os prestadores
+    },
+    child: isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : _prestadoresFiltrados.isEmpty
+            ? const Center(
+                child: Text(
+                  'Nenhum prestador encontrado.\nTente ajustar sua busca ou filtros.',
+                  textAlign: TextAlign.center,
+                ),
+              )
+            : ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(), // garante o gesto mesmo com poucos itens
+                itemCount: _prestadoresFiltrados.length,
+                itemBuilder: (context, index) {
+                  final prestador = _prestadoresFiltrados[index];
+                  final String imageUrl =
+                      (prestador['imagemPerfil'] != null && (prestador['imagemPerfil'] as String).isNotEmpty)
+                          ? 'https://${ApiConfig.baseUrl}/${prestador['imagemPerfil']}'
+                          : '';
+                  final String nome = prestador['nome'] as String? ?? 'Nome Indisponível';
+                  final List<String> tags = (prestador['tags'] as List?)
+                          ?.map((tag) => (tag is Map && tag['nome'] != null) ? tag['nome'].toString() : '')
+                          .where((tagNome) => tagNome.isNotEmpty)
+                          .toList() ??
+                      [];
+                  final double rating = (prestador['mediaAvaliacoes'] as num?)?.toDouble() ?? 0.0;
+                  final int? prestadorId = prestador['id'] as int?;
 
-    return PrestadorHomeCard(
-      imageUrl: imageUrl,
-      name: nome,
-      categories: tags,
-      rating: rating,
-      onTap: () {
-        if (prestadorId != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PrestadorDetalhesPage(
-                id: prestadorId,
-                isLoggedIn: isLoggedIn,
+                  return PrestadorHomeCard(
+                    imageUrl: imageUrl,
+                    name: nome,
+                    categories: tags,
+                    rating: rating,
+                    onTap: () {
+                      if (prestadorId != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PrestadorDetalhesPage(
+                              id: prestadorId,
+                              isLoggedIn: isLoggedIn,
+                            ),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('ID do prestador indisponível.')),
+                        );
+                      }
+                    },
+                  );
+                },
               ),
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('ID do prestador indisponível.')),
-          );
-        }
-      },
-    );
-  },
-),
-
-            ),
+  ),
+)
+,
           ],
         ),
       ),
