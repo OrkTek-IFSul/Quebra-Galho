@@ -30,10 +30,9 @@ class EditarServico extends StatefulWidget {
   State<EditarServico> createState() => _EditarServicoState();
 }
 
-
-// ============== SUBSTITUA SUA CLASSE STATE POR ESTA =================
-
 class _EditarServicoState extends State<EditarServico> {
+  final _formKey = GlobalKey<FormState>();
+
   late TextEditingController nomeController;
   late TextEditingController descricaoController;
   late TextEditingController valorController;
@@ -49,15 +48,11 @@ class _EditarServicoState extends State<EditarServico> {
 
   List<Map<String, dynamic>> tagsDisponiveis = [];
   final Set<int> tagsSelecionadas = {};
-
-  // NOVO: Adicionado para controlar o dropdown de duração.
-  int _selectedDuration = 30; 
-  // TODO: Você precisará integrar a lógica para salvar este valor de duração.
+  int _selectedDuration = 30;
 
   @override
   void initState() {
     super.initState();
-
     nomeController = TextEditingController(text: widget.nomeInicial);
     descricaoController = TextEditingController(text: widget.descricaoInicial);
     valorController = TextEditingController(text: widget.valorInicial.toStringAsFixed(2));
@@ -69,14 +64,10 @@ class _EditarServicoState extends State<EditarServico> {
       tagsSelecionadas.addAll(widget.tagsServico!);
     }
 
-    // Aqui está o ajuste:
     final allowedDurations = [30, 60, 90, 120];
     _selectedDuration = allowedDurations.contains(widget.duracao) ? widget.duracao! : 30;
 
-    if (_idPrestador == null) {
-      _loadIds();
-    }
-
+    if (_idPrestador == null) _loadIds();
     _carregarTags();
   }
 
@@ -90,99 +81,30 @@ class _EditarServicoState extends State<EditarServico> {
   }
 
   Future<void> _carregarTags() async {
-    // Sua lógica para carregar tags permanece a mesma...
-    // (Omitido por brevidade, mantenha seu código original aqui)
     final uri = Uri.http(ApiConfig.baseUrl, '/api/usuario/homepage/tags');
-  try {
-   final response = await http.get(uri);
-   if (response.statusCode == 200) {
-    final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
-    setState(() {
-     tagsDisponiveis = data.cast<Map<String, dynamic>>();
-     _loadingTags = false;
-    });
-   } else {
-    setState(() => _loadingTags = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-     SnackBar(content: Text('Falha ao carregar tags (${response.statusCode})')),
-    );
-   }
-  } catch (e) {
-   setState(() => _loadingTags = false);
-   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text('Erro ao carregar tags: $e')),
-   );
-  }
-  }
-
-  @override
-  void dispose() {
-    nomeController.dispose();
-    descricaoController.dispose();
-    valorController.dispose();
-    super.dispose();
+    try {
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+        setState(() {
+          tagsDisponiveis = data.cast<Map<String, dynamic>>();
+          _loadingTags = false;
+        });
+      } else {
+        setState(() => _loadingTags = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Falha ao carregar tags (${response.statusCode})')),
+        );
+      }
+    } catch (e) {
+      setState(() => _loadingTags = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao carregar tags: $e')),
+      );
+    }
   }
 
-  Future<void> _salvarServico() async {
-    // Sua lógica de salvar serviço permanece a mesma.
-    // Lembre-se de adicionar a variável `_selectedDuration` se precisar salvá-la.
-    // (Omitido por brevidade, mantenha seu código original aqui)
-    final nome = nomeController.text.trim();
-  final descricao = descricaoController.text.trim();
-  final valorText = valorController.text.replaceAll(',', '.');
-  final valor = double.tryParse(valorText);
-  final duracao = _selectedDuration;
-
-  if (valor == null) {
-   ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Valor precisa ser um número válido')),
-   );
-   return;
-  }
-
-  if (_idPrestador == null || _idServico == null) {
-   ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('IDs necessários não disponíveis')),
-   );
-   return;
-  }
-
-  setState(() => _isSaving = true);
-
-  final tagsJson = tagsSelecionadas.map((id) {
-  final tag = tagsDisponiveis.firstWhere((t) => t['id'] == id);
-  return {
-    'id': tag['id'],
-    'nome': tag['nome'],
-  };
-}).toList();
-
-  final sucesso = await _servicoService.atualizarServico(
-   idPrestador: _idPrestador!,
-   idServico: _idServico!,
-   nome: nome,
-   descricao: descricao,
-   duracao: duracao,
-   valor: valor,
-   tags: tagsJson, // Agora com id e nome
-  );
-
-  setState(() => _isSaving = false);
-
-  if (sucesso) {
-   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text('Serviço "$nome" salvo com sucesso!')),
-   );
-   Navigator.pop(context);
-  } else {
-   ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Erro ao salvar serviço')),
-   );
-  }
-  }
-
-  // NOVO: Função auxiliar para estilizar os TextFields como na imagem
-  InputDecoration _buildInputDecoration(String label) {
+  InputDecoration _buildInputDecoration(String hint) {
     return InputDecoration(
       filled: true,
       fillColor: Colors.grey[200],
@@ -191,10 +113,11 @@ class _EditarServicoState extends State<EditarServico> {
         borderRadius: BorderRadius.circular(8),
         borderSide: BorderSide.none,
       ),
+      hintText: hint,
+      counterText: '', // remove contador de caracteres visível
     );
   }
 
-  // NOVO: Função para exibir um diálogo para adicionar tags
   void _showAddTagDialog() {
     final tagsParaAdicionar = tagsDisponiveis
         .where((tag) => !tagsSelecionadas.contains(tag['id']))
@@ -235,9 +158,60 @@ class _EditarServicoState extends State<EditarServico> {
     );
   }
 
-  // ===================================================================
-  // MÉTODO BUILD COMPLETAMENTE REFEITO PARA CORRESPONDER À IMAGEM
-  // ===================================================================
+  Future<void> _salvarServico() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final nome = nomeController.text.trim();
+    final descricao = descricaoController.text.trim();
+    final valorText = valorController.text.replaceAll(',', '.');
+    final valor = double.tryParse(valorText);
+    final duracao = _selectedDuration;
+
+    if (valor == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Valor precisa ser um número válido')),
+      );
+      return;
+    }
+
+    if (_idPrestador == null || _idServico == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('IDs necessários não disponíveis')),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    final tagsJson = tagsSelecionadas.map((id) {
+      final tag = tagsDisponiveis.firstWhere((t) => t['id'] == id);
+      return {'id': tag['id'], 'nome': tag['nome']};
+    }).toList();
+
+    final sucesso = await _servicoService.atualizarServico(
+      idPrestador: _idPrestador!,
+      idServico: _idServico!,
+      nome: nome,
+      descricao: descricao,
+      duracao: duracao,
+      valor: valor,
+      tags: tagsJson,
+    );
+
+    setState(() => _isSaving = false);
+
+    if (sucesso) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Serviço "$nome" salvo com sucesso!')),
+      );
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao salvar serviço')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loadingIds || _loadingTags) {
@@ -247,21 +221,18 @@ class _EditarServicoState extends State<EditarServico> {
     }
 
     return Scaffold(
-      // --- AppBar modificada ---
       appBar: AppBar(
-        // O ícone de voltar é adicionado automaticamente pelo Navigator
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: Colors.black,
-        title: const Text('Editar'), // Título como na imagem
+        title: const Text('Editar'),
         centerTitle: true,
-        // Ícone de check para salvar
         actions: [
           _isSaving
               ? const Padding(
                   padding: EdgeInsets.all(16.0),
                   child: SizedBox(
-                      width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2,)),
+                      width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)),
                 )
               : IconButton(
                   icon: const Icon(Icons.check, size: 30),
@@ -271,145 +242,133 @@ class _EditarServicoState extends State<EditarServico> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // --- Campo Nome ---
-            const Text('Nome', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 8),
-            TextField(
-              controller: nomeController,
-              decoration: _buildInputDecoration('Instalação de Ar-condicionado'),
-            ),
-            const SizedBox(height: 24),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Nome', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: nomeController,
+                maxLength: 45,
+                decoration: _buildInputDecoration('Nome do serviço'),
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Informe o nome';
+                  if (v.trim().length > 45) return 'Máximo de 45 caracteres';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 24),
 
-            // --- Campo Descrição ---
-            const Text('Descrição', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 8),
-            TextField(
-              controller: descricaoController,
-              maxLines: 4,
-              decoration: _buildInputDecoration('(55) 55555-5555'),
-            ),
-            const SizedBox(height: 24),
+              const Text('Descrição', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: descricaoController,
+                maxLength: 45,
+                maxLines: 2,
+                decoration: _buildInputDecoration('Descrição do serviço'),
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Informe a descrição';
+                  if (v.trim().length > 45) return 'Máximo de 45 caracteres';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 24),
 
-            // --- Linha para Duração e Valor ---
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // --- Coluna Duração ---
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Duração (Minutos)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(height: 8),
-                      // Dropdown para duração
-                      DropdownButtonFormField<int>(
-                        value: _selectedDuration,
-                        items: const [
-                          DropdownMenuItem(value: 30, child: Text('30')),
-                          DropdownMenuItem(value: 60, child: Text('60')),
-                          DropdownMenuItem(value: 90, child: Text('90')),
-                          DropdownMenuItem(value: 120, child: Text('120')),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _selectedDuration = value;
-                            });
-                          }
-                        },
-                        decoration: const InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(horizontal: 10),
-                          border: UnderlineInputBorder(),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Duração (Min)', style: TextStyle(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        DropdownButtonFormField<int>(
+                          value: _selectedDuration,
+                          items: const [
+                            DropdownMenuItem(value: 30, child: Text('30')),
+                            DropdownMenuItem(value: 60, child: Text('60')),
+                            DropdownMenuItem(value: 90, child: Text('90')),
+                            DropdownMenuItem(value: 120, child: Text('120')),
+                          ],
+                          onChanged: (v) => setState(() => _selectedDuration = v!),
+                          decoration: _buildInputDecoration(''),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-
-                // --- Coluna Valor ---
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Valor (R\$)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: valorController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        decoration: _buildInputDecoration('100.00'),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // --- Seção de Tags ---
-            const Text('Tags / Categorias', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const Text(
-              'Adicione até 3 tags para seu perfil',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
-            ),
-            const SizedBox(height: 12),
-            
-            // Widget Wrap para exibir as tags como chips
-            Wrap(
-              spacing: 8.0, // Espaço horizontal entre os chips
-              runSpacing: 4.0, // Espaço vertical entre as linhas de chips
-              children: [
-                // Botão para adicionar nova tag
-                ActionChip(
-                  label: const Text('+ Tag'),
-                  onPressed: _showAddTagDialog,
-                  backgroundColor: Colors.grey[200],
-                ),
-                // Mapeia as tags selecionadas para Chips
-                ...tagsSelecionadas.map((tagId) {
-                  final tag = tagsDisponiveis.firstWhere(
-                    (t) => t['id'] == tagId,
-                    orElse: () => {'id': tagId, 'nome': 'Carregando...'},
-                  );
-                  return Chip(
-                    label: Text(tag['nome']),
-                    backgroundColor: Colors.grey[300],
-                    onDeleted: () {
-                      setState(() {
-                        tagsSelecionadas.remove(tagId);
-                      });
-                    },
-                  );
-                }),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // --- Link para criar nova tag ---
-            Row(
-              children: [
-                const Text('Não achou sua tag? '),
-                InkWell(
-                  onTap: () {
-                    // TODO: Implementar a navegação ou modal para criar uma nova tag
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Funcionalidade "Criar nova tag" a ser implementada.')),
-                    );
-                  },
-                  child: const Text(
-                    'Crie uma nova',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      decoration: TextDecoration.underline,
+                      ],
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Valor (R\$)', style: TextStyle(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: valorController,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          decoration: _buildInputDecoration('100.00'),
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) return 'Informe o valor';
+                            if (double.tryParse(v.replaceAll(',', '.')) == null) return 'Valor inválido';
+                            return null;
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              const Text('Tags / Categorias', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const Text('Adicione até 3 tags', style: TextStyle(color: Colors.grey, fontSize: 12)),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8.0,
+                runSpacing: 4.0,
+                children: [
+                  ActionChip(
+                    label: const Text('+ Tag'),
+                    onPressed: _showAddTagDialog,
+                    backgroundColor: Colors.grey[200],
+                  ),
+                  ...tagsSelecionadas.map((tagId) {
+                    final tag = tagsDisponiveis.firstWhere(
+                      (t) => t['id'] == tagId,
+                      orElse: () => {'id': tagId, 'nome': 'Carregando...'},
+                    );
+                    return Chip(
+                      label: Text(tag['nome']),
+                      backgroundColor: Colors.grey[300],
+                      onDeleted: () => setState(() => tagsSelecionadas.remove(tagId)),
+                    );
+                  }),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  const Text('Não achou sua tag? '),
+                  InkWell(
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Funcionalidade "Criar nova tag" a ser implementada.')),
+                      );
+                    },
+                    child: const Text(
+                      'Crie uma nova',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
