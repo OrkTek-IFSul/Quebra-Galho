@@ -367,10 +367,91 @@ class _AdicionarServicoState extends State<AdicionarServico> {
                           Text('Não achou sua tag? ', style: TextStyle(color: Colors.grey[600])),
                           InkWell(
                             onTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Funcionalidade "Criar nova tag" a ser implementada.')),
-                              );
-                            },
+  final TextEditingController novaTagController = TextEditingController();
+
+  showDialog(
+    context: context,
+    builder: (ctx) {
+      return AlertDialog(
+        title: const Text('Nova Tag'),
+        content: TextField(
+          controller: novaTagController,
+          decoration: const InputDecoration(
+            labelText: 'Nome da nova tag',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final nomeTag = novaTagController.text.trim();
+
+              if (nomeTag.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('O nome da tag não pode ser vazio.')),
+                );
+                return;
+              }
+
+              final existe = tagsDisponiveis.any((tag) =>
+                  (tag['nome'] as String).toLowerCase().trim() == nomeTag.toLowerCase());
+
+              if (existe) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Essa tag já existe.')),
+                );
+                return;
+              }
+
+              Navigator.of(ctx).pop(); // fecha o dialog
+
+              final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/tags');
+              final body = jsonEncode({
+                'nome': nomeTag,
+                'status': 'Ativo',
+              });
+
+              try {
+                final response = await http.post(
+                  uri,
+                  headers: {'Content-Type': 'application/json'},
+                  body: body,
+                );
+
+                if (response.statusCode == 201 || response.statusCode == 200) {
+                  final novaTag = jsonDecode(utf8.decode(response.bodyBytes));
+                  setState(() {
+                    tagsDisponiveis.add(novaTag);
+                    if (tagsSelecionadas.length < 3) {
+                      tagsSelecionadas.add(novaTag['id']);
+                    }
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Tag criada com sucesso!')),
+                  );
+                } else {
+                  final msg = jsonDecode(response.body)['message'] ?? 'Erro ao criar tag.';
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(msg)),
+                  );
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Erro de conexão: $e')),
+                );
+              }
+            },
+            child: const Text('Criar'),
+          ),
+        ],
+      );
+    },
+  );
+},
                             child: const Text(
                               'Crie uma nova',
                               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),

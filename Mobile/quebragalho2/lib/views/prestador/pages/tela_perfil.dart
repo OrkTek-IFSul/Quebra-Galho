@@ -383,7 +383,7 @@ class _PerfilPageState extends State<PerfilPage> {
               duracao: servico['duracao'] ?? 0,
               descricao: servico['descricao'] ?? '',
               tags: tagsServico,
-              onDelete: () => _confirmarExcluirImagem(servico['id']),
+              onDelete: () => desabilitarServico(servico['id']),
               onTap: () => _navegarEAtualizar(EditarServico(
                 idPrestador: idPrestador!,
                 idServico: servico['id'],
