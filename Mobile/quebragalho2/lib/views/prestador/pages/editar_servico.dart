@@ -123,8 +123,8 @@ class _EditarServicoState extends State<EditarServico> {
             itemBuilder: (_, i) => ListTile(
               title: Text(restantes[i]['nome']),
               onTap: () {
-                if (tagsSelecionadas.length >= 3) {
-                  _mostrarSnack('Máximo de 3 tags');
+                if (tagsSelecionadas.length >= 1) {
+                  _mostrarSnack('Máximo de 1 tag');
                 } else {
                   setState(() => tagsSelecionadas.add(restantes[i]['id']));
                 }

@@ -151,12 +151,12 @@ class _AdicionarServicoState extends State<AdicionarServico> {
                     title: Text(tag['nome']),
                     onTap: () {
                       setState(() {
-                        if (tagsSelecionadas.length < 3) {
+                        if (tagsSelecionadas.length < 1) {
                           tagsSelecionadas.add(tag['id']);
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Você pode adicionar no máximo 3 tags.'),
+                              content: Text('Você pode adicionar no máximo 1 tag.'),
                             ),
                           );
                         }
@@ -328,7 +328,7 @@ class _AdicionarServicoState extends State<AdicionarServico> {
                         children: [
                           const Text('Tags / Categorias', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                           const SizedBox(width: 15),
-                          Text('Adicione até 3 tags', style: TextStyle(color: Colors.grey[600])),
+                          Text('Adicione até 1 tags', style: TextStyle(color: Colors.grey[600])),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -426,7 +426,7 @@ class _AdicionarServicoState extends State<AdicionarServico> {
                   final novaTag = jsonDecode(utf8.decode(response.bodyBytes));
                   setState(() {
                     tagsDisponiveis.add(novaTag);
-                    if (tagsSelecionadas.length < 3) {
+                    if (tagsSelecionadas.length < 1) {
                       tagsSelecionadas.add(novaTag['id']);
                     }
                   });
