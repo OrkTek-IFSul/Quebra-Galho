@@ -13,8 +13,8 @@ class EditarMeusDados extends StatefulWidget {
   final String email;
   final String documento;
   final String descricao;
-  final String? horarioInicio; // ISO string ou null
-  final String? horarioFim;    // ISO string ou null
+  final String? horarioInicio;
+  final String? horarioFim;
 
   const EditarMeusDados({
     super.key,
@@ -45,37 +45,54 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
   int? idUsuario;
   int? idPrestador;
 
-  final telefoneMask = MaskTextInputFormatter(mask: '(##) #####-####', filter: {"#": RegExp(r'\d')});
-  final documentoMask = MaskTextInputFormatter(
+  final telefoneMask = MaskTextInputFormatter(
+    mask: '(##) #####-####',
+    filter: {"#": RegExp(r'\d')},
+  );
+
+  final maskCPF = MaskTextInputFormatter(
     mask: '###.###.###-##',
     filter: {"#": RegExp(r'\d')},
     type: MaskAutoCompletionType.lazy,
   );
 
+  final maskCNPJ = MaskTextInputFormatter(
+    mask: '##.###.###/####-##',
+    filter: {"#": RegExp(r'\d')},
+    type: MaskAutoCompletionType.lazy,
+  );
+
+  late MaskTextInputFormatter documentoMask;
+
   @override
   void initState() {
     super.initState();
 
+    // Detecta se documento é CPF ou CNPJ para usar a máscara correta
+    final documentoDigits = widget.documento.replaceAll(RegExp(r'\D'), '');
+    if (documentoDigits.length > 11) {
+      documentoMask = maskCNPJ;
+    } else {
+      documentoMask = maskCPF;
+    }
+
     nomeController = TextEditingController(text: widget.nome);
-    telefoneController = TextEditingController(text: widget.telefone);
+    telefoneController = TextEditingController(text: telefoneMask.maskText(widget.telefone));
     emailController = TextEditingController(text: widget.email);
     descricaoController = TextEditingController(text: widget.descricao);
-    documentoController = TextEditingController(text: widget.documento);
+    documentoController = TextEditingController(text: documentoMask.maskText(documentoDigits));
 
-    // Preenche os horários com a parte "HH:mm" se existir
-    if (widget.horarioInicio != null) {
-      try {
-        horaInicioSelecionada = widget.horarioInicio!.substring(11, 16);
-      } catch (_) {
-        horaInicioSelecionada = null;
-      }
-    }
-    if (widget.horarioFim != null) {
-      try {
-        horaFimSelecionada = widget.horarioFim!.substring(11, 16);
-      } catch (_) {
-        horaFimSelecionada = null;
-      }
+    final horariosValidos = gerarHorarios();
+
+    try {
+      final inicio = widget.horarioInicio?.substring(11, 16);
+      final fim = widget.horarioFim?.substring(11, 16);
+
+      horaInicioSelecionada = horariosValidos.contains(inicio) ? inicio : null;
+      horaFimSelecionada = horariosValidos.contains(fim) ? fim : null;
+    } catch (_) {
+      horaInicioSelecionada = null;
+      horaFimSelecionada = null;
     }
 
     carregarIds();
@@ -118,9 +135,9 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
     if (idUsuario == null || idPrestador == null) return;
 
     final nome = nomeController.text.trim();
-    final telefone = telefoneMask.getUnmaskedText();
+    final telefone = telefoneController.text.replaceAll(RegExp(r'\D'), '');
     final email = emailController.text.trim();
-    final documento = documentoMask.getUnmaskedText();
+    final documento = documentoController.text.replaceAll(RegExp(r'\D'), '');
     final descricao = descricaoController.text.trim();
 
     if (horaInicioSelecionada == null || horaFimSelecionada == null) {
@@ -129,6 +146,7 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
       );
       return;
     }
+
     if (_horaToInt(horaFimSelecionada!) <= _horaToInt(horaInicioSelecionada!)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('O horário de fim deve ser maior que o de início.')),
@@ -137,13 +155,18 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
     }
 
     try {
+      // Atualiza os dados do usuário
       await http.put(
         Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/$idUsuario'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'nome': nome, 'telefone': telefone, 'email': email}),
+        body: jsonEncode({
+          'nome': nome,
+          'telefone': telefone,
+          'email': email,
+        }),
       );
 
-      final horarioInicio = '2025-06-17T$horaInicioSelecionada:00'; // completando segundos
+      final horarioInicio = '2025-06-17T$horaInicioSelecionada:00';
       final horarioFim = '2025-06-17T$horaFimSelecionada:00';
 
       final prestadorBody = jsonEncode({
@@ -179,6 +202,7 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
     required TextEditingController controller,
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
+    bool readOnly = false,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,6 +213,7 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
           controller: controller,
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,
+          readOnly: readOnly,
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.grey.shade100,
@@ -243,29 +268,13 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
               keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 20),
-            Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    const Text('Documento', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-    const SizedBox(height: 8),
-    TextField(
-      controller: documentoController,
-      readOnly: true,
-      keyboardType: TextInputType.number,
-      inputFormatters: [documentoMask],
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: Colors.grey.shade100,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.0),
-          borderSide: BorderSide.none,
-        ),
-      ),
-    ),
-  ],
-),
-
+            buildTextField(
+              label: 'Documento (CPF ou CNPJ)',
+              controller: documentoController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [documentoMask],
+              readOnly: true, // **Não pode editar**
+            ),
             const SizedBox(height: 20),
             buildTextField(label: 'Descrição', controller: descricaoController),
             const SizedBox(height: 24),

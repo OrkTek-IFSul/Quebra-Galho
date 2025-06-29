@@ -13,8 +13,7 @@ class EditarDadosPage extends StatefulWidget {
 }
 
 class _EditarDadosPageState extends State<EditarDadosPage> {
-  final String _cpf = "123.456.789-00";
-
+  final TextEditingController _documentoController = TextEditingController();
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _telefoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -22,15 +21,24 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
   int? _usuarioId;
   bool _isLoading = true;
 
-  final maskTelefone = MaskTextInputFormatter(
-    mask: '(##) #####-####',
+  final maskCPF = MaskTextInputFormatter(
+    mask: '###.###.###-##',
     filter: {"#": RegExp(r'[0-9]')},
     type: MaskAutoCompletionType.lazy,
   );
 
+  final maskCNPJ = MaskTextInputFormatter(
+    mask: '##.###.###/####-##',
+    filter: {"#": RegExp(r'[0-9]')},
+    type: MaskAutoCompletionType.lazy,
+  );
+
+  late MaskTextInputFormatter currentMask;
+
   @override
   void initState() {
     super.initState();
+    currentMask = maskCPF;
     _inicializar();
   }
 
@@ -68,10 +76,22 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (!mounted) return;
+
+        final documentoOriginal = data['documento'] ?? '';
+        final digitsOnly = documentoOriginal.replaceAll(RegExp(r'\D'), '');
+
+        // Detecta máscara conforme dígitos
+        if (digitsOnly.length > 11) {
+          currentMask = maskCNPJ;
+        } else {
+          currentMask = maskCPF;
+        }
+
         setState(() {
           _nomeController.text = data['nome'] ?? '';
           _telefoneController.text = data['telefone'] ?? '';
           _emailController.text = data['email'] ?? '';
+          _documentoController.text = currentMask.maskText(digitsOnly);
         });
       } else {
         throw Exception('Erro ao buscar dados do usuário');
@@ -102,6 +122,7 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
       "nome": _nomeController.text,
       "email": _emailController.text,
       "telefone": _telefoneController.text,
+      // Não envia documento pois não altera
     };
 
     try {
@@ -136,6 +157,7 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
     _nomeController.dispose();
     _telefoneController.dispose();
     _emailController.dispose();
+    _documentoController.dispose();
     super.dispose();
   }
 
@@ -144,7 +166,10 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: Text ("Editar Dados", style: TextStyle(fontWeight: FontWeight.bold),),
+        title: const Text(
+          "Editar Dados",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -163,9 +188,7 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                
                   const SizedBox(height: 14),
-
                   const Text("Nome completo"),
                   const SizedBox(height: 8),
                   TextField(
@@ -173,17 +196,21 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
                     decoration: _customInputDecoration("Digite seu nome completo"),
                   ),
                   const SizedBox(height: 20),
-
                   const Text("Telefone"),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _telefoneController,
                     keyboardType: TextInputType.number,
-                    inputFormatters: [maskTelefone],
+                    inputFormatters: [
+                      MaskTextInputFormatter(
+                        mask: '(##) #####-####',
+                        filter: {"#": RegExp(r'[0-9]')},
+                        type: MaskAutoCompletionType.lazy,
+                      )
+                    ],
                     decoration: _customInputDecoration("(00) 00000-0000"),
                   ),
                   const SizedBox(height: 20),
-
                   const Text("Email"),
                   const SizedBox(height: 8),
                   TextField(
@@ -192,17 +219,14 @@ class _EditarDadosPageState extends State<EditarDadosPage> {
                     decoration: _customInputDecoration("exemplo@email.com"),
                   ),
                   const SizedBox(height: 20),
-
-                  const Text("CPF"),
+                  const Text("CPF ou CNPJ"),
                   const SizedBox(height: 8),
                   TextField(
-                    controller: TextEditingController(text: _cpf),
-                    enabled: false,
-                    decoration: _customInputDecoration("123.456.789-00"),
+                    controller: _documentoController,
+                    enabled: false, // Campo desabilitado para edição
+                    decoration: _customInputDecoration("Documento"),
                   ),
                   const SizedBox(height: 32),
-
-              
                 ],
               ),
             ),

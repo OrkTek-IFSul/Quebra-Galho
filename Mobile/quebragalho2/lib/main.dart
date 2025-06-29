@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:quebragalho2/views/cliente/pages/avaliacoes_prestador.dart';
-import 'package:quebragalho2/views/moderador/pages/moderador_page.dart';
-import 'package:quebragalho2/views/prestador/pages/avaliacoes_page_detalhes.dart';
-import 'package:quebragalho2/views/prestador/pages/lista_avaliacoes.dart';
 import 'package:quebragalho2/views/splash_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart'; // Arquivo gerado automaticamente
 
-void main() {
-  runApp(const MyApp());
+
+
+void main() async {;
+WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -14,9 +19,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: ModeradorPage(),
+      home: SplashScreen()
+
     );
   }
 }

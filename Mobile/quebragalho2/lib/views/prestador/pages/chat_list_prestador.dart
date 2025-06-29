@@ -3,22 +3,43 @@ import 'package:http/http.dart' as http;
 import 'package:quebragalho2/api_config.dart';
 import 'dart:convert';
 import 'package:quebragalho2/views/cliente/pages/chat_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class ChatListScreen extends StatefulWidget {
-  final int usuarioId;
-  const ChatListScreen({super.key, required this.usuarioId});
-
-  @override
-  _ChatListScreenState createState() => _ChatListScreenState();
+Future<int?> obterIdPrestador() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getInt('prestador_id');
 }
 
-class _ChatListScreenState extends State<ChatListScreen> {
+Future<int?> obterIdUsuario() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getInt('usuario_id');
+}
+
+class ChatListPrestador extends StatefulWidget {
+  const ChatListPrestador({super.key});
+
+  @override
+  _ChatListPrestadorState createState() => _ChatListPrestadorState();
+}
+
+class _ChatListPrestadorState extends State<ChatListPrestador> {
   late Future<List<dynamic>> _chatsFuture;
+  int? usuarioId;
 
   @override
   void initState() {
     super.initState();
-    _chatsFuture = fetchChats(widget.usuarioId);
+    _loadUsuarioIdAndChats();
+  }
+
+  Future<void> _loadUsuarioIdAndChats() async {
+    final id = await obterIdUsuario();
+    setState(() {
+      usuarioId = id;
+      if (usuarioId != null) {
+        _chatsFuture = fetchChats(usuarioId!);
+      }
+    });
   }
 
   Future<List<dynamic>> fetchChats(int usuarioId) async {
@@ -33,6 +54,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (usuarioId == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       appBar: AppBar(title: const Text("Minhas Conversas")),
       body: FutureBuilder<List<dynamic>>(
@@ -47,8 +73,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
           final chats = (snapshot.data! as List)
               .where((chat) =>
-                  (chat['participants'] as List).isNotEmpty &&
-                  (chat['participants'] as List).first == widget.usuarioId.toString())
+                  (chat['participants'] as List).length > 1 &&
+                  (chat['participants'] as List)[1].toString() == usuarioId.toString())
               .toList();
 
           if (chats.isEmpty) {
@@ -60,7 +86,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
             itemBuilder: (context, index) {
               final chat = chats[index];
               return ListTile(
-                title: Text(chat['prestadorNome'] ?? 'Sem nome'),
+                title: Text(chat['clienteNome'] ?? 'Sem nome'),
                 subtitle: Text(chat['lastMessage'] ?? ''),
                 onTap: () {
                   Navigator.push(

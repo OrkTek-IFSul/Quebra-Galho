@@ -133,30 +133,37 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
   }
 
   void _gerarHorariosDisponiveis() {
-    if (_duracaoServico == null || _horarioInicioPrestador == null || _horarioFimPrestador == null) return;
+  if (_duracaoServico == null || _horarioInicioPrestador == null || _horarioFimPrestador == null) return;
 
-    List<String> horariosGerados = [];
-    DateTime horarioAtual = _horarioInicioPrestador!;
+  List<String> horariosGerados = [];
+  DateTime horarioAtual = _horarioInicioPrestador!;
+  final agora = DateTime.now();
 
-    while (horarioAtual.add(Duration(minutes: _duracaoServico!)).isBefore(_horarioFimPrestador!) ||
-        horarioAtual.add(Duration(minutes: _duracaoServico!)).isAtSameMomentAs(_horarioFimPrestador!)) {
-      bool estaDisponivelNaApi = _horariosDisponiveisAPI.any((horaApi) =>
-        horaApi.year == horarioAtual.year &&
-        horaApi.month == horarioAtual.month &&
-        horaApi.day == horarioAtual.day &&
-        horaApi.hour == horarioAtual.hour &&
-        horaApi.minute == horarioAtual.minute);
+  while (horarioAtual.add(Duration(minutes: _duracaoServico!)).isBefore(_horarioFimPrestador!) ||
+      horarioAtual.add(Duration(minutes: _duracaoServico!)).isAtSameMomentAs(_horarioFimPrestador!)) {
+    
+    bool estaDisponivelNaApi = _horariosDisponiveisAPI.any((horaApi) =>
+      horaApi.year == horarioAtual.year &&
+      horaApi.month == horarioAtual.month &&
+      horaApi.day == horarioAtual.day &&
+      horaApi.hour == horarioAtual.hour &&
+      horaApi.minute == horarioAtual.minute);
 
-      if (estaDisponivelNaApi) {
+    if (estaDisponivelNaApi) {
+      if (_selectedDay.isAfter(DateTime(agora.year, agora.month, agora.day)) ||
+          (isSameDay(_selectedDay, agora) && horarioAtual.isAfter(agora))) {
         horariosGerados.add(DateFormat('HH:mm').format(horarioAtual));
       }
-      horarioAtual = horarioAtual.add(Duration(minutes: _duracaoServico!));
     }
 
-    setState(() {
-      _horariosDisponiveis = horariosGerados;
-    });
+    horarioAtual = horarioAtual.add(Duration(minutes: _duracaoServico!));
   }
+
+  setState(() {
+    _horariosDisponiveis = horariosGerados;
+  });
+}
+
 
   bool _isHorarioIndisponivel(String hora) {
     final dataHora = _criarDateTime(_selectedDay, hora);
@@ -271,7 +278,17 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
-                  _buildHorariosGrid(),
+_horariosDisponiveis.isEmpty
+  ? const Padding(
+      padding: EdgeInsets.only(top: 12),
+      child: Text(
+        'Não há mais horários disponíveis hoje.',
+        style: TextStyle(fontSize: 16, color: Colors.redAccent),
+        textAlign: TextAlign.center,
+      ),
+    )
+  : _buildHorariosGrid(),
+
                   const Spacer(),
                   SizedBox(
                     width: double.infinity,
@@ -286,7 +303,7 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
                       child: Text(
                         _selectedTime == null
                             ? 'SELECIONE UM HORÁRIO'
-                            : 'CONFIRMAR AGENDAMENTO PARA \$_selectedTime',
+                            : 'CONFIRMAR AGENDAMENTO PARA $_selectedTime',
                         style: const TextStyle(color: Colors.white),
                       ),
                     ),

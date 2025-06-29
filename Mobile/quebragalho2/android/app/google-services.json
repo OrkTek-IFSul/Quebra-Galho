@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "461538889702",
+    "project_id": "quebragalho-b86d5",
+    "storage_bucket": "quebragalho-b86d5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:461538889702:android:df79c9c1f5cd7e06ed9027",
+        "android_client_info": {
+          "package_name": "com.example.quebragalho2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCk6mJcqWPElRPClMARmyyylM6k6VIMYX8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
