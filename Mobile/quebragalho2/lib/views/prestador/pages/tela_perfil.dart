@@ -1,3 +1,4 @@
+// imports permanecem os mesmos
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import 'package:quebragalho2/views/prestador/pages/editar_servico.dart';
 import 'package:quebragalho2/views/prestador/pages/lista_avaliacoes.dart';
 import 'package:quebragalho2/views/prestador/pages/meus_dados.dart';
 import 'package:quebragalho2/views/prestador/pages/adicionar_portfolio.dart';
+import 'package:quebragalho2/views/prestador/pages/denuncias_aceitas_page.dart';
 import 'package:quebragalho2/views/prestador/widgets/servico_card.dart';
 import 'package:quebragalho2/views/cliente/pages/login_page.dart'; // obterIdPrestador
 
@@ -199,6 +201,43 @@ class _PerfilPageState extends State<PerfilPage> {
     }
   }
 
+  void showMigrarParaClienteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Migrar para cliente'),
+        content: const Text('Tem certeza de que deseja migrar para cliente?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const NavegacaoCliente()),
+                (route) => false,
+              );
+            },
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildListTile({
+    required String title,
+    required IconData icon,
+    required VoidCallback onTap,
+    String? subtitle,
+  }) {
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      subtitle: subtitle != null ? Text(subtitle) : null,
+      onTap: onTap,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (carregando) {
@@ -228,23 +267,23 @@ class _PerfilPageState extends State<PerfilPage> {
         title: const Text('Perfil'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.feedback),
-            onPressed: () {
-              if (idPrestador != null) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ListaAvaliacoesPage(idPrestador: idPrestador!),
-                  ),
-                );
-              }
-            },
+            icon: const Icon(Icons.feedback_outlined),
+            tooltip: 'Ver feedbacks',
+            onPressed: idPrestador == null
+                ? null
+                : () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ListaAvaliacoesPage(idPrestador: idPrestador!),
+                      ),
+                    ),
           )
         ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // Avatar e dados básicos
           Row(
             children: [
               Stack(
@@ -298,76 +337,80 @@ class _PerfilPageState extends State<PerfilPage> {
             label: const Text("Adicionar ao Portfólio"),
           ),
           const SizedBox(height: 16),
-          if (portfolio.isNotEmpty)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text("Meu Portfólio",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 10),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: portfolio.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                  ),
-                  itemBuilder: (context, index) {
-                    final imagem = portfolio[index];
-                    final imagemUrl = 'https://${ApiConfig.baseUrl}${imagem['imagemUrl']}';
-                    return Stack(
-                      children: [
-                        Positioned.fill(
-                          child: ClipRRect(
+          if (portfolio.isNotEmpty) ...[
+            const Text("Meu Portfólio",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: portfolio.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+              ),
+              itemBuilder: (context, index) {
+                final imagem = portfolio[index];
+                final imagemUrl = 'https://${ApiConfig.baseUrl}${imagem['imagemUrl']}';
+                return Stack(
+                  children: [
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(imagemUrl, fit: BoxFit.cover),
+                      ),
+                    ),
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: GestureDetector(
+                        onTap: () => _confirmarExcluirImagem(imagem['id']),
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
                             borderRadius: BorderRadius.circular(8),
-                            child: Image.network(imagemUrl, fit: BoxFit.cover),
                           ),
+                          child: const Icon(Icons.delete, size: 16, color: Colors.white),
                         ),
-                        Positioned(
-                          top: 4,
-                          right: 4,
-                          child: GestureDetector(
-                            onTap: () => _confirmarExcluirImagem(imagem['id']),
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: Colors.black54,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Icon(Icons.delete, size: 16, color: Colors.white),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-              ],
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
-          const Divider(height: 32),
-          ListTile(
-            leading: const Icon(Icons.person),
-            title: const Text("Editar meus dados"),
+            const SizedBox(height: 16),
+          ],
+          const SizedBox(height: 24),
+          _buildListTile(
+            title: 'Editar meus dados',
+            icon: Icons.account_box_outlined,
             onTap: () => _navegarEAtualizar(MeusDados()),
+            subtitle: 'Atualize seu perfil de forma rápida e segura.',
           ),
-          ListTile(
-            leading: const Icon(Icons.build),
-            title: const Text("Adicionar Serviço"),
+          _buildListTile(
+            title: 'Adicionar Serviço',
+            icon: Icons.build_outlined,
             onTap: () => _navegarEAtualizar(AdicionarServico(idPrestador: idPrestador!)),
+            subtitle: 'Adicione novos serviços ao seu perfil.',
           ),
-          ListTile(
-            leading: const Icon(Icons.swap_horiz),
-            title: const Text("Migrar para cliente"),
-            onTap: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const NavegacaoCliente()),
-                (route) => false,
-              );
-            },
+          _buildListTile(
+            title: 'Ver Denúncias Aceitas',
+            icon: Icons.report_outlined,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => DenunciasAceitasPage(idPrestador: idPrestador!),
+              ),
+            ),
+            subtitle: 'Visualize as denúncias aceitas contra seu perfil.',
+          ),
+          _buildListTile(
+            title: 'Migrar para cliente',
+            icon: Icons.swap_horiz_rounded,
+            onTap: () => showMigrarParaClienteDialog(context),
+            subtitle: 'Mude para perfil Cliente e solicite serviços.',
           ),
           const Divider(height: 32),
           Text("Serviços cadastrados",

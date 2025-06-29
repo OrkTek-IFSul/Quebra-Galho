@@ -59,9 +59,7 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
 
         await _carregarPortfolio(widget.id);
 
-        setState(() {
-          isLoading = false;
-        });
+        setState(() => isLoading = false);
       } else {
         throw Exception('Erro ao carregar dados (Status: ${response.statusCode})');
       }
@@ -100,30 +98,96 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
     );
   }
 
-  Widget _buildRatingStars(double rating) {
-    List<Widget> stars = [];
-    for (int i = 1; i <= 5; i++) {
-      IconData iconData = Icons.star_border;
-      Color color = Colors.grey;
-      if (i <= rating) {
-        iconData = Icons.star;
-        color = Colors.amber;
-      } else if (i - 0.5 <= rating) {
-        iconData = Icons.star_half;
-        color = Colors.amber;
-      }
-      stars.add(Icon(iconData, color: color, size: 20));
-    }
-    return Row(mainAxisSize: MainAxisSize.min, children: stars);
+  void _mostrarDialogoDenuncia(BuildContext context) {
+    final List<String> tipos = ['Conta', 'Resposta', 'Avaliação'];
+    String? tipoSelecionado;
+    TextEditingController motivoController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Denunciar Prestador'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: 'Tipo'),
+                items: tipos
+                    .map((tipo) => DropdownMenuItem(value: tipo, child: Text(tipo)))
+                    .toList(),
+                onChanged: (value) => tipoSelecionado = value,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: motivoController,
+                decoration: const InputDecoration(labelText: 'Motivo'),
+                maxLines: 2,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            ElevatedButton(
+              child: const Text('Enviar'),
+              onPressed: () async {
+                if (tipoSelecionado == null || motivoController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Preencha todos os campos')),
+                  );
+                  return;
+                }
+
+                final body = {
+                  "tipo": tipoSelecionado,
+                  "motivo": motivoController.text,
+                  "idConteudoDenunciado": widget.id,
+                  "denunciante": 5, // Substituir pelo ID real
+                  "denunciado": widget.id,
+                };
+
+                final response = await http.post(
+                  Uri.parse('http://${ApiConfig.baseUrl}/api/denuncia'),
+                  headers: {"Content-Type": "application/json"},
+                  body: jsonEncode(body),
+                );
+
+                Navigator.of(context).pop();
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      response.statusCode == 200 || response.statusCode == 201
+                          ? 'Denúncia enviada com sucesso!'
+                          : 'Erro ao denunciar: ${response.statusCode}',
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
-  Map<String, List<dynamic>> _groupServices(List<dynamic> services) {
-    Map<String, List<dynamic>> grouped = {};
-    for (var service in services) {
-      String key = service['nome'] ?? 'Outros';
-      grouped.putIfAbsent(key, () => []).add(service);
-    }
-    return grouped;
+  Widget _buildRatingStars(double rating) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (i) {
+        final index = i + 1;
+        if (index <= rating) {
+          return const Icon(Icons.star, color: Colors.amber, size: 20);
+        } else if (index - 0.5 <= rating) {
+          return const Icon(Icons.star_half, color: Colors.amber, size: 20);
+        } else {
+          return const Icon(Icons.star_border, color: Colors.grey, size: 20);
+        }
+      }),
+    );
   }
 
   @override
@@ -134,35 +198,46 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
       );
     }
 
-    final name = prestadorData!['nome'] ?? 'Prestador';
-    final imageUrl = prestadorData!['imagemPerfil'];
-    final rating = (prestadorData!['mediaAvaliacoes'] as num?)?.toDouble() ?? 0.0;
-    final tags = prestadorData!['tags'] ?? [];
-    final descricao = prestadorData!['descricao'] ?? '';
-    final servicos = prestadorData!['servicos'] ?? [];
-    final groupedServices = _groupServices(servicos);
+    if (prestadorData == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Erro')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('Erro ao carregar dados do prestador.'),
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: _fetchPrestadorDetails,
+                child: const Text('Tentar novamente'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final String name = prestadorData!['nome'];
+    final String? imageUrl = prestadorData!['imagemPerfil'];
+    final double rating = (prestadorData!['mediaAvaliacoes'] as num?)?.toDouble() ?? 0.0;
+    final List<dynamic> tags = prestadorData!['tags'] ?? [];
+    final String descricao = prestadorData!['descricao'];
+    final List<dynamic> servicos = prestadorData!['servicos'] ?? [];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detalhes'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-      ),
+      appBar: AppBar(title: const Text('Detalhes')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Perfil
             Center(
               child: Column(
                 children: [
                   CircleAvatar(
                     radius: 50,
-                    backgroundImage: imageUrl != null
-                        ? NetworkImage(imageUrl)
-                        : null,
+                    backgroundImage: imageUrl != null ? NetworkImage(imageUrl) : null,
                     child: imageUrl == null
-                        ? Text(name[0], style: const TextStyle(fontSize: 40))
+                        ? Text(name[0].toUpperCase(), style: const TextStyle(fontSize: 40))
                         : null,
                   ),
                   const SizedBox(height: 12),
@@ -185,21 +260,25 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
                 ],
               ),
             ),
-
             const SizedBox(height: 24),
             const Divider(),
-
-            // Descrição
             const Align(
               alignment: Alignment.centerLeft,
               child: Text('Sobre', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
             const SizedBox(height: 8),
             Text(descricao),
-
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () => _mostrarDialogoDenuncia(context),
+              icon: const Icon(Icons.report_problem_outlined),
+              label: const Text('Denunciar'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade100,
+                foregroundColor: Colors.red.shade900,
+              ),
+            ),
             const SizedBox(height: 24),
-
-            // Portfólio
             if (portfolio.isNotEmpty) ...[
               const Align(
                 alignment: Alignment.centerLeft,
@@ -224,7 +303,8 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
                           width: 120,
                           height: 120,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.broken_image),
                         ),
                       ),
                     );
@@ -233,10 +313,7 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
               ),
               const SizedBox(height: 24),
             ],
-
             const Divider(),
-
-            // Lista de serviços
             const Align(
               alignment: Alignment.centerLeft,
               child: Text('Serviços', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -245,51 +322,48 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: groupedServices.length,
-              itemBuilder: (_, i) {
-                final nome = groupedServices.keys.elementAt(i);
-                final servicosGrupo = groupedServices[nome]!;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: servicosGrupo.map((servico) {
-                    return ListTile(
-                      title: Text(servico['nome']),
-                      subtitle: Text(servico['descricao'] ?? ''),
-                      trailing: Text('R\$ ${servico['preco']?.toStringAsFixed(2) ?? '0.00'}'),
-                      onTap: () {
-                        if (!widget.isLoggedIn) {
-                          showDialog(
-                            context: context,
-                            builder: (_) => AlertDialog(
-                              title: const Text('Atenção'),
-                              content: const Text('Você precisa estar logado para agendar.'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => LoginPage()));
-                                  },
-                                  child: const Text('Fazer login'),
-                                ),
-                              ],
+              itemCount: servicos.length,
+              itemBuilder: (_, index) {
+                final servico = servicos[index];
+                return ListTile(
+                  title: Text(servico['nome']),
+                  subtitle: Text(servico['descricao'] ?? ''),
+                  trailing: Text('R\$ ${servico['preco']?.toStringAsFixed(2) ?? '0.00'}'),
+                  onTap: () {
+                    if (!widget.isLoggedIn) {
+                      showDialog(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          title: const Text('Atenção'),
+                          content: const Text('Você precisa estar logado para agendar.'),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => LoginPage()),
+                                );
+                              },
+                              child: const Text('Fazer login'),
                             ),
-                          );
-                          return;
-                        }
+                          ],
+                        ),
+                      );
+                      return;
+                    }
 
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => AgendamentoPage(
-                              servico: servico['nome'],
-                              servicoId: servico['id'],
-                              prestadorId: widget.id,
-                            ),
-                          ),
-                        );
-                      },
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AgendamentoPage(
+                          servico: servico['nome'],
+                          servicoId: servico['id'],
+                          prestadorId: widget.id,
+                        ),
+                      ),
                     );
-                  }).toList(),
+                  },
                 );
               },
             ),
