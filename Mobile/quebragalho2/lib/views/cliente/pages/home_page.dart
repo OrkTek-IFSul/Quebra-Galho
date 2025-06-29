@@ -487,20 +487,21 @@ class _HomePageState extends State<HomePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(height: 20),
-                          Container(
-                            width: double.infinity,
-                            margin: const EdgeInsets.only(bottom: 16),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(24),
-                              image: const DecorationImage(
-                                image: AssetImage(
-                                  'assets/images/banner_homepage.png',
-                                ),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            height: 200,
-                          ),
+                          // Banner desabilitado:
+                          // Container(
+                          //   width: double.infinity,
+                          //   margin: const EdgeInsets.only(bottom: 16),
+                          //   decoration: BoxDecoration(
+                          //     borderRadius: BorderRadius.circular(24),
+                          //     image: const DecorationImage(
+                          //       image: AssetImage(
+                          //         'assets/images/banner_homepage.png',
+                          //       ),
+                          //       fit: BoxFit.cover,
+                          //     ),
+                          //   ),
+                          //   height: 200,
+                          // ),
                           Row(
                             children: [
                               Text(

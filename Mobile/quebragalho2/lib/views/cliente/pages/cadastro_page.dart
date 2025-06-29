@@ -500,7 +500,7 @@ class _CadastroPageState extends State<CadastroPage>
         backgroundColor: const Color(0xFFF7F8FA), // Fundo cinza claro
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
-          title: const Text("Crie sua Conta"),
+          title: const Text("Crie sua Conta", style:TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           centerTitle: true,
           elevation: 0,
           backgroundColor: Colors.transparent,
