@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:quebragalho2/api_config.dart';
-import 'package:quebragalho2/views/moderador/pages/detalhes_apelo_page.dart';
-import 'package:quebragalho2/views/moderador/pages/detalhes_denuncia_page.dart';
-import 'package:quebragalho2/views/moderador/pages/detalhes_prestador_page.dart';
+import 'package:quebragalho2/views/moderador/detalhes_apelo_page.dart';
+import 'package:quebragalho2/views/moderador/detalhes_denuncia_page.dart';
+import 'package:quebragalho2/views/moderador/detalhes_prestador_page.dart';
 
 enum ListaTipo { usuarios, prestadores, denuncias, apelos }
 
