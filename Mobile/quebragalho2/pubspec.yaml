@@ -1,5 +1,5 @@
-name: quebragalho2
-description: "A new Flutter project."
+name: Quebra-Galho
+description: "Aplicativo de agendamento de serviços domésticos"
 publish_to: 'none'
 version: 0.1.0
 
@@ -22,6 +22,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
@@ -30,7 +31,10 @@ flutter:
     - assets/confetti.json
     - assets/welcome.json
     - assets/images/logo.png
+    - assets/images/logo_black.png
     - assets/images/illustracao_telaselecaoperfil.png
+    - assets/images/banner_homepage.png
+    - assets/images/Launcher_icon.png
 
   fonts:
     - family: Manrope
@@ -41,3 +45,13 @@ flutter:
           weight: 700
         - asset: assets/fonts/Manrope-ExtraBold.ttf
           weight: 900
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/Launcher_icon.png"  # Caminho para o seu ícone base (1024x1024px recomendado)
+  # Configurações opcionais para Android (ícones adaptativos)
+  android_adaptive_icon_foreground: "assets/images/logo_black.png"  # Ícone de primeiro plano (opcional)
+  android_adaptive_icon_background: "#000000"  # Cor de fundo (ou caminho para imagem)
+ 
+  remove_alpha_ios: true  # Remove transparência se necessário

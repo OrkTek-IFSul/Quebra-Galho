@@ -210,7 +210,7 @@ class _EditarMeusDadosState extends State<EditarMeusDados> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Editar dados'),
+        title: const Text('Editar dados', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),),
         centerTitle: true,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,

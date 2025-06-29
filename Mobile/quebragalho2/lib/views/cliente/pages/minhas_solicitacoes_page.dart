@@ -23,19 +23,17 @@ class _MinhasSolicitacoesPageState extends State<MinhasSolicitacoesPage> {
   int? _usuarioId;
 
   @override
-void initState() {
-  super.initState();
+  void initState() {
+    super.initState();
 
-  obterIdUsuario().then((id) {
-    if (!mounted) return;
-    setState(() {
-      _usuarioId = id;
+    obterIdUsuario().then((id) {
+      if (!mounted) return;
+      setState(() {
+        _usuarioId = id;
+      });
+      _carregarSolicitacoes(); // <-- Chama o carregamento com o ID certo
     });
-    _carregarSolicitacoes(); // <-- Chama o carregamento com o ID certo
-  });
-}
-
-  
+  }
 
   String _formatarData(String dataString) {
     final data = DateTime.parse(dataString);
@@ -43,8 +41,8 @@ void initState() {
   }
 
   String _formatarBool(dynamic valor) {
-    if (valor == true) return 'Sim';
-    if (valor == false) return 'Não';
+    if (valor == true) return 'Aceito';
+    if (valor == false) return 'Negado';
     return 'Pendente';
   }
 
@@ -59,7 +57,9 @@ void initState() {
 
     try {
       final response = await http.get(
-        Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/solicitacoes/$_usuarioId'),
+        Uri.parse(
+          'https://${ApiConfig.baseUrl}/api/usuario/solicitacoes/$_usuarioId',
+        ),
       );
 
       if (response.statusCode == 200) {
@@ -87,10 +87,12 @@ void initState() {
       if (query.isEmpty) {
         _solicitacoesFiltradas = _solicitacoes;
       } else {
-        _solicitacoesFiltradas = _solicitacoes.where((item) {
-          final nomePrestador = item['nome_prestador'].toString().toLowerCase();
-          return nomePrestador.contains(query.toLowerCase());
-        }).toList();
+        _solicitacoesFiltradas =
+            _solicitacoes.where((item) {
+              final nomePrestador =
+                  item['nome_prestador'].toString().toLowerCase();
+              return nomePrestador.contains(query.toLowerCase());
+            }).toList();
       }
     });
   }
@@ -98,7 +100,13 @@ void initState() {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Minhas Solicitações")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        centerTitle: true,
+        title: const Text("Minhas Solicitações", 
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      ),
       body: Column(
         children: [
           Padding(
@@ -106,7 +114,7 @@ void initState() {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Buscar prestador...',
+                hintText: 'Buscar...',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -116,44 +124,47 @@ void initState() {
             ),
           ),
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _solicitacoesFiltradas.isEmpty
-                    ? const Center(child: Text('Nenhuma solicitação encontrada.'))
+            child:
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _solicitacoesFiltradas.isEmpty
+                    ? const Center(
+                      child: Text('Nenhuma solicitação encontrada.'),
+                    )
                     : ListView.builder(
-                        itemCount: _solicitacoesFiltradas.length,
-                        itemBuilder: (context, index) {
-                          final item = _solicitacoesFiltradas[index];
+                      itemCount: _solicitacoesFiltradas.length,
+                      itemBuilder: (context, index) {
+                        final item = _solicitacoesFiltradas[index];
 
-                          return SolicitacaoWidget(
-                            nome: item['nome_prestador'] ?? 'Não informado',
-                            horario: _formatarData(item['horario']),
-                            statusServico: _formatarBool(item['status_servico']),
-                            statusAceito: _formatarBool(item['status_aceito']),
-                            idAgendamento: item['id_agendamento'].toString(),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => DetalhesSolicitacaoPage(
-                                    agendamentoId: item['id_agendamento'],
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
+                        return SolicitacaoWidget(
+                          nome: item['nome_prestador'] ?? 'Não informado',
+                          horario: _formatarData(item['horario']),
+                          statusServico: _formatarBool(item['status_servico']),
+                          statusAceito: _formatarBool(item['status_aceito']),
+                          idAgendamento: item['id_agendamento'].toString(),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (_) => DetalhesSolicitacaoPage(
+                                      agendamentoId: item['id_agendamento'],
+                                    ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
           ),
         ],
       ),
     );
   }
-  
+
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 }
-

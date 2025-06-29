@@ -119,7 +119,14 @@ class _MeusDadosState extends State<MeusDados> {
 
     if (usuario == null || prestador == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Meus Dados')),
+        appBar: AppBar(
+          centerTitle: true,
+          backgroundColor: Colors.white,
+          title: const Text('Meus Dados', 
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18
+              ),)),
         body: const Center(child: Text('Erro ao carregar dados.')),
       );
     }
@@ -137,7 +144,7 @@ class _MeusDadosState extends State<MeusDados> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Meus Dados', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Meus Dados', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 1.0,

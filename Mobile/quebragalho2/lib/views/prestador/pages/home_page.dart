@@ -168,7 +168,7 @@ class _HomePageState extends State<HomePage> {
                 return SolicitacaoClienteCard(
                   nome: solicitacao['nomeDoUsuario'],
                   fotoUrl:
-                      'https://${ApiConfig.baseUrl}/${solicitacao['fotoPerfilUsuario']}',
+                      'https://${ApiConfig.baseUrl}${solicitacao['fotoPerfilUsuario']}',
                   idAgendamento: solicitacao['idAgendamento'],
                   isConfirmed: solicitacao['statusPedidoAgendamento'] == true,
                   isCanceled: solicitacao['statusPedidoAgendamento'] == false,
@@ -184,7 +184,7 @@ class _HomePageState extends State<HomePage> {
                         builder: (_) => DetalhesSolicitacaoPage(
                           nome: solicitacao['nomeDoUsuario'],
                           fotoUrl:
-                              'https://${ApiConfig.baseUrl}/${solicitacao['fotoPerfilUsuario']}',
+                              'https://${ApiConfig.baseUrl}${solicitacao['fotoPerfilUsuario']}',
                           servico: solicitacao['nomeServico'],
                           dataHora: dataHoraFormatada,
                           valorTotal: solicitacao['precoServico'].toDouble(),

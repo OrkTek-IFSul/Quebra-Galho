@@ -366,6 +366,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
@@ -378,24 +379,24 @@ class _HomePageState extends State<HomePage> {
                     // Foto de perfil ou avatar padrão
                     _profileImageUrl != null
                         ? GestureDetector(
-                            onTap: _confirmLogout,
-                            child: CircleAvatar(
-                              radius: 25,
-                              backgroundImage: NetworkImage(_profileImageUrl!),
-                              backgroundColor: Colors.transparent,
-                              onBackgroundImageError: (exception, stackTrace) {
-                                print('Erro ao carregar imagem: $exception');
-                              },
-                            ),
-                          )
-                        : GestureDetector(
-                            onTap: _confirmLogout,
-                            child: const CircleAvatar(
-                              radius: 25,
-                              backgroundColor: Color(0xFFF0F0F0),
-                              child: Icon(Icons.person, color: Colors.black87),
-                            ),
+                          onTap: _confirmLogout,
+                          child: CircleAvatar(
+                            radius: 25,
+                            backgroundImage: NetworkImage(_profileImageUrl!),
+                            backgroundColor: Colors.transparent,
+                            onBackgroundImageError: (exception, stackTrace) {
+                              print('Erro ao carregar imagem: $exception');
+                            },
                           ),
+                        )
+                        : GestureDetector(
+                          onTap: _confirmLogout,
+                          child: const CircleAvatar(
+                            radius: 25,
+                            backgroundColor: Color(0xFFF0F0F0),
+                            child: Icon(Icons.person, color: Colors.black87),
+                          ),
+                        ),
                     const SizedBox(width: 12),
                     // Textos de boas-vindas
                     Expanded(
@@ -422,7 +423,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                 )
                 : const Text(
-                  '',
+                  'Bem-vindo',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -457,7 +458,7 @@ class _HomePageState extends State<HomePage> {
                   shape: BoxShape.circle,
                 ),
                 child: IconButton(
-                  icon: const Icon(Icons.login),
+                  icon: const Icon(Icons.person_2_outlined),
                   onPressed:
                       () => Navigator.push(
                         context,
@@ -474,81 +475,76 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(width: 12),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  "O que você precisa pra hoje?",
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12),
-            TextField(
-              controller: searchController,
-              decoration: InputDecoration(
-                hintText: 'Pesquise pelo nome do usuário ou empresa',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: Colors.grey[200],
-              ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 40,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: categories.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder:
-                    (context, index) => _buildCategoryChip(categories[index]),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Column(
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.bolt, color: const Color.fromARGB(255, 63, 63, 63)),
-                    Text(
-                      'Prestadores',
-                      style: TextStyle(
-                        color: const Color.fromARGB(255, 112, 112, 112),
-                        fontWeight: FontWeight.bold,
+      body:
+          isLoggedIn
+              ? CustomScrollView(
+                slivers: [
+                  // Banner, texto e "Prestadores"
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: 20),
+                          Container(
+                            width: double.infinity,
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(24),
+                              image: const DecorationImage(
+                                image: AssetImage(
+                                  'assets/images/banner_homepage.png',
+                                ),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            height: 200,
+                          ),
+                          Row(
+                            children: [
+                              Text(
+                                "O que você precisa pra hoje?",
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-               
-              ],
-            ),
-            Expanded(
-              child:
+                  ),
+                  // Barra de busca e tags fixas
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _SliverSearchAndTagsDelegate(
+                      searchController: searchController,
+                      categories: categories,
+                      buildCategoryChip: _buildCategoryChip,
+                      horizontalPadding: 16.0, // Adicione este parâmetro
+                    ),
+                  ),
+                  // Lista de prestadores
+                  SliverToBoxAdapter(child: SizedBox(height: 12)),
                   isLoading
-                      ? const Center(child: CircularProgressIndicator())
+                      ? SliverFillRemaining(
+                        child: Center(child: CircularProgressIndicator()),
+                      )
                       : _prestadoresFiltrados.isEmpty
-                      ? const Center(
-                        child: Text(
-                          'Nenhum prestador encontrado.\nTente ajustar sua busca ou filtros.',
-                          textAlign: TextAlign.center,
+                      ? SliverFillRemaining(
+                        child: Center(
+                          child: Text(
+                            'Nenhum prestador encontrado.\nTente ajustar sua busca ou filtros.',
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       )
-                      : ListView.builder(
-                        itemCount: _prestadoresFiltrados.length,
-                        itemBuilder: (context, index) {
+                      : SliverList(
+                        delegate: SliverChildBuilderDelegate((context, index) {
                           final prestador = _prestadoresFiltrados[index];
                           final String imageUrl =
                               (prestador['imagemPerfil'] != null &&
@@ -604,12 +600,102 @@ class _HomePageState extends State<HomePage> {
                               }
                             },
                           );
-                        },
+                        }, childCount: _prestadoresFiltrados.length),
                       ),
+                ],
+              )
+              : Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ...conteúdo para não logado...
+                  ],
+                ),
+              ),
+    );
+  }
+}
+
+// Delegate para manter busca e tags fixas
+class _SliverSearchAndTagsDelegate extends SliverPersistentHeaderDelegate {
+  final TextEditingController searchController;
+  final List<String> categories;
+  final Widget Function(String) buildCategoryChip;
+  final double horizontalPadding;
+
+  _SliverSearchAndTagsDelegate({
+    required this.searchController,
+    required this.categories,
+    required this.buildCategoryChip,
+    this.horizontalPadding = 0,
+  });
+
+  @override
+  double get minExtent => 150;
+  @override
+  double get maxExtent => 150;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      color: Colors.white,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+        child: Column(
+          children: [
+            TextField(
+              controller: searchController,
+              decoration: InputDecoration(
+                hintText: 'Pesquise pelo nome do usuário ou empresa',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                fillColor: Colors.grey[200],
+              ),
             ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 40,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: categories.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder:
+                    (context, index) => buildCategoryChip(categories[index]),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(Icons.bolt, color: const Color.fromARGB(255, 63, 63, 63)),
+                Text(
+                  'Prestadores',
+                  style: TextStyle(
+                    color: const Color.fromARGB(255, 112, 112, 112),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
           ],
         ),
       ),
     );
+  }
+
+  @override
+  bool shouldRebuild(covariant _SliverSearchAndTagsDelegate oldDelegate) {
+    return searchController != oldDelegate.searchController ||
+         categories != oldDelegate.categories ||
+         buildCategoryChip != oldDelegate.buildCategoryChip;
   }
 }

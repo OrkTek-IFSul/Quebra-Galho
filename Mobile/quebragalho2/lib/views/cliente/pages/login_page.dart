@@ -156,12 +156,18 @@ class _LoginPageState extends State<LoginPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 20),
+              const SizedBox(height: 32),
+              Image.asset(
+                'assets/images/logo_black.png',
+                height: 100,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(height: 30),
               const Text(
                 'Bem-vindo',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 32,
+                  fontSize: 25,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),

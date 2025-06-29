@@ -55,27 +55,37 @@ class _ChatListPrestadorState extends State<ChatListPrestador> {
   @override
   Widget build(BuildContext context) {
     if (usuarioId == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     return Scaffold(
-      appBar: AppBar(title: const Text("Minhas Conversas")),
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text(
+          "Minhas Conversas",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+      ),
       body: FutureBuilder<List<dynamic>>(
         future: _chatsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+          if (snapshot.hasError ||
+              !snapshot.hasData ||
+              snapshot.data!.isEmpty) {
             return const Center(child: Text("Nenhuma conversa disponível."));
           }
 
-          final chats = (snapshot.data! as List)
-              .where((chat) =>
-                  (chat['participants'] as List).length > 1 &&
-                  (chat['participants'] as List)[1].toString() == usuarioId.toString())
-              .toList();
+          final chats =
+              (snapshot.data! as List)
+                  .where(
+                    (chat) =>
+                        (chat['participants'] as List).length > 1 &&
+                        (chat['participants'] as List)[1].toString() ==
+                            usuarioId.toString(),
+                  )
+                  .toList();
 
           if (chats.isEmpty) {
             return const Center(child: Text("Nenhuma conversa disponível."));
@@ -85,19 +95,35 @@ class _ChatListPrestadorState extends State<ChatListPrestador> {
             itemCount: chats.length,
             itemBuilder: (context, index) {
               final chat = chats[index];
-              return ListTile(
-                title: Text(chat['clienteNome'] ?? 'Sem nome'),
-                subtitle: Text(chat['lastMessage'] ?? ''),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ChatScreen(
-                        chatId: chat['agendamentoId'].toString(),
+              return Column(
+                children: [
+                  ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.grey[300],
+                      child: const Icon(Icons.chat_bubble, color: Colors.black54),
+                    ),
+                    title: Text(
+                      chat['clienteNome'] ?? 'Sem nome',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  );
-                },
+                    subtitle: Text(chat['lastMessage'] ?? ''),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatScreen(
+                            chatId: chat['agendamentoId'].toString(),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  SizedBox(height: 12,),
+                  const Divider(height: 1, thickness: 1),
+                ],
               );
             },
           );

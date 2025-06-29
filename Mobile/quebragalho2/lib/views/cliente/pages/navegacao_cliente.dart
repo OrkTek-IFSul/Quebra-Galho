@@ -68,6 +68,7 @@ class _NavegacaoClienteState extends State<NavegacaoCliente> {
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: paginas),
       bottomNavigationBar: BottomAppBar(
+        color: Colors.white,
         shape: const CircularNotchedRectangle(),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,

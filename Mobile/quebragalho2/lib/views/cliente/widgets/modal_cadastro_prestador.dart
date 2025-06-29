@@ -32,10 +32,11 @@ void showCadastroPrestadorModal(BuildContext context) {
                   );
                 },
                 style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                child: const Text("Cadastre-se"),
+                child: const Text("Cadastre-se", style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),),
               ),
             ),
           ],
