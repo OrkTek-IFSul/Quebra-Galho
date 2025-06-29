@@ -34,22 +34,34 @@ class _ChatListScreenState extends State<ChatListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Minhas Conversas")),
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text(
+          "Minhas Conversas",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+      ),
       body: FutureBuilder<List<dynamic>>(
         future: _chatsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+          if (snapshot.hasError ||
+              !snapshot.hasData ||
+              snapshot.data!.isEmpty) {
             return const Center(child: Text("Nenhuma conversa disponível."));
           }
 
-          final chats = (snapshot.data! as List)
-              .where((chat) =>
-                  (chat['participants'] as List).isNotEmpty &&
-                  (chat['participants'] as List).first == widget.usuarioId.toString())
-              .toList();
+          final chats =
+              (snapshot.data! as List)
+                  .where(
+                    (chat) =>
+                        (chat['participants'] as List).isNotEmpty &&
+                        (chat['participants'] as List).first ==
+                            widget.usuarioId.toString(),
+                  )
+                  .toList();
 
           if (chats.isEmpty) {
             return const Center(child: Text("Nenhuma conversa disponível."));
@@ -59,19 +71,48 @@ class _ChatListScreenState extends State<ChatListScreen> {
             itemCount: chats.length,
             itemBuilder: (context, index) {
               final chat = chats[index];
-              return ListTile(
-                title: Text(chat['prestadorNome'] ?? 'Sem nome'),
-                subtitle: Text(chat['lastMessage'] ?? ''),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ChatScreen(
-                        chatId: chat['agendamentoId'].toString(),
+
+              final String imageUrl =
+                  (chat['prestadorFotoUrl'] != null &&
+                          chat['prestadorFotoUrl'].toString().isNotEmpty)
+                      ? 'https://${ApiConfig.baseUrl}/${chat['prestadorFotoUrl']}'
+                      : '';
+
+              return Column(
+                children: [
+                  ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: const Color.fromARGB(255, 235, 235, 235),
+                      child: const Icon(Icons.chat_outlined, size: 25,color: Colors.black54),
+                    ),
+                    title: Text(
+                      chat['prestadorNome'] ?? 'Sem nome',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  );
-                },
+                    subtitle: Text(
+                      chat['lastMessage'] ?? '',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatScreen(
+                            chatId: chat['agendamentoId'].toString(),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  SizedBox(height: 12,),
+                  const Divider(height: 1, thickness: 1),
+                ],
               );
             },
           );

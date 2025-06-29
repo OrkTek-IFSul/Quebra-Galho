@@ -33,10 +33,27 @@ class SolicitacaoWidget extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Prestador: $nome", style: const TextStyle(fontWeight: FontWeight.bold)),
-            Text("Horário: $horario"),
-            Text("Status Serviço: $statusServico"),
-            Text("Status Aceito: $statusAceito"),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Icon(Icons.calendar_month_outlined, size: 35,),
+                
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("$nome", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text("Data e Hora: $horario"),
+                  ],
+                ),
+                Column(
+                  children: [
+                    Text("Status"),
+                    Text("$statusAceito", style: TextStyle(fontWeight: FontWeight.bold),)
+                  ],
+                ),
+              ],
+            ),
+            
           ]
         ),
       ),

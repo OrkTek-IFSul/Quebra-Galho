@@ -43,20 +43,30 @@ class _NavegacaoPrestadorState extends State<NavegacaoPrestador> {
         children: paginas,
       ),
       bottomNavigationBar: BottomAppBar(
+        color: Colors.white,
         shape: const CircularNotchedRectangle(),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
             IconButton(
-              icon: const Icon(Icons.home),
+              icon: Icon(
+                Icons.home,
+                color: _selectedIndex == 0 ? Colors.black : Colors.grey,
+              ),
               onPressed: () => _onTabTapped(0),
             ),
-             IconButton(
-              icon: const Icon(Icons.chat_bubble_outline),
+            IconButton(
+              icon: Icon(
+                Icons.chat_bubble_outline,
+                color: _selectedIndex == 1 ? Colors.black : Colors.grey,
+              ),
               onPressed: () => _onTabTapped(1),
             ),
             IconButton(
-              icon: const Icon(Icons.person),
+              icon: Icon(
+                Icons.person,
+                color: _selectedIndex == 2 ? Colors.black : Colors.grey,
+              ),
               onPressed: () => _onTabTapped(2),
             ),
           ],

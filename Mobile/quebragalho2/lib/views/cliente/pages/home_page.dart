@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:quebragalho2/views/cliente/pages/login_page.dart';
 import 'package:quebragalho2/views/cliente/pages/prestador_detalhes_page.dart';
+import 'package:quebragalho2/views/cliente/widgets/popular_card_home.dart';
 import 'package:quebragalho2/views/cliente/widgets/prestador_home_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:quebragalho2/api_config.dart';
@@ -24,13 +25,16 @@ class _HomePageState extends State<HomePage> {
   bool isLoggedIn = false;
   Timer? _debounce;
 
+  int? usuarioId;
   int? _idPrestadorLogado;
+
   String? nomeUsuario;
   String? _profileImageUrl;
 
   @override
   void initState() {
     super.initState();
+    _initializeData();
     _checkLoginStatus();
     _loadPrestadorId(); // nova chamada
     _loadProfileImage();
@@ -46,6 +50,24 @@ class _HomePageState extends State<HomePage> {
     searchController.dispose();
     super.dispose();
   }
+
+  // --- MÉTODOS DE INICIALIZAÇÃO ---
+
+  /// Inicializa os dados na ordem correta
+  Future<void> _initializeData() async {
+    // Primeiro verifica o status de login
+    await _checkLoginStatus();
+
+    // Se estiver logado, carrega os dados do usuário
+    if (isLoggedIn) {
+      await Future.wait([_loadNomeUsuario(), _loadProfileImage()]);
+    }
+
+    // Por último, carrega os dados da página
+    await _loadInitialData();
+  }
+
+  // --- MÉTODOS DE LÓGICA E DADOS ---
 
   Future<void> _loadPrestadorId() async {
     final id = await obterIdPrestador();
@@ -84,7 +106,9 @@ class _HomePageState extends State<HomePage> {
     if (!isLoading) setState(() => isLoading = true);
 
     try {
-      final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage/prestadores');
+      final uri = Uri.parse(
+        'https://${ApiConfig.baseUrl}/api/usuario/homepage/prestadores',
+      );
       final response = await http.get(uri);
 
       if (response.statusCode == 200) {
@@ -95,7 +119,10 @@ class _HomePageState extends State<HomePage> {
               .toList();
         });
       } else {
-        print('Falha ao carregar prestadores: ${response.statusCode}');
+        print(
+          'Falha ao carregar prestadores: ${response.statusCode} ${response.body}',
+        );
+
         setState(() => _prestadoresFiltrados = []);
       }
     } catch (e) {
@@ -111,14 +138,16 @@ class _HomePageState extends State<HomePage> {
 
     try {
       final queryParams = {
-        if (searchController.text.trim().isNotEmpty) 'nome': searchController.text.trim(),
+        if (searchController.text.trim().isNotEmpty)
+          'nome': searchController.text.trim(),
         if (selectedTags.isNotEmpty) 'tags': selectedTags.join(','),
         'page': '0',
         'size': '10',
       };
 
-      final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage/buscar')
-          .replace(queryParameters: queryParams);
+      final uri = Uri.parse(
+        'https://${ApiConfig.baseUrl}/api/usuario/homepage/buscar',
+      ).replace(queryParameters: queryParams);
 
       final response = await http.get(uri);
 
@@ -130,7 +159,11 @@ class _HomePageState extends State<HomePage> {
               .toList();
         });
       } else {
-        print('Falha ao buscar prestadores: ${response.statusCode}');
+        
+        print(
+          'Falha ao buscar prestadores: ${response.statusCode} ${response.body}',
+        );
+
         setState(() => _prestadoresFiltrados = []);
       }
     } catch (e) {
@@ -141,9 +174,13 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  /// Busca as categorias/tags disponíveis.
+
   Future<void> fetchCategorias() async {
     try {
-      final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage/tags');
+      final uri = Uri.parse(
+        'https://${ApiConfig.baseUrl}/api/usuario/homepage/tags',
+      );
       final response = await http.get(uri);
 
       if (response.statusCode == 200) {
@@ -152,22 +189,44 @@ class _HomePageState extends State<HomePage> {
           categories = ['Todos', ...data.map((tag) => tag['nome'].toString())];
         });
       } else {
-        print('Falha ao carregar categorias: ${response.statusCode}');
+
+        print(
+          'Falha ao carregar categorias: ${response.statusCode} ${response.body}',
+        );
+
       }
     } catch (e) {
       print('Erro ao carregar categorias: $e');
     }
   }
 
+  // --- MÉTODOS DE AUTENTICAÇÃO E OUTROS ---
   Future<void> _checkLoginStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    setState(() {
-      isLoggedIn = token != null && token.isNotEmpty;
-    });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      final userId = prefs.getInt('usuario_id');
+
+      if (mounted) {
+        setState(() {
+          isLoggedIn = token != null && token.isNotEmpty;
+          usuarioId = userId;
+        });
+      }
+
+      print('Status de login: $isLoggedIn, Usuario ID: $usuarioId'); // Debug
+    } catch (e) {
+      print('Erro ao verificar status de login: $e');
+      if (mounted) {
+        setState(() {
+          isLoggedIn = false;
+          usuarioId = null;
+        });
+      }
+    }
   }
 
-  Future<void> _logout() async {
+  Future<void> _confirmLogout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
 
@@ -182,7 +241,8 @@ class _HomePageState extends State<HomePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Logout realizado com sucesso')),
     );
-    _loadInitialData();
+    
+    _initializeData();
   }
 
   Future<void> _confirmLogout() async {
@@ -210,33 +270,99 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadNomeUsuario() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      nomeUsuario = prefs.getString('user_name') ?? '';
-    });
+    if (!isLoggedIn || usuarioId == null) {
+      print('Usuário não logado ou ID não encontrado'); // Debug
+      return;
+    }
+
+    try {
+      print('Carregando nome do usuário para ID: $usuarioId'); // Debug
+
+      final response = await http.get(
+        Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$usuarioId'),
+      );
+
+      print('Status da resposta (nome): ${response.statusCode}'); // Debug
+
+      if (response.statusCode == 200) {
+        // Aplicando a decodificação UTF-8 aqui também
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        print('Dados recebidos (nome): $data'); // Debug
+
+        if (mounted) {
+          setState(() {
+            nomeUsuario = data['nome']?.toString() ?? 'Usuário';
+          });
+        }
+        print('Nome carregado: $nomeUsuario'); // Debug
+      } else {
+        print(
+          'Erro ao carregar nome: ${response.statusCode} - ${response.body}',
+        );
+        if (mounted) {
+          setState(() {
+            nomeUsuario = 'Usuário';
+          });
+        }
+      }
+    } catch (e) {
+      print('Erro ao carregar nome do usuário: $e');
+      if (mounted) {
+        setState(() {
+          nomeUsuario = 'Usuário';
+        });
+      }
+    }
   }
 
   Future<void> _loadProfileImage() async {
-    if (!isLoggedIn) return;
+
+    if (!isLoggedIn || usuarioId == null) {
+      print('Usuário não logado ou ID não encontrado para imagem'); // Debug
+      return;
+    }
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final userId = prefs.getInt('usuario_id');
-      if (userId == null) return;
+      print('Carregando imagem do usuário para ID: $usuarioId'); // Debug
 
       final response = await http.get(
-        Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$userId'),
+        Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$usuarioId'),
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final imagemPerfil = data['imagemPerfil'];
+      print('Status da resposta (imagem): ${response.statusCode}'); // Debug
 
-        if (imagemPerfil != null && imagemPerfil.isNotEmpty) {
-          setState(() {
-            _profileImageUrl = 'https://${ApiConfig.baseUrl}/$imagemPerfil?ts=${DateTime.now().millisecondsSinceEpoch}';
-          });
+      if (response.statusCode == 200) {
+        // Aplicando a decodificação UTF-8 aqui também
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        print('Dados recebidos (imagem): $data'); // Debug
+
+        final imagemPerfil = data['imagemPerfil'];
+        
+        print('Caminho da imagem: $imagemPerfil'); // Debug
+
+        if (imagemPerfil != null && imagemPerfil.toString().isNotEmpty) {
+          final imageUrl =
+              'https://${ApiConfig.baseUrl}/$imagemPerfil?ts=${DateTime.now().millisecondsSinceEpoch}';
+          print('URL final da imagem: $imageUrl'); // Debug
+
+          if (mounted) {
+            setState(() {
+              _profileImageUrl = imageUrl;
+            });
+          }
+        } else {
+          print('Imagem de perfil não encontrada ou vazia');
+          if (mounted) {
+            setState(() {
+              _profileImageUrl = null;
+            });
+          }
+
         }
+      } else {
+        print(
+          'Erro ao carregar imagem: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       print('Erro ao carregar imagem de perfil: $e');
@@ -244,16 +370,16 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildCategoryChip(String category) {
-    final isSelected = category == 'Todos'
-        ? selectedTags.isEmpty
-        : selectedTags.contains(category);
+    final isSelected =
+        category == 'Todos'
+            ? selectedTags.isEmpty
+            : selectedTags.contains(category);
 
     return ChoiceChip(
       label: Text(
         category,
-        style: TextStyle(
-          color: isSelected ? Colors.white : Colors.black,
-        ),
+        style: TextStyle(color: isSelected ? Colors.white : Colors.black),
+
       ),
       selectedColor: Colors.black,
       backgroundColor: Colors.grey[200],
@@ -279,9 +405,70 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text(''),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title:
+            isLoggedIn
+                ? Row(
+                  children: [
+                    const SizedBox(height: 10),
+                    // Foto de perfil ou avatar padrão
+                    _profileImageUrl != null
+                        ? GestureDetector(
+                          onTap: _confirmLogout,
+                          child: CircleAvatar(
+                            radius: 25,
+                            backgroundImage: NetworkImage(_profileImageUrl!),
+                            backgroundColor: Colors.transparent,
+                            onBackgroundImageError: (exception, stackTrace) {
+                              print('Erro ao carregar imagem: $exception');
+                            },
+                          ),
+                        )
+                        : GestureDetector(
+                          onTap: _confirmLogout,
+                          child: const CircleAvatar(
+                            radius: 25,
+                            backgroundColor: Color(0xFFF0F0F0),
+                            child: Icon(Icons.person, color: Colors.black87),
+                          ),
+                        ),
+                    const SizedBox(width: 12),
+                    // Textos de boas-vindas
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Bem-vindo,',
+                            style: TextStyle(fontSize: 14, color: Colors.grey),
+                          ),
+                          Text(
+                            nomeUsuario ?? 'Carregando...',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+                : const Text(
+                  'Bem-vindo',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
         actions: [
           if (isLoggedIn) ...[
             Padding(
@@ -336,11 +523,14 @@ class _HomePageState extends State<HomePage> {
                   shape: BoxShape.circle,
                 ),
                 child: IconButton(
-                  icon: const Icon(Icons.login),
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginPage()),
-                  ),
+                  icon: const Icon(Icons.person_2_outlined),
+                  onPressed:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginPage(),
+                        ),
+                      ),
                   color: Colors.black87,
                   splashRadius: 24,
                 ),
@@ -350,31 +540,231 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(width: 12),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(12.0),
+      body:
+          isLoggedIn
+              ? CustomScrollView(
+                slivers: [
+                  // Banner, texto e "Prestadores"
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: 20),
+                          // Banner desabilitado:
+                          // Container(
+                          //   width: double.infinity,
+                          //   margin: const EdgeInsets.only(bottom: 16),
+                          //   decoration: BoxDecoration(
+                          //     borderRadius: BorderRadius.circular(24),
+                          //     image: const DecorationImage(
+                          //       image: AssetImage(
+                          //         'assets/images/banner_homepage.png',
+                          //       ),
+                          //       fit: BoxFit.cover,
+                          //     ),
+                          //   ),
+                          //   height: 200,
+                          // ),
+                          Row(
+                            children: [
+                              Text(
+                                "O que você precisa pra hoje?",
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Barra de busca e tags fixas
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _SliverSearchAndTagsDelegate(
+                      searchController: searchController,
+                      categories: categories,
+                      buildCategoryChip: _buildCategoryChip,
+                      horizontalPadding: 16.0, // Adicione este parâmetro
+                    ),
+                  ),
+                  // Lista de prestadores
+                  SliverToBoxAdapter(child: SizedBox(height: 12)),
+                  isLoading
+                      ? SliverFillRemaining(
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                      : _prestadoresFiltrados.isEmpty
+                      ? SliverFillRemaining(
+                        child: Center(
+                          child: Text(
+                            'Nenhum prestador encontrado.\nTente ajustar sua busca ou filtros.',
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      )
+                      : SliverList(
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final prestador = _prestadoresFiltrados[index];
+                          final String imageUrl =
+                              (prestador['imagemPerfil'] != null &&
+                                      (prestador['imagemPerfil'] as String)
+                                          .isNotEmpty)
+                                  ? 'https://${ApiConfig.baseUrl}/${prestador['imagemPerfil']}'
+                                  : '';
+                          final String nome =
+                              prestador['nome'] as String? ??
+                              'Nome Indisponível';
+                          final List<String> tags =
+                              (prestador['tags'] as List?)
+                                  ?.map(
+                                    (tag) =>
+                                        (tag is Map && tag['nome'] != null)
+                                            ? tag['nome'].toString()
+                                            : '',
+                                  )
+                                  .where((tagNome) => tagNome.isNotEmpty)
+                                  .toList() ??
+                              [];
+                          final double rating =
+                              (prestador['mediaAvaliacoes'] as num?)
+                                  ?.toDouble() ??
+                              0.0;
+                          final int? prestadorId = prestador['id'] as int?;
+
+                          return PrestadorHomeCard(
+                            imageUrl: imageUrl,
+                            name: nome,
+                            categories: tags,
+                            rating: rating,
+                            onTap: () {
+                              if (prestadorId != null) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => PrestadorDetalhesPage(
+                                          id: prestadorId,
+                                          isLoggedIn: isLoggedIn,
+                                        ),
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'ID do prestador indisponível.',
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                          );
+                        }, childCount: _prestadoresFiltrados.length),
+                      ),
+                ],
+              )
+              : Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ...conteúdo para não logado...
+                  ],
+                ),
+              ),
+    );
+  }
+}
+
+// Delegate para manter busca e tags fixas
+class _SliverSearchAndTagsDelegate extends SliverPersistentHeaderDelegate {
+  final TextEditingController searchController;
+  final List<String> categories;
+  final Widget Function(String) buildCategoryChip;
+  final double horizontalPadding;
+
+  _SliverSearchAndTagsDelegate({
+    required this.searchController,
+    required this.categories,
+    required this.buildCategoryChip,
+    this.horizontalPadding = 0,
+  });
+
+  @override
+  double get minExtent => 150;
+  @override
+  double get maxExtent => 150;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      color: Colors.white,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
               controller: searchController,
               decoration: InputDecoration(
-                hintText: 'Buscar prestador...',
+                hintText: 'Pesquise pelo nome do usuário ou empresa',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
                 fillColor: Colors.grey[200],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             SizedBox(
               height: 40,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: categories.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder:
+                    (context, index) => buildCategoryChip(categories[index]),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(Icons.bolt, color: const Color.fromARGB(255, 63, 63, 63)),
+                Text(
+                  'Prestadores',
+                  style: TextStyle(
+                    color: const Color.fromARGB(255, 112, 112, 112),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _SliverSearchAndTagsDelegate oldDelegate) {
+    return searchController != oldDelegate.searchController ||
+         categories != oldDelegate.categories ||
+         buildCategoryChip != oldDelegate.buildCategoryChip;
+  }
+
                 itemBuilder: (context, index) => _buildCategoryChip(categories[index]),
               ),
             ),

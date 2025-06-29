@@ -18,12 +18,17 @@ class PrestadorHomeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double horizontalPadding = MediaQuery.of(context).size.width * 0.05; // 5% de cada lado
+
     return Column(
       children: [
         InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 0),
+            padding: EdgeInsets.symmetric(
+              vertical: 12,
+              horizontal: horizontalPadding,
+            ),
             child: Row(
               children: [
                 // Imagem do perfil
@@ -43,7 +48,6 @@ class PrestadorHomeCard extends StatelessWidget {
                       if (loadingProgress == null) return child;
                       return const Center(child: CircularProgressIndicator(strokeWidth: 2));
                     },
-                 
                   ),
                 ),
                 const SizedBox(width: 12),

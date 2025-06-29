@@ -43,7 +43,9 @@ class _ListaAvaliacoesPageState extends State<ListaAvaliacoesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Avaliações Recebidas')),
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text('Avaliações Recebidas', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),)),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : avaliacoes.isEmpty

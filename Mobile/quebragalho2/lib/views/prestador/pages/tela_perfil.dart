@@ -135,6 +135,47 @@ class _PerfilPageState extends State<PerfilPage> {
     );
   }
 
+  Future<void> showMigrarParaClienteDialog(BuildContext context) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Center(
+              child: Text(
+                'Alterar para Cliente',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            content: const Text(
+              'Deseja migrar para sua \nconta de cliente?',
+              textAlign: TextAlign.center,
+            ),
+            actionsAlignment: MainAxisAlignment.center,
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('NÃO', style: TextStyle(color: Colors.black)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                  elevation: 0,
+                ),
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text(
+                  'SIM',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+
   Future<String?> _uploadImagemApi(int usuarioId, File imagem) async {
     final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$usuarioId/imagem');
     final request = http.MultipartRequest('POST', uri);
@@ -143,6 +184,7 @@ class _PerfilPageState extends State<PerfilPage> {
       'file',
       imagem.path,
       contentType: MediaType.parse(mimeType),
+
     );
     request.files.add(fileStream);
 
@@ -204,20 +246,42 @@ class _PerfilPageState extends State<PerfilPage> {
   void showMigrarParaClienteDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Migrar para cliente'),
-        content: const Text('Tem certeza de que deseja migrar para cliente?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const NavegacaoCliente()),
-                (route) => false,
-              );
-            },
-            child: const Text('Confirmar'),
+      builder:
+          (context) => AlertDialog(
+            title: Center(
+              child: Text(
+                'Removendo serviço',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            content: const Text(
+              'Tem certeza que deseja remover?',
+              textAlign: TextAlign.center,
+            ),
+            actionsAlignment: MainAxisAlignment.center,
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('NÃO', style: TextStyle(color: Colors.black)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                  elevation: 0,
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  onConfirm();
+                },
+                child: const Text('SIM', style: TextStyle(fontWeight: FontWeight.bold),),
+              ),
+            ],
           ),
         ],
       ),
@@ -264,20 +328,28 @@ class _PerfilPageState extends State<PerfilPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Perfil'),
+        title: const Text('Perfil', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        centerTitle: true,
+
         actions: [
           IconButton(
             icon: const Icon(Icons.feedback_outlined),
             tooltip: 'Ver feedbacks',
-            onPressed: idPrestador == null
-                ? null
-                : () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ListaAvaliacoesPage(idPrestador: idPrestador!),
-                      ),
-                    ),
-          )
+            onPressed:
+                idPrestador == null
+                    ? null
+                    : () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (_) => ListaAvaliacoesPage(
+                                idPrestador: idPrestador!,
+                              ),
+                        ),
+                      );
+                    },
+          ),
         ],
       ),
       body: ListView(

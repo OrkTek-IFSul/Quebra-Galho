@@ -185,7 +185,7 @@ class _PerfilPageState extends State<PerfilPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Meu Perfil', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: const Text('Meu Perfil', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,

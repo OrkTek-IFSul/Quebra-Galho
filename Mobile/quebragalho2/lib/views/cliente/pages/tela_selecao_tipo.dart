@@ -83,15 +83,15 @@ class _WelcomePageState extends State<WelcomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Lottie.asset(
-                'assets/welcome.json',
+              Image.asset(
+                'assets/images/illustracao_telaselecaoperfil.png',
                 width: 200,
                 height: 200,
                 fit: BoxFit.contain,
               ),
               const SizedBox(height: 24),
               const Text(
-                "Seja bem-vindo(a) ao App!\nEscolha como deseja continuar:",
+                "Seja bem-vindo(a) ao Quebra-Galho!\nEscolha como deseja continuar:",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 18,
@@ -105,10 +105,10 @@ class _WelcomePageState extends State<WelcomePage> {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade600,
+                    backgroundColor: const Color.fromARGB(255, 0, 0, 0),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                   onPressed: () {
@@ -122,7 +122,7 @@ class _WelcomePageState extends State<WelcomePage> {
                   icon: const Icon(Icons.person, color: Colors.white),
                   label: const Text(
                     "Sou Cliente",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -132,10 +132,10 @@ class _WelcomePageState extends State<WelcomePage> {
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.blue.shade600, width: 2),
+                    side: BorderSide(color: const Color.fromARGB(255, 0, 0, 0), width: 2),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                   // Desabilita o botão se estiver em estado de carregamento.
@@ -175,7 +175,7 @@ class _WelcomePageState extends State<WelcomePage> {
                            showCadastroPrestadorModal(context);
                           }
                         },
-                  icon: Icon(Icons.handyman, color: Colors.blue.shade600),
+                  icon: Icon(Icons.handyman, color: const Color.fromARGB(255, 0, 0, 0)),
                   label: _isLoading
                       ? const SizedBox(
                           height: 18,
@@ -184,7 +184,7 @@ class _WelcomePageState extends State<WelcomePage> {
                         )
                       : Text(
                           "Sou Prestador",
-                          style: TextStyle(color: Colors.blue.shade600, fontSize: 16),
+                          style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0), fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                 ),
               ),
