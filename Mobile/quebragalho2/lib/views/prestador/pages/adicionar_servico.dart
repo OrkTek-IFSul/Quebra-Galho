@@ -18,7 +18,7 @@ class _AdicionarServicoState extends State<AdicionarServico> {
   final TextEditingController nomeController = TextEditingController();
   final TextEditingController descricaoController = TextEditingController();
   final TextEditingController valorController = TextEditingController();
-  final TextEditingController duracaoController = TextEditingController(text: '30'); // Valor inicial
+  final TextEditingController duracaoController = TextEditingController(text: '30');
 
   List<Map<String, dynamic>> tagsDisponiveis = [];
   final Set<int> tagsSelecionadas = {};
@@ -33,7 +33,6 @@ class _AdicionarServicoState extends State<AdicionarServico> {
   }
 
   Future<void> _carregarTags() async {
-    // Usando a URL da sua API de tags (se for diferente, ajuste aqui)
     final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage/tags');
     try {
       final response = await http.get(uri);
@@ -45,7 +44,7 @@ class _AdicionarServicoState extends State<AdicionarServico> {
         });
       } else {
         setState(() => _loadingTags = false);
-        if(mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Falha ao carregar tags (${response.statusCode})')),
           );
@@ -53,7 +52,7 @@ class _AdicionarServicoState extends State<AdicionarServico> {
       }
     } catch (e) {
       setState(() => _loadingTags = false);
-      if(mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao carregar tags: $e')),
         );
@@ -61,7 +60,6 @@ class _AdicionarServicoState extends State<AdicionarServico> {
     }
   }
 
-  // A ÚNICA FUNÇÃO ALTERADA É ESTA: _salvarServico
   Future<void> _salvarServico() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -80,40 +78,31 @@ class _AdicionarServicoState extends State<AdicionarServico> {
 
     setState(() => _isLoading = true);
 
-    // Mapeia as tags selecionadas. A API espera uma lista de objetos.
     final tagsJson = tagsSelecionadas.map((id) {
       final tag = tagsDisponiveis.firstWhere((t) => t['id'] == id);
       return {'id': tag['id'], 'nome': tag['nome']};
     }).toList();
 
-    // --- Início da Correção ---
+    final url = Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/servico/${widget.idPrestador}');
 
-    // CORREÇÃO 1: Definindo a URL correta do endpoint.
-    final url = Uri.parse(
-        'https://${ApiConfig.baseUrl}/api/prestador/servico/${widget.idPrestador}');
-
-    // CORREÇÃO 2: Ajustando o corpo do JSON para corresponder à nova estrutura.
     final body = json.encode({
       'nome': nome,
       'descricao': descricao,
       'preco': valor,
       'duracaoMinutos': duracao,
-      'idPrestador': widget.idPrestador, // <--- ALTERADO
-      'tags': tagsJson,                 // <--- MANTIDO (a API espera uma lista)
+      'idPrestador': widget.idPrestador,
+      'tags': tagsJson,
     });
-
-    // --- Fim da Correção ---
 
     try {
       final response = await http.post(
-        url, // <-- USA A NOVA URL
+        url,
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
         },
-        body: body, // <-- USA O NOVO BODY
+        body: body,
       );
 
-      // Decodifica a resposta para logar em caso de erro
       final responseBody = jsonDecode(utf8.decode(response.bodyBytes));
 
       if (response.statusCode == 201 || response.statusCode == 200) {
@@ -121,10 +110,9 @@ class _AdicionarServicoState extends State<AdicionarServico> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Serviço "$nome" adicionado com sucesso!')),
           );
-          Navigator.pop(context, true); // Retorna true para a tela anterior
+          Navigator.pop(context, true);
         }
       } else {
-        // Mostra uma mensagem de erro mais detalhada vinda da API, se houver.
         final errorMessage = responseBody['message'] ?? 'Erro desconhecido';
         throw Exception(
             'Falha ao adicionar serviço (Status: ${response.statusCode}) - $errorMessage');
@@ -140,16 +128,12 @@ class _AdicionarServicoState extends State<AdicionarServico> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
-    // Função para exibir o diálogo de seleção de tags
     void _showAddTagDialog() {
-      // Filtra as tags que ainda não foram selecionadas
-      final tagsParaAdicionar =
-          tagsDisponiveis
-              .where((tag) => !tagsSelecionadas.contains(tag['id']))
-              .toList();
+      final tagsParaAdicionar = tagsDisponiveis
+          .where((tag) => !tagsSelecionadas.contains(tag['id']))
+          .toList();
 
       showDialog(
         context: context,
@@ -167,15 +151,12 @@ class _AdicionarServicoState extends State<AdicionarServico> {
                     title: Text(tag['nome']),
                     onTap: () {
                       setState(() {
-                        // Limita a seleção a 3 tags, como na imagem
-                        if (tagsSelecionadas.length < 3) {
+                        if (tagsSelecionadas.length < 1) {
                           tagsSelecionadas.add(tag['id']);
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text(
-                                'Você pode adicionar no máximo 3 tags.',
-                              ),
+                              content: Text('Você pode adicionar no máximo 1 tag.'),
                             ),
                           );
                         }
@@ -197,7 +178,6 @@ class _AdicionarServicoState extends State<AdicionarServico> {
       );
     }
 
-    // Estilo padrão para os campos de texto, para evitar repetição de código
     final inputDecoration = InputDecoration(
       filled: true,
       fillColor: Colors.grey[200],
@@ -206,10 +186,7 @@ class _AdicionarServicoState extends State<AdicionarServico> {
         borderSide: BorderSide.none,
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      errorStyle: const TextStyle(
-        color: Colors.redAccent,
-        fontWeight: FontWeight.bold,
-      ),
+      errorStyle: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
     );
 
     return Scaffold(
@@ -217,12 +194,8 @@ class _AdicionarServicoState extends State<AdicionarServico> {
       body: SafeArea(
         child: Column(
           children: [
-            // 1. Cabeçalho Personalizado
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 10.0,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -241,69 +214,58 @@ class _AdicionarServicoState extends State<AdicionarServico> {
                           child: CircularProgressIndicator(strokeWidth: 3),
                         )
                       : IconButton(
-                          icon: const Icon(
-                            Icons.check,
-                            color: Color.fromARGB(255, 0, 0, 0),
-                            size: 30,
-                          ),
+                          icon: const Icon(Icons.check, color: Colors.black, size: 30),
                           onPressed: _salvarServico,
                         ),
                 ],
               ),
             ),
-            // 2. Formulário com rolagem
             Expanded(
               child: Form(
                 key: _formKey,
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 8.0,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Nome',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
+                      const Text('Nome', style: TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: nomeController,
+                        maxLength: 45,
                         decoration: inputDecoration.copyWith(
                           hintText: 'Ex: Instalação de Ar-condicionado',
+                          counterText: '',
                         ),
-                        validator:
-                            (v) =>
-                                (v == null || v.isEmpty)
-                                    ? 'Informe o nome'
-                                    : null,
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return 'Informe o nome';
+                          if (v.trim().length > 45) return 'Máximo de 45 caracteres';
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 16),
 
-                      const Text(
-                        'Descrição',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
+                      const Text('Descrição', style: TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: descricaoController,
+                        maxLength: 250,
                         decoration: inputDecoration.copyWith(
                           hintText: 'Descreva os detalhes do serviço...',
+                          counterText: '',
                         ),
-                        maxLines: 4,
-                        validator:
-                            (v) =>
-                                (v == null || v.isEmpty)
-                                    ? 'Informe a descrição'
-                                    : null,
+                        maxLines: 2,
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return 'Informe a descrição';
+                          if (v.trim().length > 250) return 'Máximo de 250 caracteres';
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 16),
 
                       const Divider(),
                       const SizedBox(height: 16),
 
-                      // Seção Duração e Valor
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -311,25 +273,11 @@ class _AdicionarServicoState extends State<AdicionarServico> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'Duração (Minutos)',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
+                                const Text('Duração (Minutos)', style: TextStyle(fontWeight: FontWeight.bold)),
                                 const SizedBox(height: 8),
                                 DropdownButtonFormField<String>(
-                                  value:
-                                      duracaoController.text.isEmpty
-                                          ? '30'
-                                          : duracaoController.text,
-                                  items:
-                                      [
-                                    '30',
-                                    '60',
-                                    '90',
-                                    '120',
-                                    '150',
-                                    '180',
-                                  ].map((String value) {
+                                  value: duracaoController.text.isEmpty ? '30' : duracaoController.text,
+                                  items: ['30', '60', '90', '120', '150', '180'].map((String value) {
                                     return DropdownMenuItem<String>(
                                       value: value,
                                       child: Text(value),
@@ -343,11 +291,7 @@ class _AdicionarServicoState extends State<AdicionarServico> {
                                     }
                                   },
                                   decoration: inputDecoration,
-                                  validator:
-                                      (v) =>
-                                          (v == null || v.isEmpty)
-                                              ? 'Informe a duração'
-                                              : null,
+                                  validator: (v) => (v == null || v.isEmpty) ? 'Informe a duração' : null,
                                 ),
                               ],
                             ),
@@ -357,28 +301,15 @@ class _AdicionarServicoState extends State<AdicionarServico> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'Valor (R\$)',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
+                                const Text('Valor (R\$)', style: TextStyle(fontWeight: FontWeight.bold)),
                                 const SizedBox(height: 8),
                                 TextFormField(
                                   controller: valorController,
-                                  keyboardType:
-                                      const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                                  decoration: inputDecoration.copyWith(
-                                    hintText: '100.00',
-                                  ),
+                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                  decoration: inputDecoration.copyWith(hintText: '100.00'),
                                   validator: (v) {
-                                    if (v == null || v.isEmpty)
-                                      return 'Informe o valor';
-                                    if (double.tryParse(
-                                          v.replaceAll(',', '.'),
-                                        ) ==
-                                        null)
-                                      return 'Valor inválido';
+                                    if (v == null || v.isEmpty) return 'Informe o valor';
+                                    if (double.tryParse(v.replaceAll(',', '.')) == null) return 'Valor inválido';
                                     return null;
                                   },
                                 ),
@@ -392,19 +323,12 @@ class _AdicionarServicoState extends State<AdicionarServico> {
                       const Divider(),
                       const SizedBox(height: 16),
 
-                      // 3. Seção de Tags
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Tags / Categorias',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                          SizedBox(width: 15),
-                          Text(
-                            'Adicione até 3 tags',
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
+                          const Text('Tags / Categorias', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          const SizedBox(width: 15),
+                          Text('Adicione até 1 tags', style: TextStyle(color: Colors.grey[600])),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -417,30 +341,20 @@ class _AdicionarServicoState extends State<AdicionarServico> {
                           children: [
                             ActionChip(
                               avatar: const Icon(Icons.add, color: Color.fromARGB(255, 156, 156, 156)),
-                              label: const Text(
-                                'Tag',
-                                style: TextStyle(color: Color.fromARGB(255, 34, 34, 34)),
-                              ),
+                              label: const Text('Tag', style: TextStyle(color: Color.fromARGB(255, 34, 34, 34))),
                               backgroundColor: const Color.fromARGB(255, 117, 117, 117).withOpacity(0.1),
                               onPressed: _showAddTagDialog,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
-                                side: const BorderSide(
-                                  color: Colors.transparent,
-                                ),
+                                side: const BorderSide(color: Colors.transparent),
                               ),
                             ),
                             ...tagsSelecionadas.map((tagId) {
-                              final tag = tagsDisponiveis.firstWhere(
-                                (t) => t['id'] == tagId,
-                              );
+                              final tag = tagsDisponiveis.firstWhere((t) => t['id'] == tagId);
                               return Chip(
                                 label: Text(tag['nome']),
                                 backgroundColor: Colors.grey[200],
-                                onDeleted:
-                                    () => setState(
-                                      () => tagsSelecionadas.remove(tagId),
-                                    ),
+                                onDeleted: () => setState(() => tagsSelecionadas.remove(tagId)),
                                 deleteIcon: const Icon(Icons.close, size: 18),
                               );
                             }).toList(),
@@ -450,26 +364,97 @@ class _AdicionarServicoState extends State<AdicionarServico> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            'Não achou sua tag? ',
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
+                          Text('Não achou sua tag? ', style: TextStyle(color: Colors.grey[600])),
                           InkWell(
                             onTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Funcionalidade "Criar nova tag" a ser implementada.',
-                                  ),
-                                ),
-                              );
-                            },
+  final TextEditingController novaTagController = TextEditingController();
+
+  showDialog(
+    context: context,
+    builder: (ctx) {
+      return AlertDialog(
+        title: const Text('Nova Tag'),
+        content: TextField(
+          controller: novaTagController,
+          decoration: const InputDecoration(
+            labelText: 'Nome da nova tag',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final nomeTag = novaTagController.text.trim();
+
+              if (nomeTag.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('O nome da tag não pode ser vazio.')),
+                );
+                return;
+              }
+
+              final existe = tagsDisponiveis.any((tag) =>
+                  (tag['nome'] as String).toLowerCase().trim() == nomeTag.toLowerCase());
+
+              if (existe) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Essa tag já existe.')),
+                );
+                return;
+              }
+
+              Navigator.of(ctx).pop(); // fecha o dialog
+
+              final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/tags');
+              final body = jsonEncode({
+                'nome': nomeTag,
+                'status': 'Ativo',
+              });
+
+              try {
+                final response = await http.post(
+                  uri,
+                  headers: {'Content-Type': 'application/json'},
+                  body: body,
+                );
+
+                if (response.statusCode == 201 || response.statusCode == 200) {
+                  final novaTag = jsonDecode(utf8.decode(response.bodyBytes));
+                  setState(() {
+                    tagsDisponiveis.add(novaTag);
+                    if (tagsSelecionadas.length < 1) {
+                      tagsSelecionadas.add(novaTag['id']);
+                    }
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Tag criada com sucesso!')),
+                  );
+                } else {
+                  final msg = jsonDecode(response.body)['message'] ?? 'Erro ao criar tag.';
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(msg)),
+                  );
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Erro de conexão: $e')),
+                );
+              }
+            },
+            child: const Text('Criar'),
+          ),
+        ],
+      );
+    },
+  );
+},
                             child: const Text(
                               'Crie uma nova',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue,
-                              ),
+                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                             ),
                           ),
                         ],

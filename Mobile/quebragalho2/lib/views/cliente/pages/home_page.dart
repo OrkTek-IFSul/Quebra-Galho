@@ -1,16 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:quebragalho2/views/cliente/pages/login_page.dart';
-
 import 'package:quebragalho2/views/cliente/pages/prestador_detalhes_page.dart';
 import 'package:quebragalho2/views/cliente/widgets/popular_card_home.dart';
 import 'package:quebragalho2/views/cliente/widgets/prestador_home_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'package:quebragalho2/api_config.dart'; // nova importação para a baseUrl
+import 'package:quebragalho2/api_config.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -29,6 +26,8 @@ class _HomePageState extends State<HomePage> {
   Timer? _debounce;
 
   int? usuarioId;
+  int? _idPrestadorLogado;
+
   String? nomeUsuario;
   String? _profileImageUrl;
 
@@ -36,6 +35,11 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _initializeData();
+    _checkLoginStatus();
+    _loadPrestadorId(); // nova chamada
+    _loadProfileImage();
+    _loadNomeUsuario();
+    _loadInitialData();
     searchController.addListener(_debouncedSearch);
   }
 
@@ -65,7 +69,13 @@ class _HomePageState extends State<HomePage> {
 
   // --- MÉTODOS DE LÓGICA E DADOS ---
 
-  /// Método centralizador que decide qual busca realizar.
+  Future<void> _loadPrestadorId() async {
+    final id = await obterIdPrestador();
+    setState(() {
+      _idPrestadorLogado = id;
+    });
+  }
+
   Future<void> _filtrarEBuscarPrestadores() async {
     setState(() {
       isLoading = true;
@@ -80,13 +90,11 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  /// Carrega os dados iniciais da página.
   Future<void> _loadInitialData() async {
     await fetchCategorias();
     await _filtrarEBuscarPrestadores();
   }
 
-  /// Listener para o campo de busca com debounce.
   void _debouncedSearch() {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
@@ -94,9 +102,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  // --- MÉTODOS DE API ---
-
-  /// Busca TODOS os prestadores (sem filtros).
   Future<void> fetchPrestadores() async {
     if (!isLoading) setState(() => isLoading = true);
 
@@ -109,12 +114,15 @@ class _HomePageState extends State<HomePage> {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
         setState(() {
-          _prestadoresFiltrados = data;
+          _prestadoresFiltrados = data
+              .where((p) => p['id'] != _idPrestadorLogado)
+              .toList();
         });
       } else {
         print(
           'Falha ao carregar prestadores: ${response.statusCode} ${response.body}',
         );
+
         setState(() => _prestadoresFiltrados = []);
       }
     } catch (e) {
@@ -125,7 +133,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  /// Realiza a busca com os filtros (nome e/ou tags).
   Future<void> _searchPrestadoresComFiltros() async {
     if (!isLoading) setState(() => isLoading = true);
 
@@ -147,12 +154,16 @@ class _HomePageState extends State<HomePage> {
       if (response.statusCode == 200) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
         setState(() {
-          _prestadoresFiltrados = data['content'] ?? [];
+          _prestadoresFiltrados = (data['content'] ?? [])
+              .where((p) => p['id'] != _idPrestadorLogado)
+              .toList();
         });
       } else {
+        
         print(
           'Falha ao buscar prestadores: ${response.statusCode} ${response.body}',
         );
+
         setState(() => _prestadoresFiltrados = []);
       }
     } catch (e) {
@@ -164,6 +175,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   /// Busca as categorias/tags disponíveis.
+
   Future<void> fetchCategorias() async {
     try {
       final uri = Uri.parse(
@@ -177,9 +189,11 @@ class _HomePageState extends State<HomePage> {
           categories = ['Todos', ...data.map((tag) => tag['nome'].toString())];
         });
       } else {
+
         print(
           'Falha ao carregar categorias: ${response.statusCode} ${response.body}',
         );
+
       }
     } catch (e) {
       print('Erro ao carregar categorias: $e');
@@ -187,7 +201,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   // --- MÉTODOS DE AUTENTICAÇÃO E OUTROS ---
-
   Future<void> _checkLoginStatus() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -228,7 +241,32 @@ class _HomePageState extends State<HomePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Logout realizado com sucesso')),
     );
+    
     _initializeData();
+  }
+
+  Future<void> _confirmLogout() async {
+    final bool? confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmação de Logout'),
+        content: const Text('Deseja realmente sair da sua conta?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Sair'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar == true) {
+      _logout();
+    }
   }
 
   Future<void> _loadNomeUsuario() async {
@@ -278,6 +316,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadProfileImage() async {
+
     if (!isLoggedIn || usuarioId == null) {
       print('Usuário não logado ou ID não encontrado para imagem'); // Debug
       return;
@@ -298,6 +337,7 @@ class _HomePageState extends State<HomePage> {
         print('Dados recebidos (imagem): $data'); // Debug
 
         final imagemPerfil = data['imagemPerfil'];
+        
         print('Caminho da imagem: $imagemPerfil'); // Debug
 
         if (imagemPerfil != null && imagemPerfil.toString().isNotEmpty) {
@@ -317,6 +357,7 @@ class _HomePageState extends State<HomePage> {
               _profileImageUrl = null;
             });
           }
+
         }
       } else {
         print(
@@ -328,9 +369,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // --- WIDGETS ---
-
-  /// Constrói os chips de categoria.
   Widget _buildCategoryChip(String category) {
     final isSelected =
         category == 'Todos'
@@ -341,6 +379,7 @@ class _HomePageState extends State<HomePage> {
       label: Text(
         category,
         style: TextStyle(color: isSelected ? Colors.white : Colors.black),
+
       ),
       selectedColor: Colors.black,
       backgroundColor: Colors.grey[200],
@@ -432,7 +471,6 @@ class _HomePageState extends State<HomePage> {
                 ),
         actions: [
           if (isLoggedIn) ...[
-            // Ícone de notificações
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Container(
@@ -448,8 +486,35 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: GestureDetector(
+                onTap: _confirmLogout,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0F0F0),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.grey[300]!, width: 1),
+                  ),
+                  child: _profileImageUrl != null
+                      ? CircleAvatar(
+                          backgroundImage: NetworkImage(_profileImageUrl!),
+                          onBackgroundImageError: (exception, stackTrace) {
+                            setState(() {
+                              _profileImageUrl = null;
+                            });
+                          },
+                        )
+                      : const CircleAvatar(
+                          backgroundColor: Color(0xFFF0F0F0),
+                          child: Icon(Icons.person, color: Colors.black87),
+                        ),
+                ),
+              ),
+            ),
           ] else ...[
-            // Botão de login para usuários não logados
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Container(
@@ -698,5 +763,68 @@ class _SliverSearchAndTagsDelegate extends SliverPersistentHeaderDelegate {
     return searchController != oldDelegate.searchController ||
          categories != oldDelegate.categories ||
          buildCategoryChip != oldDelegate.buildCategoryChip;
+  }
+
+                itemBuilder: (context, index) => _buildCategoryChip(categories[index]),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _loadInitialData,
+                child: isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _prestadoresFiltrados.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'Nenhum prestador encontrado.\nTente ajustar sua busca ou filtros.',
+                              textAlign: TextAlign.center,
+                            ),
+                          )
+                        : ListView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            itemCount: _prestadoresFiltrados.length,
+                            itemBuilder: (context, index) {
+                              final prestador = _prestadoresFiltrados[index];
+                              final imageUrl = (prestador['imagemPerfil'] != null &&
+                                      (prestador['imagemPerfil'] as String).isNotEmpty)
+                                  ? 'https://${ApiConfig.baseUrl}/${prestador['imagemPerfil']}'
+                                  : '';
+                              final nome = prestador['nome'] ?? 'Nome Indisponível';
+                              final tags = (prestador['tags'] as List?)
+                                      ?.map((tag) => tag['nome'].toString())
+                                      .where((nome) => nome.isNotEmpty)
+                                      .toList() ??
+                                  [];
+                              final rating = (prestador['mediaAvaliacoes'] as num?)?.toDouble() ?? 0.0;
+                              final id = prestador['id'];
+
+                              return PrestadorHomeCard(
+                                imageUrl: imageUrl,
+                                name: nome,
+                                categories: tags,
+                                rating: rating,
+                                onTap: () {
+                                  if (id != null) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => PrestadorDetalhesPage(
+                                          id: id,
+                                          isLoggedIn: isLoggedIn,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                              );
+                            },
+                          ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

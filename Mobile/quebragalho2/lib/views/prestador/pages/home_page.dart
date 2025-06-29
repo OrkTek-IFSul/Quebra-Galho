@@ -55,6 +55,30 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Future<void> _confirmLogout() async {
+    final bool? confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmação de Logout'),
+        content: const Text('Deseja realmente sair da sua conta?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Sair'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar == true) {
+      _logout();
+    }
+  }
+
   Future<void> _loadNomeUsuario() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -139,7 +163,7 @@ class _HomePageState extends State<HomePage> {
                 icon: Icon(isLoggedIn ? Icons.logout : Icons.login),
                 tooltip: isLoggedIn ? 'Sair' : 'Entrar',
                 onPressed: isLoggedIn
-                    ? _logout
+                    ? _confirmLogout
                     : () => Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -192,13 +216,55 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                     ).then((_) {
+          : RefreshIndicator(
+              onRefresh: () async {
+                await carregarSolicitacoesDoPrestador();
+              },
+              child: ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: solicitacoes.length,
+                itemBuilder: (context, index) {
+                  final solicitacao = solicitacoes[index];
+
+                  final DateTime dataHora = DateTime.parse(
+                    solicitacao['dataHoraAgendamento'],
+                  );
+                  final String dataHoraFormatada =
+                      '${dataHora.day}/${dataHora.month}/${dataHora.year} às ${dataHora.hour}:${dataHora.minute.toString().padLeft(2, '0')}';
+
+                  return SolicitacaoClienteCard(
+                    nome: solicitacao['nomeDoUsuario'],
+                    fotoUrl: 'https://${ApiConfig.baseUrl}/${solicitacao['fotoPerfilUsuario']}',
+                    idAgendamento: solicitacao['idAgendamento'],
+                    isConfirmed: solicitacao['statusPedidoAgendamento'] == true,
+                    isCanceled: solicitacao['statusPedidoAgendamento'] == false,
+                    onConfirm: () {
                       if (idPrestador != null) {
                         fetchSolicitacoes(idPrestador!);
                       }
-                    });
-                  },
-                );
-              },
+                    },
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => DetalhesSolicitacaoPage(
+                            nome: solicitacao['nomeDoUsuario'],
+                            fotoUrl: 'https://${ApiConfig.baseUrl}/${solicitacao['fotoPerfilUsuario']}',
+                            servico: solicitacao['nomeServico'],
+                            dataHora: dataHoraFormatada,
+                            valorTotal: solicitacao['precoServico'].toDouble(),
+                            idAgendamento: solicitacao['idAgendamento'],
+                          ),
+                        ),
+                      ).then((_) {
+                        if (idPrestador != null) {
+                          fetchSolicitacoes(idPrestador!);
+                        }
+                      });
+                    },
+                  );
+                },
+              ),
             ),
     );
   }

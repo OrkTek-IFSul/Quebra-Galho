@@ -23,13 +23,12 @@ class _CadastroPageState extends State<CadastroPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  // Controllers e Keys permanecem os mesmos
   final _formCliente = GlobalKey<FormState>();
   final _formPrestador = GlobalKey<FormState>();
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
   final _telefoneController = TextEditingController();
-  final _cpfController = TextEditingController();
+  final _documentoController = TextEditingController(); // Alterado
   final _senhaController = TextEditingController();
   final _confirmarSenhaController = TextEditingController();
   final _descricaoController = TextEditingController();
@@ -38,31 +37,35 @@ class _CadastroPageState extends State<CadastroPage>
   File? _documentoImagem;
   File? _imagemPerfil;
 
-  // Máscaras permanecem as mesmas
+  // Máscaras CPF e CNPJ
+  final _maskCpf = MaskTextInputFormatter(
+    mask: '###.###.###-##',
+    filter: {"#": RegExp(r'[0-9]')},
+    type: MaskAutoCompletionType.lazy,
+  );
+  final _maskCnpj = MaskTextInputFormatter(
+    mask: '##.###.###/####-##',
+    filter: {"#": RegExp(r'[0-9]')},
+    type: MaskAutoCompletionType.lazy,
+  );
+
   final _maskTelefone = MaskTextInputFormatter(
     mask: '(##) #####-####',
     filter: {"#": RegExp(r'[0-9]')},
     type: MaskAutoCompletionType.lazy,
   );
 
-  final _maskCpf = MaskTextInputFormatter(
-    mask: '###.###.###-##',
-    filter: {"#": RegExp(r'[0-9]')},
-    type: MaskAutoCompletionType.lazy,
-  );
-  
-  // NOVO: Estado para controlar a visibilidade da senha
+  // Controla qual máscara e label usar (true = CPF, false = CNPJ)
+  bool _isCpf = true;
+
   bool _isPasswordObscured = true;
   bool _isConfirmPasswordObscured = true;
-
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
   }
-
-  // --- MÉTODOS DE LÓGICA (permanecem inalterados) ---
 
   Future<void> _selecionarImagemDocumento() async {
     final XFile? imagem = await _picker.pickImage(source: ImageSource.gallery);
@@ -113,10 +116,28 @@ class _CadastroPageState extends State<CadastroPage>
     }
   }
 
+  String? _validarDocumento(String? value) {
+    if (value == null || value.isEmpty) {
+      return "Informe o CPF ou CNPJ";
+    }
+    final unmasked = _isCpf
+        ? _maskCpf.getUnmaskedText()
+        : _maskCnpj.getUnmaskedText();
+
+    if (_isCpf && unmasked.length != 11) {
+      return "CPF incompleto";
+    }
+    if (!_isCpf && unmasked.length != 14) {
+      return "CNPJ incompleto";
+    }
+    return null;
+  }
+
   Future<void> _cadastrarCliente() async {
     final url = Uri.parse('https://${ApiConfig.baseUrl}/api/cadastro/usuario');
     final telefoneLimpo = _maskTelefone.getUnmaskedText();
-    final cpfLimpo = _maskCpf.getUnmaskedText();
+    final documentoLimpo =
+        _isCpf ? _maskCpf.getUnmaskedText() : _maskCnpj.getUnmaskedText();
 
     final response = await http.post(
       url,
@@ -125,7 +146,7 @@ class _CadastroPageState extends State<CadastroPage>
         "nome": _nomeController.text,
         "email": _emailController.text,
         "senha": _senhaController.text,
-        "documento": cpfLimpo,
+        "documento": documentoLimpo,
         "telefone": telefoneLimpo,
       }),
     );
@@ -163,13 +184,14 @@ class _CadastroPageState extends State<CadastroPage>
       'https://${ApiConfig.baseUrl}/api/cadastro/prestador',
     );
     final telefoneLimpo = _maskTelefone.getUnmaskedText();
-    final cpfLimpo = _maskCpf.getUnmaskedText();
+    final documentoLimpo =
+        _isCpf ? _maskCpf.getUnmaskedText() : _maskCnpj.getUnmaskedText();
 
     final usuario = {
       "nome": _nomeController.text,
       "email": _emailController.text,
       "senha": _senhaController.text,
-      "documento": cpfLimpo,
+      "documento": documentoLimpo,
       "telefone": telefoneLimpo,
     };
 
@@ -215,15 +237,12 @@ class _CadastroPageState extends State<CadastroPage>
     }
   }
 
-  // --- WIDGETS DE LAYOUT (atualizados para o novo design) ---
-
-  // NOVO: Widget helper para criar os campos de texto estilizados
   Widget _buildCustomTextField({
     required TextEditingController controller,
     required String label,
     TextInputType? keyboardType,
     String? Function(String?)? validator,
-    List? inputFormatters,
+    List<TextInputFormatter>? inputFormatters,
     bool obscureText = false,
     Widget? suffixIcon,
   }) {
@@ -245,8 +264,7 @@ class _CadastroPageState extends State<CadastroPage>
             controller: controller,
             validator: validator,
             keyboardType: keyboardType,
-            inputFormatters:
-                inputFormatters?.cast<TextInputFormatter>(),
+            inputFormatters: inputFormatters,
             obscureText: obscureText,
             decoration: InputDecoration(
               suffixIcon: suffixIcon,
@@ -282,7 +300,6 @@ class _CadastroPageState extends State<CadastroPage>
     );
   }
 
-  // NOVO: Widget helper para criar os seletores de imagem estilizados
   Widget _buildImagePicker({
     required String label,
     required File? imageFile,
@@ -338,8 +355,7 @@ class _CadastroPageState extends State<CadastroPage>
       ),
     );
   }
-  
-  // ATUALIZADO: _formularioBase agora usa os novos widgets helpers
+
   Widget _formularioBase(
     GlobalKey<FormState> formKey, {
     bool prestador = false,
@@ -370,14 +386,89 @@ class _CadastroPageState extends State<CadastroPage>
             validator: (value) =>
                 value == null || value.isEmpty ? "Informe o telefone" : null,
           ),
-          _buildCustomTextField(
-            controller: _cpfController,
-            label: "CPF",
-            inputFormatters: [_maskCpf],
-            keyboardType: TextInputType.number,
-            validator: (value) =>
-                value == null || value.isEmpty ? "Informe o CPF" : null,
+
+          // Campo documento com toggle de CPF / CNPJ
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      _isCpf ? "CPF" : "CNPJ",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[800],
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isCpf = !_isCpf;
+                          _documentoController.clear();
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 4, horizontal: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          _isCpf ? "Mudar para CNPJ" : "Mudar para CPF",
+                          style: TextStyle(
+                            color: Colors.black87,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _documentoController,
+                  keyboardType: TextInputType.number,
+                  validator: _validarDocumento,
+                  inputFormatters:
+                      _isCpf ? [_maskCpf] : [_maskCnpj],
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: const Color.fromARGB(255, 235, 235, 235),
+                    contentPadding: const EdgeInsets.symmetric(
+                        vertical: 15.0, horizontal: 12.0),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                      borderSide: BorderSide(
+                          color: Theme.of(context).primaryColor, width: 2.0),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                      borderSide: const BorderSide(color: Colors.red, width: 1.5),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                      borderSide: const BorderSide(color: Colors.red, width: 2.0),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
+
           _buildCustomTextField(
             controller: _senhaController,
             label: "Senha",
@@ -435,7 +526,6 @@ class _CadastroPageState extends State<CadastroPage>
     );
   }
 
-  // ATUALIZADO: Widget do formulário de cliente com novo padding
   Widget _formClienteWidget() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
@@ -443,7 +533,6 @@ class _CadastroPageState extends State<CadastroPage>
     );
   }
 
-  // ATUALIZADO: Widget do formulário de prestador com novo padding e usando o helper de imagem
   Widget _formPrestadorWidget() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
@@ -462,7 +551,6 @@ class _CadastroPageState extends State<CadastroPage>
     );
   }
 
-  // ATUALIZADO:SnackBar de erro com novo estilo
   void _mostrarErro(String mensagem) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -482,14 +570,13 @@ class _CadastroPageState extends State<CadastroPage>
     _nomeController.dispose();
     _emailController.dispose();
     _telefoneController.dispose();
-    _cpfController.dispose();
+    _documentoController.dispose();
     _senhaController.dispose();
     _confirmarSenhaController.dispose();
     _descricaoController.dispose();
     super.dispose();
   }
 
-  // ATUALIZADO: Método build principal com a nova estrutura de layout
   @override
   Widget build(BuildContext context) {
     final primaryColor = Colors.black;
@@ -497,14 +584,14 @@ class _CadastroPageState extends State<CadastroPage>
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF7F8FA), // Fundo cinza claro
+        backgroundColor: const Color(0xFFF7F8FA),
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
           title: const Text("Crie sua Conta", style:TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           centerTitle: true,
           elevation: 0,
           backgroundColor: Colors.transparent,
-          foregroundColor: Colors.black, // Cor dos ícones e texto
+          foregroundColor: Colors.black,
           bottom: TabBar(
             controller: _tabController,
             indicatorColor: primaryColor,
@@ -526,13 +613,13 @@ class _CadastroPageState extends State<CadastroPage>
           child: ElevatedButton(
             onPressed: () {
               final abaAtual = _tabController.index;
-              if (abaAtual == 0) { // Aba Cliente
+              if (abaAtual == 0) {
                 if (_formCliente.currentState!.validate()) {
                   _cadastrarCliente();
                 } else {
                   _mostrarErro("Por favor, corrija os erros no formulário.");
                 }
-              } else { // Aba Prestador
+              } else {
                 if (_formPrestador.currentState!.validate()) {
                   _cadastrarPrestador();
                 } else {
