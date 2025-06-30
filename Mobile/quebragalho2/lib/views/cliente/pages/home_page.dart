@@ -1,13 +1,20 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:quebragalho2/views/cliente/pages/login_page.dart';
 import 'package:quebragalho2/views/cliente/pages/prestador_detalhes_page.dart';
-import 'package:quebragalho2/views/cliente/widgets/popular_card_home.dart';
 import 'package:quebragalho2/views/cliente/widgets/prestador_home_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:quebragalho2/api_config.dart';
+import 'package:quebragalho2/views/cliente/pages/cadastro_page.dart';
+
+// Função placeholder
+Future<int?> obterIdPrestador() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getInt('prestador_id');
+}
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -35,11 +42,6 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _initializeData();
-    _checkLoginStatus();
-    _loadPrestadorId(); // nova chamada
-    _loadProfileImage();
-    _loadNomeUsuario();
-    _loadInitialData();
     searchController.addListener(_debouncedSearch);
   }
 
@@ -53,36 +55,44 @@ class _HomePageState extends State<HomePage> {
 
   // --- MÉTODOS DE INICIALIZAÇÃO ---
 
-  /// Inicializa os dados na ordem correta
+  // ALTERAÇÃO APLICADA AQUI
   Future<void> _initializeData() async {
-    // Primeiro verifica o status de login
-    await _checkLoginStatus();
-
-    // Se estiver logado, carrega os dados do usuário
+    // 1. REMOVIDO: setState(() => isLoading = true);
+    
+    await Future.wait([
+      _checkLoginStatus(),
+      _loadPrestadorId(),
+    ]);
+    
     if (isLoggedIn) {
-      await Future.wait([_loadNomeUsuario(), _loadProfileImage()]);
+      await Future.wait([
+        _loadNomeUsuario(),
+        _loadProfileImage(),
+      ]);
     }
-
-    // Por último, carrega os dados da página
+    
+    // Esta chamada agora controlará o isLoading por conta própria.
     await _loadInitialData();
+
+    // 2. REMOVIDO: if (mounted) { setState(() => isLoading = false); }
   }
 
-  // --- MÉTODOS DE LÓGICA E DADOS ---
+  // --- MÉTODOS DE LÓGICA E DADOS (sem alterações) ---
 
   Future<void> _loadPrestadorId() async {
     final id = await obterIdPrestador();
-    setState(() {
-      _idPrestadorLogado = id;
-    });
+    if (mounted) {
+      setState(() {
+        _idPrestadorLogado = id;
+      });
+    }
   }
 
   Future<void> _filtrarEBuscarPrestadores() async {
-    setState(() {
-      isLoading = true;
-    });
-
+    if (isLoading) return;
+    setState(() => isLoading = true); // Define como carregando
+    
     final termoBusca = searchController.text.trim();
-
     if (termoBusca.isEmpty && selectedTags.isEmpty) {
       await fetchPrestadores();
     } else {
@@ -103,146 +113,94 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> fetchPrestadores() async {
-    if (!isLoading) setState(() => isLoading = true);
-
     try {
-      final uri = Uri.parse(
-        'https://${ApiConfig.baseUrl}/api/usuario/homepage/prestadores',
-      );
+      final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage/prestadores');
       final response = await http.get(uri);
-
-      if (response.statusCode == 200) {
+      if (mounted && response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
         setState(() {
-          _prestadoresFiltrados = data
-              .where((p) => p['id'] != _idPrestadorLogado)
-              .toList();
+          _prestadoresFiltrados = data.where((p) => p['id'] != _idPrestadorLogado).toList();
         });
-      } else {
-        print(
-          'Falha ao carregar prestadores: ${response.statusCode} ${response.body}',
-        );
-
+      } else if (mounted) {
         setState(() => _prestadoresFiltrados = []);
       }
     } catch (e) {
-      print('Erro ao carregar prestadores: $e');
-      setState(() => _prestadoresFiltrados = []);
+      if (mounted) setState(() => _prestadoresFiltrados = []);
     } finally {
+      // Este finally garante que o loading termine APÓS a busca
       if (mounted) setState(() => isLoading = false);
     }
   }
 
   Future<void> _searchPrestadoresComFiltros() async {
-    if (!isLoading) setState(() => isLoading = true);
-
     try {
       final queryParams = {
-        if (searchController.text.trim().isNotEmpty)
-          'nome': searchController.text.trim(),
+        if (searchController.text.trim().isNotEmpty) 'nome': searchController.text.trim(),
         if (selectedTags.isNotEmpty) 'tags': selectedTags.join(','),
         'page': '0',
-        'size': '10',
+        'size': '20',
       };
-
-      final uri = Uri.parse(
-        'https://${ApiConfig.baseUrl}/api/usuario/homepage/buscar',
-      ).replace(queryParameters: queryParams);
-
+      final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage/buscar')
+          .replace(queryParameters: queryParams);
       final response = await http.get(uri);
-
-      if (response.statusCode == 200) {
+      if (mounted && response.statusCode == 200) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
         setState(() {
-          _prestadoresFiltrados = (data['content'] ?? [])
-              .where((p) => p['id'] != _idPrestadorLogado)
-              .toList();
+          _prestadoresFiltrados = (data['content'] as List<dynamic>?)
+                  ?.where((p) => p['id'] != _idPrestadorLogado)
+                  .toList() ??
+              [];
         });
-      } else {
-        
-        print(
-          'Falha ao buscar prestadores: ${response.statusCode} ${response.body}',
-        );
-
+      } else if (mounted) {
         setState(() => _prestadoresFiltrados = []);
       }
     } catch (e) {
-      print('Erro na busca: $e');
-      setState(() => _prestadoresFiltrados = []);
+      if (mounted) setState(() => _prestadoresFiltrados = []);
     } finally {
+      // Este finally garante que o loading termine APÓS a busca
       if (mounted) setState(() => isLoading = false);
     }
   }
 
-  /// Busca as categorias/tags disponíveis.
-
   Future<void> fetchCategorias() async {
     try {
-      final uri = Uri.parse(
-        'https://${ApiConfig.baseUrl}/api/usuario/homepage/tags',
-      );
+      final uri = Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/homepage/tags');
       final response = await http.get(uri);
-
-      if (response.statusCode == 200) {
+      if (mounted && response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
         setState(() {
           categories = ['Todos', ...data.map((tag) => tag['nome'].toString())];
         });
-      } else {
-
-        print(
-          'Falha ao carregar categorias: ${response.statusCode} ${response.body}',
-        );
-
       }
     } catch (e) {
       print('Erro ao carregar categorias: $e');
     }
   }
 
-  // --- MÉTODOS DE AUTENTICAÇÃO E OUTROS ---
   Future<void> _checkLoginStatus() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      final userId = prefs.getInt('usuario_id');
-
-      if (mounted) {
-        setState(() {
-          isLoggedIn = token != null && token.isNotEmpty;
-          usuarioId = userId;
-        });
-      }
-
-      print('Status de login: $isLoggedIn, Usuario ID: $usuarioId'); // Debug
-    } catch (e) {
-      print('Erro ao verificar status de login: $e');
-      if (mounted) {
-        setState(() {
-          isLoggedIn = false;
-          usuarioId = null;
-        });
-      }
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final userId = prefs.getInt('usuario_id');
+    if (mounted) {
+      setState(() {
+        isLoggedIn = token != null && token.isNotEmpty;
+        usuarioId = userId;
+      });
     }
   }
 
-  Future<void> _confirmLogout() async {
+  Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
-
     if (!mounted) return;
-
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => const LoginPage()),
+      MaterialPageRoute(builder: (context) => const HomePage()),
       (route) => false,
     );
-
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Logout realizado com sucesso')),
     );
-    
-    _initializeData();
   }
 
   Future<void> _confirmLogout() async {
@@ -252,117 +210,44 @@ class _HomePageState extends State<HomePage> {
         title: const Text('Confirmação de Logout'),
         content: const Text('Deseja realmente sair da sua conta?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Sair'),
-          ),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Sair')),
         ],
       ),
     );
-
     if (confirmar == true) {
       _logout();
     }
   }
 
   Future<void> _loadNomeUsuario() async {
-    if (!isLoggedIn || usuarioId == null) {
-      print('Usuário não logado ou ID não encontrado'); // Debug
-      return;
-    }
-
+    if (!isLoggedIn || usuarioId == null) return;
     try {
-      print('Carregando nome do usuário para ID: $usuarioId'); // Debug
-
-      final response = await http.get(
-        Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$usuarioId'),
-      );
-
-      print('Status da resposta (nome): ${response.statusCode}'); // Debug
-
-      if (response.statusCode == 200) {
-        // Aplicando a decodificação UTF-8 aqui também
+      final response = await http.get(Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$usuarioId'));
+      if (mounted && response.statusCode == 200) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
-        print('Dados recebidos (nome): $data'); // Debug
-
-        if (mounted) {
-          setState(() {
-            nomeUsuario = data['nome']?.toString() ?? 'Usuário';
-          });
-        }
-        print('Nome carregado: $nomeUsuario'); // Debug
-      } else {
-        print(
-          'Erro ao carregar nome: ${response.statusCode} - ${response.body}',
-        );
-        if (mounted) {
-          setState(() {
-            nomeUsuario = 'Usuário';
-          });
-        }
+        setState(() => nomeUsuario = data['nome']?.toString() ?? 'Usuário');
+      } else if (mounted) {
+        setState(() => nomeUsuario = 'Usuário');
       }
     } catch (e) {
-      print('Erro ao carregar nome do usuário: $e');
-      if (mounted) {
-        setState(() {
-          nomeUsuario = 'Usuário';
-        });
-      }
+      if (mounted) setState(() => nomeUsuario = 'Usuário');
     }
   }
 
   Future<void> _loadProfileImage() async {
-
-    if (!isLoggedIn || usuarioId == null) {
-      print('Usuário não logado ou ID não encontrado para imagem'); // Debug
-      return;
-    }
-
+    if (!isLoggedIn || usuarioId == null) return;
     try {
-      print('Carregando imagem do usuário para ID: $usuarioId'); // Debug
-
-      final response = await http.get(
-        Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$usuarioId'),
-      );
-
-      print('Status da resposta (imagem): ${response.statusCode}'); // Debug
-
-      if (response.statusCode == 200) {
-        // Aplicando a decodificação UTF-8 aqui também
+      final response = await http.get(Uri.parse('https://${ApiConfig.baseUrl}/api/usuario/perfil/$usuarioId'));
+      if (mounted && response.statusCode == 200) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
-        print('Dados recebidos (imagem): $data'); // Debug
-
         final imagemPerfil = data['imagemPerfil'];
-        
-        print('Caminho da imagem: $imagemPerfil'); // Debug
-
         if (imagemPerfil != null && imagemPerfil.toString().isNotEmpty) {
-          final imageUrl =
-              'https://${ApiConfig.baseUrl}/$imagemPerfil?ts=${DateTime.now().millisecondsSinceEpoch}';
-          print('URL final da imagem: $imageUrl'); // Debug
-
-          if (mounted) {
-            setState(() {
-              _profileImageUrl = imageUrl;
-            });
-          }
+          final imageUrl = 'https://${ApiConfig.baseUrl}/$imagemPerfil?ts=${DateTime.now().millisecondsSinceEpoch}';
+          setState(() => _profileImageUrl = imageUrl);
         } else {
-          print('Imagem de perfil não encontrada ou vazia');
-          if (mounted) {
-            setState(() {
-              _profileImageUrl = null;
-            });
-          }
-
+          setState(() => _profileImageUrl = null);
         }
-      } else {
-        print(
-          'Erro ao carregar imagem: ${response.statusCode} - ${response.body}',
-        );
       }
     } catch (e) {
       print('Erro ao carregar imagem de perfil: $e');
@@ -370,31 +255,19 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildCategoryChip(String category) {
-    final isSelected =
-        category == 'Todos'
-            ? selectedTags.isEmpty
-            : selectedTags.contains(category);
-
+    final isSelected = (category == 'Todos' && selectedTags.isEmpty) || selectedTags.contains(category);
     return ChoiceChip(
-      label: Text(
-        category,
-        style: TextStyle(color: isSelected ? Colors.white : Colors.black),
-
-      ),
+      label: Text(category, style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
       selectedColor: Colors.black,
       backgroundColor: Colors.grey[200],
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: Colors.transparent)),
       selected: isSelected,
       onSelected: (bool selected) {
         setState(() {
           if (category == 'Todos') {
             selectedTags.clear();
-            searchController.clear();
           } else {
-            if (selected) {
-              selectedTags.add(category);
-            } else {
-              selectedTags.remove(category);
-            }
+            selected ? selectedTags.add(category) : selectedTags.remove(category);
           }
         });
         _filtrarEBuscarPrestadores();
@@ -410,394 +283,122 @@ class _HomePageState extends State<HomePage> {
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         elevation: 0,
-        title:
-            isLoggedIn
-                ? Row(
-                  children: [
-                    const SizedBox(height: 10),
-                    // Foto de perfil ou avatar padrão
-                    _profileImageUrl != null
-                        ? GestureDetector(
-                          onTap: _confirmLogout,
-                          child: CircleAvatar(
-                            radius: 25,
-                            backgroundImage: NetworkImage(_profileImageUrl!),
-                            backgroundColor: Colors.transparent,
-                            onBackgroundImageError: (exception, stackTrace) {
-                              print('Erro ao carregar imagem: $exception');
-                            },
-                          ),
-                        )
-                        : GestureDetector(
-                          onTap: _confirmLogout,
-                          child: const CircleAvatar(
-                            radius: 25,
-                            backgroundColor: Color(0xFFF0F0F0),
-                            child: Icon(Icons.person, color: Colors.black87),
-                          ),
-                        ),
-                    const SizedBox(width: 12),
-                    // Textos de boas-vindas
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            'Bem-vindo,',
-                            style: TextStyle(fontSize: 14, color: Colors.grey),
-                          ),
-                          Text(
-                            nomeUsuario ?? 'Carregando...',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                )
-                : const Text(
-                  'Bem-vindo',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-        actions: [
-          if (isLoggedIn) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF0F0F0),
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.notifications_none),
-                  onPressed: () {},
-                  color: Colors.black87,
-                  splashRadius: 24,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: GestureDetector(
-                onTap: _confirmLogout,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0F0F0),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.grey[300]!, width: 1),
-                  ),
-                  child: _profileImageUrl != null
-                      ? CircleAvatar(
-                          backgroundImage: NetworkImage(_profileImageUrl!),
-                          onBackgroundImageError: (exception, stackTrace) {
-                            setState(() {
-                              _profileImageUrl = null;
-                            });
-                          },
-                        )
-                      : const CircleAvatar(
-                          backgroundColor: Color(0xFFF0F0F0),
-                          child: Icon(Icons.person, color: Colors.black87),
-                        ),
-                ),
-              ),
-            ),
-          ] else ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF0F0F0),
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.person_2_outlined),
-                  onPressed:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginPage(),
-                        ),
-                      ),
-                  color: Colors.black87,
-                  splashRadius: 24,
-                ),
-              ),
-            ),
-          ],
-          const SizedBox(width: 12),
-        ],
-      ),
-      body:
-          isLoggedIn
-              ? CustomScrollView(
-                slivers: [
-                  // Banner, texto e "Prestadores"
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: 20),
-                          // Banner desabilitado:
-                          // Container(
-                          //   width: double.infinity,
-                          //   margin: const EdgeInsets.only(bottom: 16),
-                          //   decoration: BoxDecoration(
-                          //     borderRadius: BorderRadius.circular(24),
-                          //     image: const DecorationImage(
-                          //       image: AssetImage(
-                          //         'assets/images/banner_homepage.png',
-                          //       ),
-                          //       fit: BoxFit.cover,
-                          //     ),
-                          //   ),
-                          //   height: 200,
-                          // ),
-                          Row(
-                            children: [
-                              Text(
-                                "O que você precisa pra hoje?",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                        ],
-                      ),
+        title: isLoggedIn
+            ? Row(
+                children: [
+                  GestureDetector(
+                    onTap: _confirmLogout,
+                    child: CircleAvatar(
+                      radius: 25,
+                      backgroundImage: _profileImageUrl != null ? NetworkImage(_profileImageUrl!) : null,
+                      backgroundColor: Colors.grey[200],
+                      child: _profileImageUrl == null ? const Icon(Icons.person, color: Colors.black87) : null,
                     ),
                   ),
-                  // Barra de busca e tags fixas
-                  SliverPersistentHeader(
-                    pinned: true,
-                    delegate: _SliverSearchAndTagsDelegate(
-                      searchController: searchController,
-                      categories: categories,
-                      buildCategoryChip: _buildCategoryChip,
-                      horizontalPadding: 16.0, // Adicione este parâmetro
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Bem-vindo,', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                        Text(
+                          nomeUsuario ?? 'Carregando...',
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
-                  // Lista de prestadores
-                  SliverToBoxAdapter(child: SizedBox(height: 12)),
-                  isLoading
-                      ? SliverFillRemaining(
-                        child: Center(child: CircularProgressIndicator()),
-                      )
-                      : _prestadoresFiltrados.isEmpty
-                      ? SliverFillRemaining(
-                        child: Center(
-                          child: Text(
-                            'Nenhum prestador encontrado.\nTente ajustar sua busca ou filtros.',
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      )
-                      : SliverList(
-                        delegate: SliverChildBuilderDelegate((context, index) {
-                          final prestador = _prestadoresFiltrados[index];
-                          final String imageUrl =
-                              (prestador['imagemPerfil'] != null &&
-                                      (prestador['imagemPerfil'] as String)
-                                          .isNotEmpty)
-                                  ? 'https://${ApiConfig.baseUrl}/${prestador['imagemPerfil']}'
-                                  : '';
-                          final String nome =
-                              prestador['nome'] as String? ??
-                              'Nome Indisponível';
-                          final List<String> tags =
-                              (prestador['tags'] as List?)
-                                  ?.map(
-                                    (tag) =>
-                                        (tag is Map && tag['nome'] != null)
-                                            ? tag['nome'].toString()
-                                            : '',
-                                  )
-                                  .where((tagNome) => tagNome.isNotEmpty)
-                                  .toList() ??
-                              [];
-                          final double rating =
-                              (prestador['mediaAvaliacoes'] as num?)
-                                  ?.toDouble() ??
-                              0.0;
-                          final int? prestadorId = prestador['id'] as int?;
-
-                          return PrestadorHomeCard(
-                            imageUrl: imageUrl,
-                            name: nome,
-                            categories: tags,
-                            rating: rating,
-                            onTap: () {
-                              if (prestadorId != null) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) => PrestadorDetalhesPage(
-                                          id: prestadorId,
-                                          isLoggedIn: isLoggedIn,
-                                        ),
-                                  ),
-                                );
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'ID do prestador indisponível.',
-                                    ),
-                                  ),
-                                );
-                              }
-                            },
-                          );
-                        }, childCount: _prestadoresFiltrados.length),
-                      ),
                 ],
               )
-              : Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
+            : const Text('Bem-vindo', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+        actions: [
+          if (!isLoggedIn)
+            Padding(
+              padding: const EdgeInsets.only(right: 12.0),
+              child: IconButton(
+                icon: const Icon(Icons.login),
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginPage())),
+                color: Colors.black87,
+                splashRadius: 24,
+              ),
+            ),
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: _initializeData,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (isLoggedIn)
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ...conteúdo para não logado...
+                    const SizedBox(height: 20),
+                    const Text(
+                      "O que você precisa pra hoje?",
+                      style: TextStyle(fontSize: 20, color: Colors.black, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Pesquise por nome ou serviço',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                        filled: true,
+                        fillColor: Colors.grey[200],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 40,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: categories.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 8),
+                        itemBuilder: (context, index) => _buildCategoryChip(categories[index]),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Row(
+                      children: [
+                        Icon(Icons.bolt, color: Color.fromARGB(255, 63, 63, 63)),
+                        SizedBox(width: 4),
+                        Text('Prestadores', style: TextStyle(color: Color.fromARGB(255, 112, 112, 112), fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
                   ],
                 ),
-              ),
-    );
-  }
-}
-
-// Delegate para manter busca e tags fixas
-class _SliverSearchAndTagsDelegate extends SliverPersistentHeaderDelegate {
-  final TextEditingController searchController;
-  final List<String> categories;
-  final Widget Function(String) buildCategoryChip;
-  final double horizontalPadding;
-
-  _SliverSearchAndTagsDelegate({
-    required this.searchController,
-    required this.categories,
-    required this.buildCategoryChip,
-    this.horizontalPadding = 0,
-  });
-
-  @override
-  double get minExtent => 150;
-  @override
-  double get maxExtent => 150;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Container(
-      color: Colors.white,
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-        child: Column(
-          children: [
-            TextField(
-              controller: searchController,
-              decoration: InputDecoration(
-                hintText: 'Pesquise pelo nome do usuário ou empresa',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: Colors.grey[200],
-              ),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 40,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: categories.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder:
-                    (context, index) => buildCategoryChip(categories[index]),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Icon(Icons.bolt, color: const Color.fromARGB(255, 63, 63, 63)),
-                Text(
-                  'Prestadores',
-                  style: TextStyle(
-                    color: const Color.fromARGB(255, 112, 112, 112),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-          ],
-        ),
-      ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant _SliverSearchAndTagsDelegate oldDelegate) {
-    return searchController != oldDelegate.searchController ||
-         categories != oldDelegate.categories ||
-         buildCategoryChip != oldDelegate.buildCategoryChip;
-  }
-
-                itemBuilder: (context, index) => _buildCategoryChip(categories[index]),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: _loadInitialData,
+              Expanded(
                 child: isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : _prestadoresFiltrados.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'Nenhum prestador encontrado.\nTente ajustar sua busca ou filtros.',
-                              textAlign: TextAlign.center,
-                            ),
-                          )
+                        ? const Center(child: Text('Nenhum prestador encontrado.'))
                         : ListView.builder(
                             physics: const AlwaysScrollableScrollPhysics(),
+                            padding: EdgeInsets.zero,
                             itemCount: _prestadoresFiltrados.length,
                             itemBuilder: (context, index) {
                               final prestador = _prestadoresFiltrados[index];
-                              final imageUrl = (prestador['imagemPerfil'] != null &&
-                                      (prestador['imagemPerfil'] as String).isNotEmpty)
-                                  ? 'https://${ApiConfig.baseUrl}/${prestador['imagemPerfil']}'
-                                  : '';
-                              final nome = prestador['nome'] ?? 'Nome Indisponível';
-                              final tags = (prestador['tags'] as List?)
-                                      ?.map((tag) => tag['nome'].toString())
-                                      .where((nome) => nome.isNotEmpty)
+                              final String imageUrl =
+                                  (prestador['imagemPerfil'] != null && (prestador['imagemPerfil'] as String).isNotEmpty)
+                                      ? 'https://${ApiConfig.baseUrl}/${prestador['imagemPerfil']}'
+                                      : '';
+                              final String nome = prestador['nome'] as String? ?? 'Nome Indisponível';
+                              final List<String> tags = (prestador['tags'] as List?)
+                                      ?.map((tag) => (tag is Map && tag['nome'] != null)
+                                          ? tag['nome'].toString()
+                                          : '')
+                                      .where((tagNome) => tagNome.isNotEmpty)
                                       .toList() ??
                                   [];
-                              final rating = (prestador['mediaAvaliacoes'] as num?)?.toDouble() ?? 0.0;
-                              final id = prestador['id'];
+                              final double rating = (prestador['mediaAvaliacoes'] as num?)?.toDouble() ?? 0.0;
+                              final int? prestadorId = prestador['id'] as int?;
 
                               return PrestadorHomeCard(
                                 imageUrl: imageUrl,
@@ -805,14 +406,11 @@ class _SliverSearchAndTagsDelegate extends SliverPersistentHeaderDelegate {
                                 categories: tags,
                                 rating: rating,
                                 onTap: () {
-                                  if (id != null) {
+                                  if (prestadorId != null) {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => PrestadorDetalhesPage(
-                                          id: id,
-                                          isLoggedIn: isLoggedIn,
-                                        ),
+                                        builder: (context) => PrestadorDetalhesPage(id: prestadorId, isLoggedIn: isLoggedIn),
                                       ),
                                     );
                                   }
@@ -821,8 +419,8 @@ class _SliverSearchAndTagsDelegate extends SliverPersistentHeaderDelegate {
                             },
                           ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

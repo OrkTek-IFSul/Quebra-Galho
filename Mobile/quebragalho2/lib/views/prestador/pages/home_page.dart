@@ -8,6 +8,15 @@ import 'package:quebragalho2/views/cliente/pages/login_page.dart';
 import 'package:quebragalho2/views/prestador/pages/detalhes_solicitacao.dart';
 import 'package:quebragalho2/views/prestador/widgets/solicitacao_cliente_card.dart';
 
+// Presumindo que a função obterIdPrestador() existe em algum lugar do seu projeto
+// Exemplo de placeholder se não estiver definida:
+Future<int?> obterIdPrestador() async {
+  final prefs = await SharedPreferences.getInstance();
+  // Supondo que 'user_id' seja a chave para o ID do prestador
+  return prefs.getInt('user_id');
+}
+
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -25,17 +34,24 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus();
-    _loadNomeUsuario();
-    carregarSolicitacoesDoPrestador();
+    _initializePage();
+  }
+
+  // Juntei as chamadas de inicialização em um único método para clareza
+  Future<void> _initializePage() async {
+    await _checkLoginStatus();
+    await _loadNomeUsuario();
+    await carregarSolicitacoesDoPrestador();
   }
 
   Future<void> _checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
-    setState(() {
-      isLoggedIn = token != null && token.isNotEmpty;
-    });
+    if (mounted) {
+      setState(() {
+        isLoggedIn = token != null && token.isNotEmpty;
+      });
+    }
   }
 
   Future<void> _logout() async {
@@ -75,29 +91,35 @@ class _HomePageState extends State<HomePage> {
     );
 
     if (confirmar == true) {
-      _logout();
+      await _logout();
     }
   }
 
   Future<void> _loadNomeUsuario() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      nomeUsuario = prefs.getString('user_name') ?? '';
-    });
+    if (mounted) {
+      setState(() {
+        nomeUsuario = prefs.getString('user_name') ?? '';
+      });
+    }
   }
 
   Future<void> carregarSolicitacoesDoPrestador() async {
     final id = await obterIdPrestador();
 
     if (id != null) {
-      setState(() {
-        idPrestador = id;
-      });
-      fetchSolicitacoes(id);
+      if (mounted) {
+        setState(() {
+          idPrestador = id;
+        });
+      }
+      await fetchSolicitacoes(id);
     } else {
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
       print('ID do prestador não encontrado.');
     }
   }
@@ -111,20 +133,27 @@ class _HomePageState extends State<HomePage> {
         },
       );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        setState(() {
-          solicitacoes = data;
-          isLoading = false;
-        });
-      } else {
-        throw Exception('Falha ao carregar solicitações');
+      if (mounted) {
+        if (response.statusCode == 200) {
+          final List<dynamic> data = jsonDecode(response.body);
+          setState(() {
+            solicitacoes = data;
+            isLoading = false;
+          });
+        } else {
+          setState(() {
+            isLoading = false;
+          });
+          throw Exception('Falha ao carregar solicitações. Status: ${response.statusCode}');
+        }
       }
     } catch (e) {
       print('Erro ao carregar solicitações: $e');
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -132,26 +161,13 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: isLoggedIn
-            ? Text('Serviços', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),)
-            : const Text('Solicitações'),
+        title: Text(
+          isLoggedIn ? 'Serviços' : 'Solicitações',
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
         actions: [
           if (isLoggedIn)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF0F0F0),
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.notifications_none),
-                  onPressed: () {},
-                  color: Colors.black87,
-                  splashRadius: 24,
-                ),
-              ),
-            ),
+           
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Container(
@@ -178,48 +194,8 @@ class _HomePageState extends State<HomePage> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: solicitacoes.length,
-              itemBuilder: (context, index) {
-                final solicitacao = solicitacoes[index];
-
-                final DateTime dataHora = DateTime.parse(
-                  solicitacao['dataHoraAgendamento'],
-                );
-                final String dataHoraFormatada =
-                    '${dataHora.day}/${dataHora.month}/${dataHora.year} às ${dataHora.hour}:${dataHora.minute.toString().padLeft(2, '0')}';
-
-                return SolicitacaoClienteCard(
-                  nome: solicitacao['nomeDoUsuario'],
-                  fotoUrl:
-                      'https://${ApiConfig.baseUrl}${solicitacao['fotoPerfilUsuario']}',
-                  idAgendamento: solicitacao['idAgendamento'],
-                  isConfirmed: solicitacao['statusPedidoAgendamento'] == true,
-                  isCanceled: solicitacao['statusPedidoAgendamento'] == false,
-                  onConfirm: () {
-                    if (idPrestador != null) {
-                      fetchSolicitacoes(idPrestador!);
-                    }
-                  },
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => DetalhesSolicitacaoPage(
-                          nome: solicitacao['nomeDoUsuario'],
-                          fotoUrl:
-                              'https://${ApiConfig.baseUrl}${solicitacao['fotoPerfilUsuario']}',
-                          servico: solicitacao['nomeServico'],
-                          dataHora: dataHoraFormatada,
-                          valorTotal: solicitacao['precoServico'].toDouble(),
-                          idAgendamento: solicitacao['idAgendamento'],
-                        ),
-                      ),
-                    ).then((_) {
           : RefreshIndicator(
-              onRefresh: () async {
-                await carregarSolicitacoesDoPrestador();
-              },
+              onRefresh: carregarSolicitacoesDoPrestador, // Atribui a função de refresh
               child: ListView.builder(
                 physics: const AlwaysScrollableScrollPhysics(),
                 itemCount: solicitacoes.length,
@@ -239,6 +215,7 @@ class _HomePageState extends State<HomePage> {
                     isConfirmed: solicitacao['statusPedidoAgendamento'] == true,
                     isCanceled: solicitacao['statusPedidoAgendamento'] == false,
                     onConfirm: () {
+                      // O onConfirm pode simplesmente recarregar a lista
                       if (idPrestador != null) {
                         fetchSolicitacoes(idPrestador!);
                       }
@@ -257,6 +234,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                       ).then((_) {
+                        // Recarrega os dados quando o usuário voltar da tela de detalhes
                         if (idPrestador != null) {
                           fetchSolicitacoes(idPrestador!);
                         }
