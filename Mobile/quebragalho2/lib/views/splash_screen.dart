@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:quebragalho2/views/cliente/pages/navegacao_cliente.dart';
 import 'package:quebragalho2/views/prestador/pages/navegacao_prestador.dart';
 
-
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -29,20 +28,14 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeIn,
-      ),
+      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
     );
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.5),
       end: Offset.zero,
     ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOutCubic,
-      ),
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
     );
 
     _animationController.forward();
@@ -76,11 +69,7 @@ class _SplashScreenState extends State<SplashScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Image.asset(
-                  'assets/images/logo.png',
-                  width: 200,
-                  height: 200,
-                ),
+                Image.asset('assets/images/logo.png', width: 200, height: 200),
                 // Se você tiver um texto aqui, como "Carregando...",
                 // certifique-se de que a cor do texto contraste com o preto.
                 // Exemplo:

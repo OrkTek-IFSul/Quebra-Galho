@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:quebragalho2/views/cliente/pages/chat_list_page.dart';
 import 'package:quebragalho2/views/cliente/pages/chat_page.dart';
+import 'package:quebragalho2/views/moderador/moderador_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:quebragalho2/views/cliente/pages/home_page.dart';
 import 'package:quebragalho2/views/cliente/pages/perfil_page.dart';
@@ -13,10 +14,10 @@ class NavegacaoCliente extends StatefulWidget {
 }
 
 class _NavegacaoClienteState extends State<NavegacaoCliente> {
-  // Index da página selecionada
   int _selectedIndex = 0;
   int? usuarioId;
   int? prestadorId;
+  bool? isModerador;
 
   @override
   void initState() {
@@ -27,6 +28,7 @@ class _NavegacaoClienteState extends State<NavegacaoCliente> {
   Future<void> _carregarUsuarioId() async {
     final prefs = await SharedPreferences.getInstance();
     final id = prefs.getInt('usuario_id');
+    final moderador = prefs.getBool('isModerador') ?? false;
 
     if (id == null) {
       if (!mounted) return;
@@ -36,19 +38,18 @@ class _NavegacaoClienteState extends State<NavegacaoCliente> {
 
     setState(() {
       usuarioId = id;
+      isModerador = moderador;
     });
   }
 
-  // Lista de páginas da navegação
   List<Widget> get paginas => [
     HomePage(),
     if (usuarioId != null) ChatListScreen(usuarioId: usuarioId!),
     if (usuarioId != null) PerfilPage(usuarioId: usuarioId!),
-    // Passe o id aqui
+    if (isModerador == true) ModeradorPage(), // index = 3
   ];
 
   void _onTabTapped(int index) {
-    // Verifica se usuário está logado antes de ir para perfil
     if ((index == 1 || index == 2) && usuarioId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -71,7 +72,7 @@ class _NavegacaoClienteState extends State<NavegacaoCliente> {
         color: Colors.white,
         shape: const CircularNotchedRectangle(),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
             IconButton(
               icon: Icon(
@@ -94,6 +95,14 @@ class _NavegacaoClienteState extends State<NavegacaoCliente> {
               ),
               onPressed: () => _onTabTapped(2),
             ),
+            if (isModerador == true)
+              IconButton(
+                icon: Icon(
+                  Icons.shield_outlined,
+                  color: _selectedIndex == 3 ? Colors.black : Colors.grey[400],
+                ),
+                onPressed: () => _onTabTapped(3),
+              ),
           ],
         ),
       ),

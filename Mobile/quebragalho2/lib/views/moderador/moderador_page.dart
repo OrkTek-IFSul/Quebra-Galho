@@ -49,12 +49,20 @@ class _ModeracaoPageState extends State<ModeradorPage> {
     final uri = Uri.parse(
       'https://${ApiConfig.baseUrl}/api/moderacao/listarUsuarios',
     );
+
     try {
       final response = await http.get(uri);
       if (response.statusCode == 200) {
-        final json = jsonDecode(response.body);
+        final json = jsonDecode(utf8.decode(response.bodyBytes));
+        final listaUsuarios = json['content'] ?? [];
+
+        // Verifica se o campo 'moderador' está presente e imprime os valores
+        for (var u in listaUsuarios) {
+          print('Usuário ${u['nome']}: moderador = ${u['moderador']}');
+        }
+
         setState(() {
-          usuarios = json['content'] ?? [];
+          usuarios = listaUsuarios;
         });
       } else {
         print('Erro ${response.statusCode}');
@@ -71,9 +79,10 @@ class _ModeracaoPageState extends State<ModeradorPage> {
     try {
       final response = await http.get(uri);
       if (response.statusCode == 200) {
-        final json = jsonDecode(response.body);
+        final json = jsonDecode(utf8.decode(response.bodyBytes));
+
         setState(() {
-          prestadores = json; // Aqui está a correção!
+          prestadores = json;
         });
       } else {
         print('Erro ${response.statusCode}');
@@ -91,7 +100,7 @@ class _ModeracaoPageState extends State<ModeradorPage> {
     try {
       final response = await http.get(uri);
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
+        final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
 
         // Filtro: apenas denúncias com status null (pendentes)
         final List<dynamic> pendentes =
@@ -116,7 +125,7 @@ class _ModeracaoPageState extends State<ModeradorPage> {
       final response = await http.get(uri);
       if (response.statusCode == 200) {
         // decodifica direto como List
-        final List<dynamic> data = jsonDecode(response.body);
+        final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
         setState(() {
           apelos = data;
         });
@@ -198,34 +207,56 @@ class _ModeracaoPageState extends State<ModeradorPage> {
 
         return _buildLista(
           filtrados,
-          (item) => ListTile(
-            leading: CircleAvatar(
-              backgroundImage: NetworkImage(
-                'https://${ApiConfig.baseUrl}/${item['imgPerfil']}',
-              ),
-            ),
-            title: Text(item['nome'] ?? 'Sem nome'),
-            subtitle: Text(
-              'Email: ${item['email'] ?? '---'}\n'
-              'Telefone: ${item['telefone'] ?? '---'}',
-            ),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+          (item) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item['moderador'] ? 'Moderador' : 'Usuário'),
-                const SizedBox(height: 2),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        item['moderador'] ? Colors.red : Colors.green,
+                CircleAvatar(
+                  backgroundImage: NetworkImage(
+                    'https://${ApiConfig.baseUrl}/${item['imgPerfil']}',
                   ),
-                  onPressed:
-                      () => _atualizarModerador(item['id'], item['moderador']),
-                  child: Text(item['moderador'] ? 'Remover' : 'Tornar'),
+                  radius: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item['nome'] ?? 'Sem nome',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text('Email: ${item['email'] ?? '---'}'),
+                      Text('Telefone: ${item['telefone'] ?? '---'}'),
+                    ],
+                  ),
+                ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(item['moderador'] ? 'Moderador' : 'Usuário'),
+                    const SizedBox(height: 4),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            item['moderador'] ? Colors.red : Colors.green,
+                        minimumSize: const Size(80, 36),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        textStyle: const TextStyle(fontSize: 12),
+                      ),
+                      onPressed:
+                          () => _atualizarModerador(
+                            item['id'],
+                            item['moderador'],
+                          ),
+                      child: Text(item['moderador'] ? 'Remover' : 'Tornar'),
+                    ),
+                  ],
                 ),
               ],
             ),
-            isThreeLine: true,
           ),
         );
 
@@ -244,8 +275,8 @@ class _ModeracaoPageState extends State<ModeradorPage> {
               'Email: ${item['usuario']?['email'] ?? '---'}',
             ),
             trailing: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                final resultado = await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder:
@@ -253,6 +284,10 @@ class _ModeracaoPageState extends State<ModeradorPage> {
                             DetalhesPrestadorPage(idPrestador: item['id']),
                   ),
                 );
+
+                if (resultado == true) {
+                  await fetchPrestadores(); // ou o nome do seu método que atualiza
+                }
               },
               child: const Text("Selecionar"),
             ),

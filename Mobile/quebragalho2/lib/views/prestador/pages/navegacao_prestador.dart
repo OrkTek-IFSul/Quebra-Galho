@@ -1,32 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:quebragalho2/views/prestador/pages/chat_list_prestador.dart';
 import 'package:quebragalho2/views/prestador/pages/home_page.dart';
 import 'package:quebragalho2/views/prestador/pages/tela_perfil.dart';
+import 'package:quebragalho2/views/moderador/moderador_page.dart';
 
 class NavegacaoPrestador extends StatefulWidget {
   final int id_prestador;
 
-  NavegacaoPrestador({super.key, required this.id_prestador});
+  const NavegacaoPrestador({super.key, required this.id_prestador});
 
   @override
   State<NavegacaoPrestador> createState() => _NavegacaoPrestadorState();
 }
 
 class _NavegacaoPrestadorState extends State<NavegacaoPrestador> {
-  // Index da página selecionada
   int _selectedIndex = 0;
-
-  //Lista de páginas da navegação
-  late final List<Widget> paginas;
+  bool isModerador = false;
+  List<Widget> paginas = [];
 
   @override
   void initState() {
     super.initState();
-    paginas = [
-      HomePage(),
-      ChatListPrestador(),
-      PerfilPage(),
-    ];
+    _carregarModerador();
+  }
+
+  Future<void> _carregarModerador() async {
+    final prefs = await SharedPreferences.getInstance();
+    final moderador = prefs.getBool('isModerador') ?? false;
+
+    setState(() {
+      isModerador = moderador;
+      paginas = [
+        HomePage(),
+        ChatListPrestador(),
+        PerfilPage(),
+        if (isModerador) ModeradorPage(),
+      ];
+    });
   }
 
   void _onTabTapped(int index) {
@@ -38,10 +49,7 @@ class _NavegacaoPrestadorState extends State<NavegacaoPrestador> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: paginas,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: paginas),
       bottomNavigationBar: BottomAppBar(
         color: Colors.white,
         shape: const CircularNotchedRectangle(),
@@ -69,12 +77,17 @@ class _NavegacaoPrestadorState extends State<NavegacaoPrestador> {
               ),
               onPressed: () => _onTabTapped(2),
             ),
+            if (isModerador)
+              IconButton(
+                icon: Icon(
+                  Icons.shield_outlined,
+                  color: _selectedIndex == 3 ? Colors.black : Colors.grey,
+                ),
+                onPressed: () => _onTabTapped(3),
+              ),
           ],
         ),
       ),
     );
   }
 }
-
-
-
