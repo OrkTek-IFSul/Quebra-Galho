@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:quebragalho2/views/cliente/pages/navegacao_cliente.dart';
 
 class ConfirmacaoPage extends StatelessWidget {
   final String nomePrestador;
@@ -53,7 +54,11 @@ class ConfirmacaoPage extends StatelessWidget {
 
             ElevatedButton.icon(
               onPressed: () {
-                Navigator.of(context).popUntil((route) => route.isFirst); // volta pra home
+                Navigator.of(context).pushAndRemoveUntil(
+  MaterialPageRoute(builder: (_) => const NavegacaoCliente()),
+  (route) => false,
+);
+// volta pra home
               },
               icon: Icon(Icons.home),
               label: Text('Voltar para Home'),

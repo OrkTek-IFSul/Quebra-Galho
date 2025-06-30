@@ -33,7 +33,6 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
 
   List<DateTime> _horariosDisponiveisAPI = [];
   List<String> _horariosDisponiveis = [];
-  List<DateTime> _horariosIndisponiveis = [];
 
   bool _loading = true;
   int? _usuarioId;
@@ -71,13 +70,14 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
       _loading = true;
       _horariosDisponiveisAPI.clear();
       _horariosDisponiveis.clear();
-      _horariosIndisponiveis.clear();
       _selectedTime = null;
     });
 
     await _carregarDadosPrestadorEHorario();
     await _carregarHorariosDisponiveis();
     _gerarHorariosDisponiveis();
+
+    setState(() => _loading = false);
   }
 
   Future<void> _carregarDadosPrestadorEHorario() async {
@@ -142,18 +142,9 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
   while (horarioAtual.add(Duration(minutes: _duracaoServico!)).isBefore(_horarioFimPrestador!) ||
       horarioAtual.add(Duration(minutes: _duracaoServico!)).isAtSameMomentAs(_horarioFimPrestador!)) {
     
-    bool estaDisponivelNaApi = _horariosDisponiveisAPI.any((horaApi) =>
-      horaApi.year == horarioAtual.year &&
-      horaApi.month == horarioAtual.month &&
-      horaApi.day == horarioAtual.day &&
-      horaApi.hour == horarioAtual.hour &&
-      horaApi.minute == horarioAtual.minute);
-
-    if (estaDisponivelNaApi) {
-      if (_selectedDay.isAfter(DateTime(agora.year, agora.month, agora.day)) ||
-          (isSameDay(_selectedDay, agora) && horarioAtual.isAfter(agora))) {
-        horariosGerados.add(DateFormat('HH:mm').format(horarioAtual));
-      }
+    // Se é o dia de hoje, só adicionar horários depois do momento atual
+    if (!isSameDay(_selectedDay, agora) || horarioAtual.isAfter(agora)) {
+      horariosGerados.add(DateFormat('HH:mm').format(horarioAtual));
     }
 
     horarioAtual = horarioAtual.add(Duration(minutes: _duracaoServico!));
@@ -165,12 +156,16 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
 }
 
 
-  bool _isHorarioIndisponivel(String hora) {
+  bool _isHorarioDisponivel(String hora) {
     final dataHora = _criarDateTime(_selectedDay, hora);
-    return _horariosIndisponiveis.any((indisponivel) =>
-      isSameDay(indisponivel, dataHora) &&
-      indisponivel.hour == dataHora.hour &&
-      indisponivel.minute == dataHora.minute);
+
+    // Disponível só se estiver na lista retornada pela API
+    return _horariosDisponiveisAPI.any((horaApi) =>
+      horaApi.year == dataHora.year &&
+      horaApi.month == dataHora.month &&
+      horaApi.day == dataHora.day &&
+      horaApi.hour == dataHora.hour &&
+      horaApi.minute == dataHora.minute);
   }
 
   DateTime _criarDateTime(DateTime data, String hora) {
@@ -191,7 +186,7 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
     try {
       final dataHora = _criarDateTime(_selectedDay, _selectedTime!);
 
-      if (_isHorarioIndisponivel(_selectedTime!)) {
+      if (!_isHorarioDisponivel(_selectedTime!)) {
         throw Exception('Este horário já está reservado');
       }
 
@@ -220,15 +215,13 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
         );
       }
 
-      setState(() {
-        _horariosIndisponiveis.add(dataHora);
-        _selectedTime = null;
-      });
+      // Recarrega horários para refletir indisponível imediatamente
+      await _refreshForSelectedDay();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro: \${e.toString()}'),
+            content: Text('Erro: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -259,7 +252,6 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
                     onDaySelected: (selectedDay, focusedDay) async {
                       setState(() => _selectedDay = selectedDay);
                       await _refreshForSelectedDay();
-                      setState(() => _loading = false);
                     },
                     calendarStyle: CalendarStyle(
                       todayDecoration: BoxDecoration(
@@ -278,17 +270,16 @@ class _AgendamentoPageState extends State<AgendamentoPage> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
-_horariosDisponiveis.isEmpty
-  ? const Padding(
-      padding: EdgeInsets.only(top: 12),
-      child: Text(
-        'Não há mais horários disponíveis hoje.',
-        style: TextStyle(fontSize: 16, color: Colors.redAccent),
-        textAlign: TextAlign.center,
-      ),
-    )
-  : _buildHorariosGrid(),
-
+                  _horariosDisponiveis.isEmpty
+                      ? const Padding(
+                          padding: EdgeInsets.only(top: 12),
+                          child: Text(
+                            'Não há horários configurados para este dia.',
+                            style: TextStyle(fontSize: 16, color: Colors.redAccent),
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                      : _buildHorariosScrollable(),
                   const Spacer(),
                   SizedBox(
                     width: double.infinity,
@@ -314,74 +305,49 @@ _horariosDisponiveis.isEmpty
     );
   }
 
-  Widget _buildHorariosGrid() {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 1.5,
-      ),
-      itemCount: _horariosDisponiveis.length,
-      itemBuilder: (context, index) {
-        final hora = _horariosDisponiveis[index];
-        final indisponivel = _isHorarioIndisponivel(hora);
-        final selecionado = _selectedTime == hora;
+  Widget _buildHorariosScrollable() {
+    return SizedBox(
+      height: 60,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: _horariosDisponiveis.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final hora = _horariosDisponiveis[index];
+          final disponivel = _isHorarioDisponivel(hora);
+          final selecionado = _selectedTime == hora;
 
-        return GestureDetector(
-          onTap: indisponivel ? null : () => setState(() => _selectedTime = hora),
-          child: Container(
-            decoration: BoxDecoration(
-              color: indisponivel
-                  ? Colors.grey[300]
-                  : selecionado
-                      ? Theme.of(context).primaryColor
-                      : Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: indisponivel
-                    ? Colors.grey
-                    : selecionado
-                        ? Theme.of(context).primaryColor
-                        : Colors.blue.shade100,
-                width: 1.5,
+          return GestureDetector(
+            onTap: disponivel ? () => setState(() => _selectedTime = hora) : null,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: disponivel
+                    ? (selecionado ? Theme.of(context).primaryColor : Colors.blue.shade50)
+                    : Colors.grey[300],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: disponivel
+                      ? (selecionado ? Theme.of(context).primaryColor : Colors.blue.shade100)
+                      : Colors.grey,
+                  width: 1.5,
+                ),
               ),
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    hora,
-                    style: TextStyle(
-                      color: indisponivel
-                          ? Colors.grey[600]
-                          : selecionado
-                              ? Colors.white
-                              : Colors.blue[800],
-                      fontWeight: FontWeight.bold,
-                    ),
+              child: Center(
+                child: Text(
+                  hora,
+                  style: TextStyle(
+                    color: disponivel
+                        ? (selecionado ? Colors.white : Colors.blue[800])
+                        : Colors.grey[600],
+                    fontWeight: FontWeight.bold,
                   ),
-                  if (indisponivel)
-                    const Text(
-                      'INDISPONÍVEL',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                ],
+                ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

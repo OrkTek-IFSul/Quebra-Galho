@@ -52,6 +52,25 @@ class _ChatListPrestadorState extends State<ChatListPrestador> {
     }
   }
 
+  Future<void> _refreshChats() async {
+    if (usuarioId != null) {
+      final chats = await fetchChats(usuarioId!);
+      setState(() {
+        _chatsFuture = Future.value(chats);
+      });
+    }
+  }
+
+  String decodeUtf8Safe(String? text) {
+    if (text == null) return '';
+    try {
+      final bytes = text.codeUnits;
+      return utf8.decode(bytes);
+    } catch (_) {
+      return text;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (usuarioId == null) {
@@ -91,41 +110,66 @@ class _ChatListPrestadorState extends State<ChatListPrestador> {
             return const Center(child: Text("Nenhuma conversa disponível."));
           }
 
-          return ListView.builder(
-            itemCount: chats.length,
-            itemBuilder: (context, index) {
-              final chat = chats[index];
-              return Column(
-                children: [
-                  ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.grey[300],
-                      child: const Icon(Icons.chat_bubble, color: Colors.black54),
-                    ),
-                    title: Text(
-                      chat['clienteNome'] ?? 'Sem nome',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+          return RefreshIndicator(
+            onRefresh: _refreshChats,
+            child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemCount: chats.length,
+              itemBuilder: (context, index) {
+                final chat = chats[index];
+                final String imageUrl =
+                    (chat['clienteFotoUrl'] != null &&
+                            chat['clienteFotoUrl'].toString().isNotEmpty)
+                        ? 'https://${ApiConfig.baseUrl}/${chat['clienteFotoUrl']}'
+                        : '';
+
+                return Column(
+                  children: [
+                    ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.grey[300],
+                        child: imageUrl.isNotEmpty
+                            ? ClipOval(
+                                child: Image.network(
+                                  imageUrl,
+                                  width: 40,
+                                  height: 40,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : const Icon(Icons.chat_bubble, color: Colors.black54),
                       ),
-                    ),
-                    subtitle: Text(chat['lastMessage'] ?? ''),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ChatScreen(
-                            chatId: chat['agendamentoId'].toString(),
-                          ),
+                      title: Text(
+                        chat['clienteNome'] ?? 'Sem nome',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
-                      );
-                    },
-                  ),
-                  SizedBox(height: 12,),
-                  const Divider(height: 1, thickness: 1),
-                ],
-              );
-            },
+                      ),
+                      subtitle: Text(
+                        decodeUtf8Safe(chat['lastMessage']),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChatScreen(
+                              chatId: chat['agendamentoId'].toString(),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    const Divider(height: 1, thickness: 1),
+                  ],
+                );
+              },
+            ),
           );
         },
       ),

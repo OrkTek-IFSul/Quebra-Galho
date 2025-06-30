@@ -8,12 +8,9 @@ import 'package:quebragalho2/views/cliente/pages/login_page.dart';
 import 'package:quebragalho2/views/prestador/pages/detalhes_solicitacao.dart';
 import 'package:quebragalho2/views/prestador/widgets/solicitacao_cliente_card.dart';
 
-// Presumindo que a função obterIdPrestador() existe em algum lugar do seu projeto
-// Exemplo de placeholder se não estiver definida:
 Future<int?> obterIdPrestador() async {
   final prefs = await SharedPreferences.getInstance();
-  // Supondo que 'user_id' seja a chave para o ID do prestador
-  return prefs.getInt('user_id');
+  return prefs.getInt('prestador_id');
 }
 
 
