@@ -6,6 +6,7 @@ import 'package:quebragalho2/api_config.dart';
 import 'package:quebragalho2/views/cliente/pages/agendamento_page.dart';
 import 'package:quebragalho2/views/cliente/pages/avaliacoes_prestador.dart';
 import 'package:quebragalho2/views/cliente/pages/login_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PrestadorDetalhesPage extends StatefulWidget {
   final int id;
@@ -36,7 +37,7 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
     setState(() => isLoading = true);
     try {
       final response = await http.get(
-        Uri.parse('http://${ApiConfig.baseUrl}/api/prestador/perfil/${widget.id}'),
+        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/perfil/${widget.id}'),
       );
 
       if (response.statusCode == 200) {
@@ -50,7 +51,7 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
           'descricao': data['descricao'] ?? 'Descrição não informada.',
           'documento': usuario['documento'] ?? '',
           'imagemPerfil': usuario['imagemPerfil'] != null && usuario['imagemPerfil'].toString().isNotEmpty
-              ? 'http://${ApiConfig.baseUrl}/${usuario['imagemPerfil']}'
+              ? 'https://${ApiConfig.baseUrl}/${usuario['imagemPerfil']}'
               : null,
           'mediaAvaliacoes': data['mediaAvaliacoes'] ?? 0.0,
           'tags': data['tags'] ?? [],
@@ -72,7 +73,7 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
   }
 
   Future<void> _carregarPortfolio(int id) async {
-    final url = 'http://${ApiConfig.baseUrl}/api/portfolio/prestador/$id';
+    final url = 'https://${ApiConfig.baseUrl}/api/portfolio/prestador/$id';
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
@@ -87,7 +88,7 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
   }
 
   void _abrirImagemFullScreen(int idImagem) {
-    final imagemUrl = 'http://${ApiConfig.baseUrl}/api/portfolio/$idImagem/imagem';
+    final imagemUrl = 'https://${ApiConfig.baseUrl}/api/portfolio/$idImagem/imagem';
     showDialog(
       context: context,
       builder: (_) => Dialog(
@@ -132,42 +133,46 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
               onPressed: () => Navigator.of(context).pop(),
             ),
             ElevatedButton(
-              child: const Text('Enviar'),
-              onPressed: () async {
-                if (tipoSelecionado == null || motivoController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Preencha todos os campos')),
-                  );
-                  return;
-                }
+  child: const Text('Enviar'),
+  onPressed: () async {
+    if (tipoSelecionado == null || motivoController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preencha todos os campos')),
+      );
+      return;
+    }
 
-                final body = {
-                  "tipo": tipoSelecionado,
-                  "motivo": motivoController.text,
-                  "idConteudoDenunciado": widget.id,
-                  "denunciante": 5, // Substituir pelo ID real
-                  "denunciado": widget.id,
-                };
+    final prefs = await SharedPreferences.getInstance();
+    final denuncianteId = prefs.getInt('usuario_id');
 
-                final response = await http.post(
-                  Uri.parse('http://${ApiConfig.baseUrl}/api/denuncia'),
-                  headers: {"Content-Type": "application/json"},
-                  body: jsonEncode(body),
-                );
+    final body = {
+      "tipo": tipoSelecionado,
+      "motivo": motivoController.text,
+      "idConteudoDenunciado": widget.id,
+      "denunciante": denuncianteId,
+      "denunciado": widget.id,
+    };
 
-                Navigator.of(context).pop();
+    final response = await http.post(
+      Uri.parse('https://${ApiConfig.baseUrl}/api/denuncia'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(body),
+    );
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      response.statusCode == 200 || response.statusCode == 201
-                          ? 'Denúncia enviada com sucesso!'
-                          : 'Erro ao denunciar: ${response.statusCode}',
-                    ),
-                  ),
-                );
-              },
-            ),
+    Navigator.of(context).pop();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          response.statusCode == 200 || response.statusCode == 201
+              ? 'Denúncia enviada com sucesso!'
+              : 'Erro ao denunciar: ${response.statusCode}\n${response.body}',
+        ),
+      ),
+    );
+  },
+),
+
           ],
         );
       },
@@ -293,7 +298,7 @@ class _PrestadorDetalhesPageState extends State<PrestadorDetalhesPage> {
                   separatorBuilder: (_, __) => const SizedBox(width: 10),
                   itemBuilder: (_, index) {
                     final imagem = portfolio[index];
-                    final url = 'http://${ApiConfig.baseUrl}${imagem['imagemUrl']}';
+                    final url = 'https://${ApiConfig.baseUrl}${imagem['imagemUrl']}';
                     return GestureDetector(
                       onTap: () => _abrirImagemFullScreen(imagem['id']),
                       child: ClipRRect(
