@@ -62,7 +62,13 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => carregando = false);
   }
 
-  Future<void> salvarPreferencias(String token, int idUsuario, {int? idPrestador, String? nomeUsuario}) async {
+  Future<void> salvarPreferencias(
+    String token,
+    int idUsuario, {
+    int? idPrestador,
+    String? nomeUsuario,
+    bool? isModerador,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
     await prefs.setInt('usuario_id', idUsuario);
@@ -72,6 +78,9 @@ class _LoginPageState extends State<LoginPage> {
     }
     if (nomeUsuario != null) {
       await prefs.setString('nome_usuario', nomeUsuario);
+    }
+    if (isModerador != null) {
+      await prefs.setBool('isModerador', isModerador);
     }
     await prefs.setBool('manter_logado', manterLogado);
   }
@@ -93,15 +102,18 @@ class _LoginPageState extends State<LoginPage> {
         final idUsuario = body['id_usuario'];
         final nomeUsuario = body['nome'] ?? '';
         final idPrestador = body['id_prestador']; // pode ser nulo
+        final isModerador = body['isModerador'];
 
         print('ID do usuário: $idUsuario');
         print('ID do prestador: $idPrestador');
+        print('ID isModerador: $isModerador');
 
         await salvarPreferencias(
           token,
           idUsuario,
           idPrestador: idPrestador,
           nomeUsuario: nomeUsuario,
+          isModerador: isModerador,
         );
 
         if (!mounted) return;
@@ -114,20 +126,19 @@ class _LoginPageState extends State<LoginPage> {
           const SnackBar(content: Text('Email ou senha inválidos')),
         );
       }
+      final body = jsonDecode(response.body);
+      print('Resposta da API no login: $body');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao conectar: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao conectar: $e')));
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
     if (carregando) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -176,13 +187,13 @@ class _LoginPageState extends State<LoginPage> {
               Text(
                 'Faça o login abaixo para acessar as principais funções do aplicativo',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
               ),
               const SizedBox(height: 48),
-              const Text('Email', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Email',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               TextField(
                 controller: emailController,
@@ -195,11 +206,17 @@ class _LoginPageState extends State<LoginPage> {
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 12,
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
-              const Text('Password', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Password',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               TextField(
                 controller: senhaController,
@@ -212,10 +229,15 @@ class _LoginPageState extends State<LoginPage> {
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 12,
+                  ),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _isPasswordObscured ? Icons.visibility_off : Icons.visibility,
+                      _isPasswordObscured
+                          ? Icons.visibility_off
+                          : Icons.visibility,
                       color: Colors.grey[400],
                     ),
                     onPressed: () {
@@ -248,7 +270,10 @@ class _LoginPageState extends State<LoginPage> {
                           return Colors.grey[300];
                         }),
                       ),
-                      const Text('Manter conectado', style: TextStyle(color: Colors.black54)),
+                      const Text(
+                        'Manter conectado',
+                        style: TextStyle(color: Colors.black54),
+                      ),
                     ],
                   ),
                   TextButton(
@@ -290,7 +315,9 @@ class _LoginPageState extends State<LoginPage> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color.fromARGB(255, 49, 49, 49),
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: const BorderSide(color: Color.fromARGB(255, 77, 77, 77)),
+                  side: const BorderSide(
+                    color: Color.fromARGB(255, 77, 77, 77),
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -308,6 +335,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+
 // Funções de obter ID permanecem as mesmas
 Future<int?> obterIdUsuario() async {
   final prefs = await SharedPreferences.getInstance();

@@ -31,7 +31,7 @@ class _DetalhesPrestadorPageState extends State<DetalhesPrestadorPage> {
       final response = await http.get(uri);
       if (response.statusCode == 200) {
         setState(() {
-          prestador = jsonDecode(response.body);
+          prestador = jsonDecode(utf8.decode(response.bodyBytes));
           isLoading = false;
         });
       } else {
@@ -60,7 +60,7 @@ class _DetalhesPrestadorPageState extends State<DetalhesPrestadorPage> {
             ),
           ),
         );
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       } else {
         throw Exception('Erro ao ${tipo} prestador');
       }
