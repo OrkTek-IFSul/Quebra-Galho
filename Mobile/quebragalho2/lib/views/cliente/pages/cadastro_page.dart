@@ -368,6 +368,7 @@ class _CadastroPageState extends State<CadastroPage>
           _buildCustomTextField(
             controller: _nomeController,
             label: "Nome completo",
+            keyboardType: TextInputType.text, // Permite acentos
             validator: (value) =>
                 value == null || value.isEmpty ? "Informe o nome" : null,
           ),
@@ -512,6 +513,7 @@ class _CadastroPageState extends State<CadastroPage>
             _buildCustomTextField(
               controller: _descricaoController,
               label: "Descrição dos serviços",
+              keyboardType: TextInputType.text, // Permite acentos
               validator: (value) =>
                   value == null || value.isEmpty ? "Informe a descrição" : null,
             ),

@@ -116,13 +116,13 @@ class _ChatScreenState extends State<ChatScreen> {
         margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
         decoration: BoxDecoration(
-          color: isCurrentUser ? Colors.blue[500] : Colors.grey[300],
+          color: isCurrentUser ? const Color.fromARGB(255, 44, 44, 44) : const Color.fromARGB(255, 192, 192, 192),
           borderRadius: BorderRadius.circular(18),
         ),
         child: Text(
           messageData['text'] ?? '',
           style: TextStyle(
-            color: isCurrentUser ? Colors.white : Colors.black87,
+            color: isCurrentUser ? Colors.white : const Color.fromARGB(221, 85, 85, 85),
             fontSize: 16,
           ),
         ),
@@ -134,9 +134,9 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Chat"),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        centerTitle: true,
+        title: const Text("Chat", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),),
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       ),
       body: Column(
         children: [
@@ -221,7 +221,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 const SizedBox(width: 8),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.blue,
+                    color: const Color.fromARGB(255, 0, 0, 0),
                     borderRadius: BorderRadius.circular(25),
                   ),
                   child: IconButton(
