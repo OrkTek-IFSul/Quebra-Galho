@@ -15,11 +15,13 @@ import 'package:quebragalho2/views/prestador/pages/meus_dados.dart';
 import 'package:quebragalho2/views/prestador/pages/adicionar_portfolio.dart';
 import 'package:quebragalho2/views/prestador/pages/denuncias_aceitas_page.dart';
 import 'package:quebragalho2/views/prestador/widgets/servico_card.dart';
-import 'package:quebragalho2/views/cliente/pages/login_page.dart'; // Supondo que obterIdPrestador venha daqui
+import 'package:quebragalho2/views/cliente/pages/login_page.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Supondo que obterIdPrestador venha daqui
 
 // Função placeholder, já que não foi fornecida.
 Future<int?> obterIdPrestador() async {
-  return 1; // Exemplo
+ final prefs = await SharedPreferences.getInstance();
+  return prefs.getInt('prestador_id'); // Exemplo
 }
 
 class PerfilPage extends StatefulWidget {
