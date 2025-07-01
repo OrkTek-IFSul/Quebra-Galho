@@ -122,37 +122,39 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> fetchSolicitacoes(int idPrestador) async {
-    try {
-      final response = await http.get(
-        Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/pedidoservico/$idPrestador'),
-        headers: {
-          'Accept': 'application/json',
-        },
-      );
+  try {
+    final response = await http.get(
+      Uri.parse('https://${ApiConfig.baseUrl}/api/prestador/pedidoservico/$idPrestador'),
+      headers: {
+        'Accept': 'application/json',
+      },
+    );
 
-      if (mounted) {
-        if (response.statusCode == 200) {
-          final List<dynamic> data = jsonDecode(response.body);
-          setState(() {
-            solicitacoes = data;
-            isLoading = false;
-          });
-        } else {
-          setState(() {
-            isLoading = false;
-          });
-          throw Exception('Falha ao carregar solicitações. Status: ${response.statusCode}');
-        }
-      }
-    } catch (e) {
-      print('Erro ao carregar solicitações: $e');
-      if (mounted) {
+    if (mounted) {
+      if (response.statusCode == 200) {
+        final String responseBody = utf8.decode(response.bodyBytes);
+        final List<dynamic> data = jsonDecode(responseBody);
+        setState(() {
+          solicitacoes = data;
+          isLoading = false;
+        });
+      } else {
         setState(() {
           isLoading = false;
         });
+        throw Exception('Falha ao carregar solicitações. Status: ${response.statusCode}');
       }
     }
+  } catch (e) {
+    print('Erro ao carregar solicitações: $e');
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -207,7 +209,7 @@ class _HomePageState extends State<HomePage> {
 
                   return SolicitacaoClienteCard(
                     nome: solicitacao['nomeDoUsuario'],
-                    fotoUrl: 'https://${ApiConfig.baseUrl}/${solicitacao['fotoPerfilUsuario']}',
+                    fotoUrl: 'https://${ApiConfig.baseUrl}${solicitacao['fotoPerfilUsuario']}',
                     idAgendamento: solicitacao['idAgendamento'],
                     isConfirmed: solicitacao['statusPedidoAgendamento'] == true,
                     isCanceled: solicitacao['statusPedidoAgendamento'] == false,
@@ -223,7 +225,7 @@ class _HomePageState extends State<HomePage> {
                         MaterialPageRoute(
                           builder: (_) => DetalhesSolicitacaoPage(
                             nome: solicitacao['nomeDoUsuario'],
-                            fotoUrl: 'https://${ApiConfig.baseUrl}/${solicitacao['fotoPerfilUsuario']}',
+                            fotoUrl: 'https://${ApiConfig.baseUrl}${solicitacao['fotoPerfilUsuario']}',
                             servico: solicitacao['nomeServico'],
                             dataHora: dataHoraFormatada,
                             valorTotal: solicitacao['precoServico'].toDouble(),

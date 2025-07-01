@@ -50,7 +50,7 @@ class _SolicitacaoClienteCardState extends State<SolicitacaoClienteCard> {
         setState(() {
           _isConfirmed = true;
         });
-        widget.onConfirm(); // Callback to update parent
+        widget.onConfirm(); // Callback para atualizar a lista no pai
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Solicitação de ${widget.nome} confirmada com sucesso!'),
@@ -91,6 +91,7 @@ class _SolicitacaoClienteCardState extends State<SolicitacaoClienteCard> {
             backgroundColor: Colors.red,
           ),
         );
+        widget.onConfirm(); // Chama o refresh no pai aqui, depois do cancelamento
       } else {
         throw Exception('Falha ao cancelar solicitação');
       }
@@ -120,14 +121,11 @@ class _SolicitacaoClienteCardState extends State<SolicitacaoClienteCard> {
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-                // Foto de perfil
                 CircleAvatar(
                   backgroundImage: NetworkImage(widget.fotoUrl),
                   radius: 25,
                 ),
                 const SizedBox(width: 12),
-                
-                // Informações do cliente
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,12 +138,9 @@ class _SolicitacaoClienteCardState extends State<SolicitacaoClienteCard> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                    
                     ],
                   ),
                 ),
-
-                // Status ou botões de ação
                 if (widget.isConfirmed)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -156,9 +151,7 @@ class _SolicitacaoClienteCardState extends State<SolicitacaoClienteCard> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.check_circle, 
-                            color: Colors.green.shade700, 
-                            size: 16),
+                        Icon(Icons.check_circle, color: Colors.green.shade700, size: 16),
                         const SizedBox(width: 4),
                         Text(
                           'Confirmado',
@@ -180,9 +173,7 @@ class _SolicitacaoClienteCardState extends State<SolicitacaoClienteCard> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.cancel, 
-                            color: Colors.grey.shade700, 
-                            size: 16),
+                        Icon(Icons.cancel, color: Colors.grey.shade700, size: 16),
                         const SizedBox(width: 4),
                         Text(
                           'Cancelado',
@@ -208,8 +199,7 @@ class _SolicitacaoClienteCardState extends State<SolicitacaoClienteCard> {
                               ),
                             )
                           : IconButton(
-                              icon: const Icon(Icons.check_circle, 
-                                  color: Colors.green),
+                              icon: const Icon(Icons.check_circle, color: Colors.green),
                               onPressed: _confirmarSolicitacao,
                             ),
                       IconButton(

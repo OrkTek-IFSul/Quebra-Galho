@@ -41,7 +41,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
   String decodeUtf8Safe(String? text) {
     if (text == null) return '';
     try {
-      // Tenta decodificar de UTF8 para garantir caracteres especiais corretos
       final bytes = text.codeUnits;
       return utf8.decode(bytes);
     } catch (_) {
@@ -71,15 +70,14 @@ class _ChatListScreenState extends State<ChatListScreen> {
             return const Center(child: Text("Nenhuma conversa disponível."));
           }
 
-          final chats =
-              (snapshot.data! as List)
-                  .where(
-                    (chat) =>
-                        (chat['participants'] as List).isNotEmpty &&
-                        (chat['participants'] as List).first ==
-                            widget.usuarioId.toString(),
-                  )
-                  .toList();
+          final chats = (snapshot.data! as List)
+              .where(
+                (chat) =>
+                    (chat['participants'] as List).isNotEmpty &&
+                    (chat['participants'] as List).first ==
+                        widget.usuarioId.toString(),
+              )
+              .toList();
 
           if (chats.isEmpty) {
             return const Center(child: Text("Nenhuma conversa disponível."));
@@ -93,27 +91,16 @@ class _ChatListScreenState extends State<ChatListScreen> {
               itemBuilder: (context, index) {
                 final chat = chats[index];
 
-                final String imageUrl =
-                    (chat['prestadorFotoUrl'] != null &&
-                            chat['prestadorFotoUrl'].toString().isNotEmpty)
-                        ? 'https://${ApiConfig.baseUrl}/${chat['prestadorFotoUrl']}'
-                        : '';
-
                 return Column(
                   children: [
                     ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: const Color.fromARGB(255, 235, 235, 235),
-                        child: imageUrl.isNotEmpty
-                            ? ClipOval(
-                                child: Image.network(
-                                  imageUrl,
-                                  width: 40,
-                                  height: 40,
-                                  fit: BoxFit.cover,
-                                ),
-                              )
-                            : const Icon(Icons.chat_outlined, size: 25, color: Colors.black54),
+                      leading: const CircleAvatar(
+                        backgroundColor: Color.fromARGB(255, 235, 235, 235),
+                        child: Icon(
+                          Icons.chat_outlined,
+                          size: 25,
+                          color: Colors.black54,
+                        ),
                       ),
                       title: Text(
                         chat['prestadorNome'] ?? 'Sem nome',
