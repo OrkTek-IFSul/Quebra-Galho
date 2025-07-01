@@ -56,11 +56,6 @@ class _ModeracaoPageState extends State<ModeradorPage> {
         final json = jsonDecode(utf8.decode(response.bodyBytes));
         final listaUsuarios = json['content'] ?? [];
 
-        // Verifica se o campo 'moderador' está presente e imprime os valores
-        for (var u in listaUsuarios) {
-          print('Usuário ${u['nome']}: moderador = ${u['moderador']}');
-        }
-
         setState(() {
           usuarios = listaUsuarios;
         });
@@ -366,7 +361,13 @@ class _ModeracaoPageState extends State<ModeradorPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Painel de Moderação')),
+      appBar: AppBar(title: const Text('Painel de Moderação'), actions: [
+          IconButton(
+            onPressed: _carregarDados,
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Atualizar listas',
+    ),],),
+      
       body: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -385,9 +386,15 @@ class _ModeracaoPageState extends State<ModeradorPage> {
                 _buildBotao("Apelos", ListaTipo.apelos),
               ],
             ),
-
+            
             const SizedBox(height: 12),
-            if (listaSelecionada == ListaTipo.usuarios) _buildSearchBar(),
+            if (listaSelecionada == ListaTipo.usuarios)
+              Row(
+                children: [
+                  Expanded(child: _buildSearchBar()),
+                  const SizedBox(width: 8),
+                ],
+              ),
             const SizedBox(height: 8),
             Expanded(child: SingleChildScrollView(child: _buildListaAtiva())),
           ],
