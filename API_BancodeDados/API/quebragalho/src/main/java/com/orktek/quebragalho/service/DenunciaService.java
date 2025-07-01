@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.orktek.quebragalho.dto.DenunciaDTO.CarregarDenunciaDTO;
+import com.orktek.quebragalho.dto.DenunciaDTO.CriarDenunciaDTO;
 import com.orktek.quebragalho.model.Denuncia;
 import com.orktek.quebragalho.model.Usuario;
 import com.orktek.quebragalho.repository.DenunciaRepository;
@@ -24,26 +26,31 @@ public class DenunciaService {
     private UsuarioRepository usuarioRepository;
 
     /**
-     * Cria uma nova denúncia no sistema
-     * @param denuncia Objeto Denuncia com os dados
-     * @param denuncianteId ID do usuário que está denunciando
-     * @param denunciadoId ID do usuário sendo denunciado
-     * @return Denuncia salva
-     * @throws ResponseStatusException se denunciante ou denunciado não existirem
+     * Cria uma nova denúncia
+     * @param denunciaDTO Dados da denúncia a ser criada
+     * @return Denuncia criada
+     * @throws ResponseStatusException se o denunciante ou denunciado não forem encontrados
      */
     @Transactional
-    public Denuncia criarDenuncia(Denuncia denuncia, Long denuncianteId, Long denunciadoId) {
-        Usuario denunciante = usuarioRepository.findById(denuncianteId)
+    public CarregarDenunciaDTO criarDenuncia(CriarDenunciaDTO denunciaDTO) {
+        Usuario denunciante = usuarioRepository.findById(denunciaDTO.getDenunciante())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Denunciante nao encontrado"));
         
-        Usuario denunciado = usuarioRepository.findById(denunciadoId)
+        Usuario denunciado = usuarioRepository.findById(denunciaDTO.getDenunciado())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Denunciado nao encontrado"));
         
+        Denuncia denuncia = new Denuncia();
+        denuncia.setTipo(denunciaDTO.getTipo());
+        denuncia.setMotivo(denunciaDTO.getMotivo());
+        denuncia.setIdComentario(denunciaDTO.getIdConteudoDenunciado());
         denuncia.setDenunciante(denunciante);
         denuncia.setDenunciado(denunciado);
-        denuncia.setStatus(false); // Status inicial como não resolvido
-        
-        return denunciaRepository.save(denuncia);
+        denuncia.setStatus(null); // Status inicial como não resolvido
+        // Salva a denúncia
+        denunciaRepository.save(denuncia);
+        // Retorna a denúncia criada como DTO
+        CarregarDenunciaDTO denunciaDTOResponse = CarregarDenunciaDTO.fromEntity(denuncia);
+        return (denunciaDTOResponse);
     }
 
     /**
@@ -52,6 +59,20 @@ public class DenunciaService {
      */
     public List<Denuncia> listarTodas() {
         return denunciaRepository.findAll();
+    }
+    
+    public List<Denuncia> listarDenunciasAceitasPorDenunciado(Long denunciadoId) {
+        return denunciaRepository.findByDenunciadoIdAndStatusTrue(denunciadoId);
+    }
+
+
+    /**
+     * Lista todos as denuncias nao resolvidas
+     * 
+     * @return Lista de Denuncia
+     */
+    public List<Denuncia> listarTodosNaoAceitos() {
+        return denunciaRepository.findByStatusIsNull();
     }
 
     /**

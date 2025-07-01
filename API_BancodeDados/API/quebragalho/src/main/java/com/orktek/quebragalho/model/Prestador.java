@@ -20,7 +20,7 @@ public class Prestador {
     @Schema(description = "Identificador único do prestador", example = "1")
     private Long id;
     
-    @Column(name = "descricao_prestador", nullable = false, length = 200)
+    @Column(name = "descricao_prestador", nullable = false, length = 250)
     @Schema(description = "Descrição do prestador", example = "Prestador especializado em serviços elétricos")
     private String descricao;
     
@@ -31,6 +31,10 @@ public class Prestador {
     @Column(name = "data_hora_fim")
     @Schema(description = "Fim do horário disponível", example = "Prestador especializado em serviços elétricos")
     private LocalDateTime dataHoraFim;
+    
+    @Column(name = "aceito")
+    @Schema(description = "Cadastro do prestador foi aceito ou não pela moderação", example = "null")
+    private Boolean aceito;
     
     @Column(name = "documento_path", nullable = false, length = 100)
     @Schema(description = "Caminho do documento do prestador", example = "/img/prestador123.jpeg")

@@ -20,7 +20,7 @@ public class Apelo {
     @Schema(description = "Justificativa do apelo", example = "Necessidade de revisão urgente")
     private String justificativa;
     
-    @Column(nullable = false)
+    @Column(nullable = true)
     @Schema(description = "Status do apelo", example = "true")
     private Boolean status;
     

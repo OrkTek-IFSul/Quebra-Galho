@@ -22,7 +22,7 @@ public class TagDTO {
         return dto;
     }
 
-    public Object toEntity() {
+    public Tags toEntity() {
         Tags tag = new Tags();
         tag.setId(this.id);
         tag.setNome(this.nome);

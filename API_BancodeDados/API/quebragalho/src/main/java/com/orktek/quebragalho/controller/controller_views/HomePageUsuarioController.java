@@ -41,17 +41,23 @@ public class HomePageUsuarioController {
         @Autowired
         private PrestadorRepository prestadorRepository;
 
-        @GetMapping
+        @GetMapping("/prestadores")
         @Operation(summary = "Lista de prestadores", description = "Lista de prestadores sem filtro de pesquisa")
         public ResponseEntity<List<PrestadorHomePageDoUsuarioDTO>> ListarPrestadores() {
 
-                List<PrestadorHomePageDoUsuarioDTO> prestadores = new ArrayList<>();
+                List<Prestador> prestadoresOriginais = prestadorService.listarTodos();
+                if (prestadoresOriginais == null || prestadoresOriginais.isEmpty()) {
+                        // Log para depuração
+                        System.out.println("Nenhum prestador encontrado em prestadorService.listarTodos()");
+                        return ResponseEntity.ok(new ArrayList<>());
+                }
 
-                for (Prestador prestadorList : prestadorService.listarTodos()) {
+                List<PrestadorHomePageDoUsuarioDTO> prestadores = new ArrayList<>();
+                for (Prestador prestadorList : prestadoresOriginais) {
                         prestadores.add(PrestadorHomePageDoUsuarioDTO.fromEntity(prestadorList, prestadorService));
                 }
 
-                System.out.println("TESTE TESTE" + prestadores.toString());
+                System.out.println("Prestadores retornados: " + prestadores);
 
                 return ResponseEntity.ok(prestadores);
 

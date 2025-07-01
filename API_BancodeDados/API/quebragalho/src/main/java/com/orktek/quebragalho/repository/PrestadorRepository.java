@@ -17,10 +17,14 @@ import org.springframework.stereotype.Repository;
 public interface PrestadorRepository extends JpaRepository<Prestador, Long> {
         boolean existsByUsuario(Usuario usuario);
 
-        Optional<Prestador> findByUsuarioId(Long usuarioId);
+        List<Prestador> findByAceitoIsNull();
 
+        List<Prestador> findByAceitoTrue();
+
+        Optional<Prestador> findByUsuarioId(Long usuarioId);
         @Query("SELECT p FROM Prestador p JOIN p.usuario u LEFT JOIN p.tags t " +
-                        "WHERE (:nome IS NULL OR :nome = '' OR LOWER(u.nome) LIKE LOWER(CONCAT('%', :nome, '%'))) " +
+                        "WHERE p.aceito = true " +
+                        "AND (:nome IS NULL OR :nome = '' OR LOWER(u.nome) LIKE LOWER(CONCAT('%', :nome, '%'))) " +
                         "AND (:tags IS NULL OR LOWER(t.nome) IN :tags) " +
                         "GROUP BY p.id")
         Page<Prestador> buscarPorNomeEPorTags(

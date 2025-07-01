@@ -14,6 +14,12 @@ import com.orktek.quebragalho.model.Usuario;
 import com.orktek.quebragalho.service.AuthService;
 import com.orktek.quebragalho.service.UsuarioService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name = "Criar e Alterar Serviços", description = "Operações relacionadas ao login e autenticação de usuários")
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -25,9 +31,26 @@ public class AuthController {
     @Autowired
     private UsuarioService usuarioService;
 
-    // Mapeia requisições POST para a URL /auth/login
+    @Operation(
+        summary = "Autentica um usuário e retorna um token JWT",
+        description = "Realiza o login do usuário com email e senha, retornando um token JWT e informações do usuário autenticado."
+    )
+    @ApiResponse(
+        responseCode = "200",
+        description = "Login realizado com sucesso. Retorna o token JWT e informações do usuário."
+    )
+    @ApiResponse(
+        responseCode = "401",
+        description = "Credenciais inválidas ou usuário desativado."
+    )
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> login(
+        @Parameter(
+            description = "Credenciais de login do usuário (email e senha)",
+            required = true
+        )
+        @RequestBody LoginRequest loginRequest
+    ) {
         // Chama o serviço de autenticação passando email e senha
         String token = authService.autenticar(loginRequest.getEmail(), loginRequest.getSenha());
 
@@ -45,6 +68,14 @@ public class AuthController {
             // Se for prestador incorporará id do prestador também
             response.put("id_prestador", usuario.getPrestador().getId());
         }
+
+        // Se usuario for inativo recusa o login
+        if(usuario.getIsAtivo() == false){
+            return ResponseEntity.ok("Usuario Desativado");
+        }
+        
+        response.put("isAdmin", usuario.getIsAdmin()); 
+        response.put("isModerador", usuario.getIsModerador()); 
 
         // Retorna o token JWT gerado e o ID como resposta para o cliente
         return ResponseEntity.ok((response));

@@ -5,11 +5,18 @@ services:
       MYSQL_ROOT_PASSWORD: ''
       MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
       MYSQL_DATABASE: quebragalhodb
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     ports:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
       - ./Banco_de_Dados:/docker-entrypoint-initdb.d
+      - ./mysql-config/my.cnf:/etc/mysql/conf.d/my.cnf
+      - ./uploads:/app/uploads
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
@@ -26,6 +33,14 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/quebragalhodb?allowPublicKeyRetrieval=true&useSSL=false
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ''
+      # --- ADICIONE A VARIÁVEL DO FIREBASE AQUI ---
+      GOOGLE_APPLICATION_CREDENTIALS: /app/config/firebase-service-account.json
+    
+    # --- ADICIONE A SEÇÃO DE VOLUMES AQUI ---
+    volumes:
+      # Mapeia o arquivo de credenciais do seu PC para dentro do contêiner
+      - ./config/firebase-service-account.json:/app/config/firebase-service-account.json
+      
     depends_on:
       mysql:
         condition: service_healthy

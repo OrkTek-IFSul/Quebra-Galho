@@ -16,6 +16,8 @@ public interface AvaliacaoRepository extends JpaRepository<Avaliacao, Long> {
 
     List<Avaliacao> findByAgendamentoServicoId(Long servicoId);
 
+    List<Avaliacao> findByAgendamentoServicoPrestadorId(Long prestadorId);
+
     @Query(value = "SELECT AVG(a.nota) FROM quebragalhodb.avaliacao a " +
             "JOIN quebragalhodb.agendamento ag ON a.id_agendamento_fk = ag.id_agendamento " +
             "JOIN quebragalhodb.servico s ON ag.id_servico_fk = s.id_servico " +

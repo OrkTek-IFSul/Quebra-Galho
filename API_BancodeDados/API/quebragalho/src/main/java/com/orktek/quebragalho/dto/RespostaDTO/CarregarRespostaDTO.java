@@ -22,13 +22,18 @@ public class CarregarRespostaDTO {
 
     @Schema(description = "Nome do prestador", example = "João da Silva")
     private String nomePrestador;
-    
+
+    @Schema(description = "Imagem do perfil do prestador", example = "api/usuarios/1/imagem")
+    private String imagemPerfil;
+
     public static CarregarRespostaDTO fromEntity(Resposta resposta) {
         CarregarRespostaDTO dto = new CarregarRespostaDTO();
         dto.setIdResposta(resposta.getId());
+        dto.setImagemPerfil("api/usuarios/" + resposta.getAvaliacao().getAgendamento().getServico().getPrestador().getUsuario().getId() + "/imagem");
         dto.setComentario(resposta.getResposta());
         dto.setData(resposta.getData());
-        dto.setNomePrestador(resposta.getAvaliacao().getAgendamento().getServico().getPrestador().getUsuario().getNome());
+        dto.setNomePrestador(
+                resposta.getAvaliacao().getAgendamento().getServico().getPrestador().getUsuario().getNome());
         return dto;
     }
 

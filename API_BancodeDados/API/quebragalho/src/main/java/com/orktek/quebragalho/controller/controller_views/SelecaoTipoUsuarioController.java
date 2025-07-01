@@ -32,10 +32,12 @@ public class SelecaoTipoUsuarioController {
         Usuario usuario = usuarioService.buscarPorId(usuarioId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (usuario.getPrestador() != null) {
-            return true;
+            if (usuario.getPrestador().getAceito() == true) {
+                return true;
+            }
+            return false;
         } else {
             return false;
-
         }
     }
 

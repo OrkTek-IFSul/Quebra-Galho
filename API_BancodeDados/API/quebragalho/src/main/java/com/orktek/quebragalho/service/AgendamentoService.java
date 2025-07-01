@@ -32,36 +32,42 @@ public class AgendamentoService {
     private ServicoService servicoService;
 
     // /**
-    //  * Cria um novo agendamento de serviço
-    //  * 
-    //  * @param agendamento Objeto Agendamento com os dados
-    //  * @param servicoId   ID do serviço a ser agendado
-    //  * @param usuarioId   ID do usuário que está agendando
-    //  * @return Agendamento criado
-    //  * @throws ResponseStatusException se serviço, usuário não existirem ou houver
-    //  *                                 conflito de horário
-    //  */
+    // * Cria um novo agendamento de serviço
+    // *
+    // * @param agendamento Objeto Agendamento com os dados
+    // * @param servicoId ID do serviço a ser agendado
+    // * @param usuarioId ID do usuário que está agendando
+    // * @return Agendamento criado
+    // * @throws ResponseStatusException se serviço, usuário não existirem ou houver
+    // * conflito de horário
+    // */
     // @Transactional
-    // public Agendamento criarAgendamento(Agendamento agendamento, Long servicoId, Long usuarioId) {
-    //     // Verifica se serviço existe
-    //     Servico servico = servicoRepository.findById(servicoId)
-    //             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Servico nao encontrado"));
+    // public Agendamento criarAgendamento(Agendamento agendamento, Long servicoId,
+    // Long usuarioId) {
+    // // Verifica se serviço existe
+    // Servico servico = servicoRepository.findById(servicoId)
+    // .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Servico
+    // nao encontrado"));
 
-    //     // Verifica se usuário existe
-    //     Usuario usuario = usuarioRepository.findById(usuarioId)
-    //             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
+    // // Verifica se usuário existe
+    // Usuario usuario = usuarioRepository.findById(usuarioId)
+    // .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario
+    // nao encontrado"));
 
-    //     // Verifica conflitos de horário para o mesmo serviço
-    //     if (agendamentoRepository.existsByDataHoraAndServico(agendamento.getDataHora(), servico)) {
-    //         throw new ResponseStatusException(HttpStatus.CONFLICT, "Ja existe um servico agendado para este horario");
-    //     }
+    // // Verifica conflitos de horário para o mesmo serviço
+    // if
+    // (agendamentoRepository.existsByDataHoraAndServico(agendamento.getDataHora(),
+    // servico)) {
+    // throw new ResponseStatusException(HttpStatus.CONFLICT, "Ja existe um servico
+    // agendado para este horario");
+    // }
 
-    //     // Configura os relacionamentos
-    //     agendamento.setServico(servico);
-    //     agendamento.setUsuario(usuario);
-    //     agendamento.setStatus(false); // Status inicial como não concluído
+    // // Configura os relacionamentos
+    // agendamento.setServico(servico);
+    // agendamento.setUsuario(usuario);
+    // agendamento.setStatus(false); // Status inicial como não concluído
 
-    //     return agendamentoRepository.save(agendamento);
+    // return agendamentoRepository.save(agendamento);
     // }
 
     /**
@@ -74,7 +80,8 @@ public class AgendamentoService {
     }
 
     public List<Agendamento> listarPorServicoAgoraEFuturo(Long servicoId) {
-        return agendamentoRepository.findByServico_IdAndDataHoraBetween(servicoId, LocalDateTime.now(), LocalDateTime.now().plusDays(30));
+        return agendamentoRepository.findByServico_IdAndDataHoraBetween(servicoId, LocalDateTime.now(),
+                LocalDateTime.now().plusDays(30));
     }
 
     public List<Agendamento> listarAgendamentosPendentesDoPrestador(Long prestadorId) {
@@ -87,6 +94,7 @@ public class AgendamentoService {
         }
         return retorno;
     }
+
     /**
      * Lista agendamentos de um usuário específico
      * 
@@ -120,7 +128,7 @@ public class AgendamentoService {
      *                                 requisição
      */
     @Transactional
-    public CriarAgendamentoDTO criarAgendamento(CriarAgendamentoDTO agendamentoDTO) {
+    public Agendamento criarAgendamento(CriarAgendamentoDTO agendamentoDTO) {
         try {
             // Validações básicas do DTO
             if (agendamentoDTO.getHorario() == null) {
@@ -148,13 +156,14 @@ public class AgendamentoService {
 
             agendamentoRepository.save(agendamento);
 
-            return agendamentoDTO;
+            return agendamento;
 
         } catch (DataIntegrityViolationException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Erro ao salvar agendamento: " + e.getRootCause().getMessage());
         }
     }
+
     // TODO UTILIZAR NA CONTROLLER DE ALTERAR AGENDAMENTO
     /**
      * Atualiza o horário de um agendamento existente
@@ -226,7 +235,6 @@ public class AgendamentoService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Agendamento nao encontrado"));
     }
 
-    
     /**
      * Atualiza o status de um agendamento (aceito/não aceito)
      * 

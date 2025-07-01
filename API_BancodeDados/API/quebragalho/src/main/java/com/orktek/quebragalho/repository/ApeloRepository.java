@@ -14,5 +14,6 @@ public interface ApeloRepository extends JpaRepository<Apelo, Long> {
     boolean existsByDenuncia(Denuncia denuncia);
 
     List<Apelo> findByStatus(boolean b);
-    
+
+    List<Apelo> findByStatusIsNull();
 }

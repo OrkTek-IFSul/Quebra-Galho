@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.orktek.quebragalho.dto.AgendamentoDTO.AgendamentoMinhasSolicitacoesDTO;
+import com.orktek.quebragalho.dto.AgendamentoDTO.AgendamentoUnicoMinhasSolicitacoesDTO;
 import com.orktek.quebragalho.dto.AvaliacaoDTO.CarregarAvaliacaoDTO;
 import com.orktek.quebragalho.dto.AvaliacaoDTO.CriarAvaliacaoDTO;
 import com.orktek.quebragalho.model.Agendamento;
@@ -26,9 +27,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 /**
  * Controller para operações da tela de solicitações do usuario
@@ -77,7 +75,7 @@ public class MinhasSoliticacoesController {
             @ApiResponse(responseCode = "404", description = "Agendamento não encontrado")
     })
     @GetMapping("/agendamento/{agendamentoId}")
-    public ResponseEntity<AgendamentoMinhasSolicitacoesDTO> carregaAgendamento(
+    public ResponseEntity<AgendamentoUnicoMinhasSolicitacoesDTO> carregaAgendamento(
             @Parameter(description = "ID do agendamento para buscar os detalhes", required = true, example = "1") @PathVariable Long agendamentoId) {
         // Busca o agendamento pelo ID
         Agendamento agendamento = agendamentoService.buscarPorId(agendamentoId)
@@ -86,7 +84,7 @@ public class MinhasSoliticacoesController {
         Prestador prestador = prestadorService.buscarPorId(agendamento.getServico().getPrestador().getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         // Cria o DTO a partir do agendamento e do prestador
-        AgendamentoMinhasSolicitacoesDTO agendamentoDTO = AgendamentoMinhasSolicitacoesDTO.fromEntity(agendamento,
+        AgendamentoUnicoMinhasSolicitacoesDTO agendamentoDTO = AgendamentoUnicoMinhasSolicitacoesDTO.fromEntity(agendamento,
                 prestador);
         return ResponseEntity.ok(agendamentoDTO);
     }

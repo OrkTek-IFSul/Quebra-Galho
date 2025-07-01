@@ -16,6 +16,9 @@ public class CarregarAvaliacaoDTO {
     @Schema(description = "Nome do usuário que fez a avaliação", example = "João Silva")
     private String nomeUsuario;
 
+    @Schema(description = "Imagem do perfil do usuário", example = "api/usuarios/1/imagem")
+    private String imagemPerfil;
+
     @Schema(description = "Nota da avaliação", example = "5")
     private Integer nota;
 
@@ -33,6 +36,7 @@ public class CarregarAvaliacaoDTO {
         CarregarAvaliacaoDTO dto = new CarregarAvaliacaoDTO();
         dto.setIdAvaliacao(avaliacao.getId());
         dto.setNomeUsuario(avaliacao.getAgendamento().getUsuario().getNome());
+        dto.setImagemPerfil("api/usuarios/" + avaliacao.getAgendamento().getUsuario().getId() + "/imagem");
         dto.setNota(avaliacao.getNota());
         dto.setComentario(avaliacao.getComentario());
         dto.setNomeServico(avaliacao.getAgendamento().getServico().getNome());

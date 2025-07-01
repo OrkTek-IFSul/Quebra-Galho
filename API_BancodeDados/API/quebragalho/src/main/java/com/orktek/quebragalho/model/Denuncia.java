@@ -24,7 +24,7 @@ public class Denuncia {
     @Schema(description = "Motivo da denúncia", example = "Conteúdo impróprio")
     private String motivo;
     
-    @Column(nullable = false)
+    @Column(nullable = true)
     @Schema(description = "Status da denúncia", example = "true")
     private Boolean status;
     

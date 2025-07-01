@@ -1,6 +1,5 @@
 package com.orktek.quebragalho.service;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,7 +10,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.orktek.quebragalho.model.Agendamento;
 import com.orktek.quebragalho.model.Avaliacao;
-import com.orktek.quebragalho.repository.AgendamentoRepository;
 import com.orktek.quebragalho.repository.AvaliacaoRepository;
 
 import jakarta.transaction.Transactional;
@@ -22,9 +20,6 @@ public class AvaliacaoService {
     @Autowired
     private AvaliacaoRepository avaliacaoRepository;
     
-    @Autowired
-    private AgendamentoRepository agendamentoRepository;
-
     /**
      * Cria uma nova avaliação para um agendamento
      * @param avaliacao Objeto Avaliacao com os dados
@@ -65,7 +60,7 @@ public class AvaliacaoService {
      * @return Lista de Avaliacao
      */
     public List<Avaliacao> listarPorPrestador(Long prestadorId) {
-        return avaliacaoRepository.findByAgendamentoServicoId(prestadorId);
+        return avaliacaoRepository.findByAgendamentoServicoPrestadorId(prestadorId);
     }
 
     /**
@@ -84,5 +79,22 @@ public class AvaliacaoService {
     @Transactional
     public void deletarAvaliacao(Long id) {
         avaliacaoRepository.deleteById(id);
+    }
+
+    /**
+     * Atualiza o comentário de uma avaliação
+     * @param id ID da avaliação
+     * @param novoComentario Novo comentário a ser salvo
+     * @return Avaliacao atualizada
+     * @throws ResponseStatusException se avaliação não existir
+     */
+    @Transactional
+    public Avaliacao atualizarAvaliacao(Long id, String novoComentario) {
+        return avaliacaoRepository.findById(id)
+                .map(avaliacao -> {
+                    avaliacao.setComentario(novoComentario);
+                    return avaliacaoRepository.save(avaliacao);
+                })
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Avaliacao nao encontrada"));
     }
 }

@@ -22,7 +22,7 @@ public class Servico {
     @Schema(description = "Nome do serviço", example = "Corte de cabelo")
     private String nome;
     
-    @Column(nullable = false, length = 45)
+    @Column(nullable = false, length = 250)
     @Schema(description = "Descrição do serviço", example = "Corte de cabelo masculino")
     private String descricao;
     
@@ -33,6 +33,10 @@ public class Servico {
     @Column(nullable = false)
     @Schema(description = "Serviço ativo ou não", example = "true")
     private Boolean ativo;
+    
+    @Column(name = "duracao_minutos",nullable = false)
+    @Schema(description = "Duracao do serviço em minutos", example = "90")
+    private int duracaoMinutos;
 
     @ManyToOne
     @JoinColumn(name = "id_prestador_fk", nullable = false)

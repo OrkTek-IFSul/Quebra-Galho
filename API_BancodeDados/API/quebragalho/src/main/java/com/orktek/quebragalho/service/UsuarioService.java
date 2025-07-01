@@ -18,8 +18,12 @@ import org.springframework.web.server.ResponseStatusException;
 import com.orktek.quebragalho.dto.UsuarioDTO.AtualizarUsuarioDTO;
 import com.orktek.quebragalho.dto.UsuarioDTO.CriarUsuarioDTO;
 import com.orktek.quebragalho.dto.UsuarioDTO.UsuarioGenericoDTO;
+import com.orktek.quebragalho.dto.UsuarioDTO.UsuarioResponseDTO;
 import com.orktek.quebragalho.model.Usuario;
 import com.orktek.quebragalho.repository.UsuarioRepository;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import jakarta.transaction.Transactional;
 
@@ -34,6 +38,16 @@ public class UsuarioService {
 
     @Autowired
     private FileStorageService fileStorageService;// Para manipulação de arquivos
+
+    @Transactional
+    public boolean desativarUsuario(Long idUsuario) {
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+
+        usuario.setIsAtivo(false);
+        usuarioRepository.save(usuario);
+        return usuario.getIsAtivo();
+    }
 
     // TODO UTILIZAR NA CONTROLLER DE CRIAÇÃO DE USUARIO E ALTERAR O RETORNO PARA
     // GETUSUARIODTO
@@ -70,7 +84,7 @@ public class UsuarioService {
 
         // Criptografa a senha antes de salvar
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
-
+        usuario.setIsAtivo(true);
         // Salva o usuário no banco de dados
         usuarioRepository.save(usuario);
         // Cria um novo DTO com os dados do usuário
@@ -122,9 +136,9 @@ public class UsuarioService {
 
         // // Só atualiza a senha se foi fornecida no DTO
         // if (usuarioDTO.getSenha() != null && !usuarioDTO.getSenha().isBlank()) {
-        //     usuario.setSenha(passwordEncoder.encode(usuarioDTO.getSenha()));
+        // usuario.setSenha(passwordEncoder.encode(usuarioDTO.getSenha()));
         // }
-        
+
         // Salva o usuário no banco de dados
         usuarioRepository.save(usuario);
         // Cria um novo DTO com os dados do usuário
@@ -136,6 +150,30 @@ public class UsuarioService {
         retornoUsuarioDTO.setDocumento(usuario.getDocumento());
         // Retorna o DTO com os dados do usuário
         return retornoUsuarioDTO;
+    }
+
+    public String tornarModerador(Long idUsuario) {
+        Usuario usuarioAtulizar = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+
+        usuarioAtulizar.setIsModerador(true);
+        usuarioRepository.save(usuarioAtulizar);
+
+        return "Usuário " + usuarioAtulizar.getNome() + " atualizado para moderador com sucesso";
+    }
+
+    public String removerModerador(Long idUsuario) {
+        Usuario usuarioAtulizar = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+
+        if (!usuarioAtulizar.getIsModerador()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuário não é moderador");
+        }
+
+        usuarioAtulizar.setIsModerador(false);
+        usuarioRepository.save(usuarioAtulizar);
+
+        return "Usuário " + usuarioAtulizar.getNome() + " não é mais moderador";
     }
 
     /**
@@ -163,35 +201,37 @@ public class UsuarioService {
     }
 
     // /**
-    //  * Atualiza os dados de um usuário existente
-    //  * 
-    //  * @param id                ID do usuário a ser atualizado
-    //  * @param usuarioAtualizado Objeto com os novos dados
-    //  * @return Usuario atualizado
-    //  * @throws ResponseStatusException se usuário não for encontrado ou email já
-    //  *                                 estiver em uso
-    //  */
+    // * Atualiza os dados de um usuário existente
+    // *
+    // * @param id ID do usuário a ser atualizado
+    // * @param usuarioAtualizado Objeto com os novos dados
+    // * @return Usuario atualizado
+    // * @throws ResponseStatusException se usuário não for encontrado ou email já
+    // * estiver em uso
+    // */
     // @Transactional
     // public Usuario atualizarUsuario(Long id, Usuario usuarioAtualizado) {
-    //     return usuarioRepository.findById(id)
-    //             .map(usuario -> {
-    //                 // Verifica se está tentando mudar o email
-    //                 if (!usuario.getEmail().equals(usuarioAtualizado.getEmail())) {
-    //                     // Verifica se novo email já está em uso
-    //                     if (usuarioRepository.existsByEmail(usuarioAtualizado.getEmail())) {
-    //                         throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já está em uso");
-    //                     }
-    //                 }
+    // return usuarioRepository.findById(id)
+    // .map(usuario -> {
+    // // Verifica se está tentando mudar o email
+    // if (!usuario.getEmail().equals(usuarioAtualizado.getEmail())) {
+    // // Verifica se novo email já está em uso
+    // if (usuarioRepository.existsByEmail(usuarioAtualizado.getEmail())) {
+    // throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já está em
+    // uso");
+    // }
+    // }
 
-    //                 // Atualiza apenas os campos permitidos
-    //                 usuario.setNome(usuarioAtualizado.getNome());
-    //                 usuario.setEmail(usuarioAtualizado.getEmail());
-    //                 usuario.setTelefone(usuarioAtualizado.getTelefone());
-    //                 usuario.setImgPerfil(usuarioAtualizado.getImgPerfil());
+    // // Atualiza apenas os campos permitidos
+    // usuario.setNome(usuarioAtualizado.getNome());
+    // usuario.setEmail(usuarioAtualizado.getEmail());
+    // usuario.setTelefone(usuarioAtualizado.getTelefone());
+    // usuario.setImgPerfil(usuarioAtualizado.getImgPerfil());
 
-    //                 return usuarioRepository.save(usuario);
-    //             })
-    //             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+    // return usuarioRepository.save(usuario);
+    // })
+    // .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário
+    // não encontrado"));
     // }
 
     /**
@@ -227,6 +267,27 @@ public class UsuarioService {
     }
 
     /**
+     * remove um strike (marca de advertência) ao usuário
+     * 
+     * @param usuarioId ID do usuário
+     */
+    public void removerStrike(Long usuarioId) {
+        usuarioRepository.findById(usuarioId).ifPresent(usuario -> {
+            usuario.setNumStrike(usuario.getNumStrike() - 1);
+            usuarioRepository.save(usuario);
+        });
+    }
+
+    public boolean salvarToken(Long usuarioId, String token) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+
+        usuario.setToken(token);
+        usuarioRepository.save(usuario);
+        return true;
+    }
+
+    /**
      * Atualiza a imagem de perfil do usuário
      * 
      * @param usuarioId    ID do usuário
@@ -255,6 +316,23 @@ public class UsuarioService {
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Erro ao atualizar imagem de perfil", e);
         }
+    }
+
+    public Page<UsuarioResponseDTO> buscarUsuariosComFiltros(String nome, Boolean isModerador, Pageable pageable) {
+
+        // Processa o nome para remover espaços e converter para minúsculas, igual você
+        // já faz.
+        String nomeProcessado = (nome != null && !nome.trim().isEmpty()) ? nome.trim().toLowerCase() : null;
+
+        // Chama o novo método do repositório
+        Page<Usuario> resultado = usuarioRepository.buscarPorNomeEModerador(
+                nomeProcessado, isModerador, pageable);
+
+        // Mapeia o resultado para o DTO de resposta, para não expor a senha
+        return resultado.map(usuario -> {
+            UsuarioResponseDTO dto = UsuarioResponseDTO.fromEntity(usuario);
+            return dto;
+        });
     }
 
     /**

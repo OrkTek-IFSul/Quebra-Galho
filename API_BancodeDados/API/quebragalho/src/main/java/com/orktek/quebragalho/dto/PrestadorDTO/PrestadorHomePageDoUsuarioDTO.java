@@ -38,7 +38,11 @@ public class PrestadorHomePageDoUsuarioDTO {
         dto.setId(prestador.getId());
         dto.setNome(prestador.getUsuario().getNome());
         dto.setImagemPerfil("api/usuarios/" + prestador.getUsuario().getId() + "/imagem");
-        dto.setTags(prestador.getTags().stream().map(TagDTO::fromEntity).toList());
+        if (prestador.getTags() == null || prestador.getTags().isEmpty()) {
+            dto.setTags(java.util.Collections.emptyList());
+        } else {
+            dto.setTags(prestador.getTags().stream().map(TagDTO::fromEntity).toList());
+        }
         dto.setMediaAvaliacoes(prestadorService.mediaNotaPrestador(prestador.getId()));
         return dto;
     }

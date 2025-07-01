@@ -6,10 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.orktek.quebragalho.dto.TagDTO;
 import com.orktek.quebragalho.dto.ServicoDTO.ServicoDTO;
+import com.orktek.quebragalho.model.Prestador;
 import com.orktek.quebragalho.model.Servico;
 import com.orktek.quebragalho.model.Tags;
+import com.orktek.quebragalho.repository.PrestadorRepository;
 import com.orktek.quebragalho.service.ServicoService;
 import com.orktek.quebragalho.service.TagService;
 
@@ -29,6 +30,9 @@ public class CriarAlterarServicoController {
         @Autowired
         private TagService tagService;
 
+        @Autowired
+        private PrestadorRepository prestadorRepository;
+        
         @Operation(summary = "Cria um serviço vinculado a um prestador", description = "Cria um serviço vinculado a um prestador", responses = {
                         @ApiResponse(responseCode = "200", description = "Servico criado com sucesso"),
                         @ApiResponse(responseCode = "404", description = "Prestador não encontrados"),
@@ -44,57 +48,121 @@ public class CriarAlterarServicoController {
                 servico.setDescricao(servicoDTO.getDescricao());
                 servico.setPreco(servicoDTO.getPreco());
                 servico.setAtivo(true);
-                // Salva as Tags
-                List<TagDTO> tagsDTO = servicoDTO.getTags();
+                servico.setDuracaoMinutos(servicoDTO.getDuracaoMinutos());
+                
+                // Adiciona as tags do DTO em uma lista para o serviço
                 List<Tags> tagsSalvar = new ArrayList<>();
-
-                for (TagDTO tags : tagsDTO) {
-                        tagService.buscarPorId(tags.getId()).ifPresent(tagsSalvar::add);
+                if (servicoDTO.getTags() != null) {
+                        servicoDTO.getTags().forEach(tagDTO -> {
+                                tagService.buscarPorId(tagDTO.getId()).ifPresent(tagsSalvar::add);
+                        });
                 }
-
                 servico.setTags(tagsSalvar);
+
                 // Salva o serviço
-                servicoService.criarServico(servico, idPrestador);
+                Servico servicoCriado = servicoService.criarServico(servico, idPrestador);
 
-                return ResponseEntity.ok(servicoDTO);
-        }
-
-        @Operation(summary = "Atualiza um serviço do prestador", description = "Atualiza os dados de um serviço existente vinculado a um prestador", responses = {
-                        @ApiResponse(responseCode = "200", description = "Serviço atualizado com sucesso"),
-                        @ApiResponse(responseCode = "404", description = "Prestador ou serviço não encontrado"),
-                        @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-        })
-        @PutMapping("/{idPrestador}/{idServico}")
-        public ResponseEntity<ServicoDTO> atualizarServico(
-                        @Parameter(description = "ID do prestador") @PathVariable Long idPrestador,
-                        @Parameter(description = "ID do serviço") @PathVariable Long idServico,
-                        @Parameter(description = "Dados atualizados do serviço") @RequestBody ServicoDTO servicoDTO) {
-
-                // Verifica se o serviço existe e pertence ao prestador
-                Servico servicoExistente = servicoService.buscarPorIdEPrestador(idServico, idPrestador)
-                                .orElseThrow(() -> new EntityNotFoundException(
-                                                "Serviço não encontrado para este prestador"));
-
-                // Atualiza os dados básicos
-                servicoExistente.setNome(servicoDTO.getNome());
-                servicoExistente.setDescricao(servicoDTO.getDescricao());
-                servicoExistente.setPreco(servicoDTO.getPreco());
-
-                // Atualiza as tags
-                List<TagDTO> tagsDTO = servicoDTO.getTags();
-                List<Tags> tagsAtualizadas = new ArrayList<>();
-
-                for (TagDTO tags : tagsDTO) {
-                        tagService.buscarPorId(tags.getId()).ifPresent(tagsAtualizadas::add);
+                // Adiciona as tags do serviço ao prestador, sem duplicar
+                Prestador prestador = servicoCriado.getPrestador();
+                if (prestador != null && tagsSalvar != null && !tagsSalvar.isEmpty()) {
+                        if (prestador.getTags() == null) {
+                                prestador.setTags(new ArrayList<>());
+                        }
+                        for (Tags tag : tagsSalvar) {
+                                boolean jaPossui = prestador.getTags().stream()
+                                        .anyMatch(t -> t.getNome().equalsIgnoreCase(tag.getNome()));
+                                if (!jaPossui) {
+                                        prestador.getTags().add(tag);
+                                }
+                        }
+                        // Salva o prestador atualizado
+                        prestadorRepository.save(prestador);
                 }
-
-                servicoExistente.setTags(tagsAtualizadas);
-
-                // Persiste as alterações
-                Servico servicoAtualizado = servicoService.atualizarServico(idServico, servicoExistente);
 
                 // Converte para DTO e retorna
-                ServicoDTO resposta = ServicoDTO.fromEntity(servicoAtualizado);
+                ServicoDTO resposta = ServicoDTO.fromEntity(servicoCriado);
                 return ResponseEntity.ok(resposta);
         }
-}
+
+                @Operation(summary = "Atualiza um serviço do prestador", description = "Atualiza os dados de um serviço existente vinculado a um prestador", responses = {
+                                @ApiResponse(responseCode = "200", description = "Serviço atualizado com sucesso"),
+                                @ApiResponse(responseCode = "404", description = "Prestador ou serviço não encontrado"),
+                                @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+                })
+                @PutMapping("/{idPrestador}/{idServico}")
+                public ResponseEntity<ServicoDTO> atualizarServico(
+                                @Parameter(description = "ID do prestador") @PathVariable Long idPrestador,
+                                @Parameter(description = "ID do serviço") @PathVariable Long idServico,
+                                @Parameter(description = "Dados atualizados do serviço") @RequestBody ServicoDTO servicoDTO) {
+
+                        // Verifica se o serviço existe e pertence ao prestador
+                        Servico servicoExistente = servicoService.buscarPorIdEPrestador(idServico, idPrestador)
+                                        .orElseThrow(() -> new EntityNotFoundException(
+                                                        "Serviço não encontrado para este prestador"));
+
+                        // Guarda a tag antiga (se houver)
+                        final Tags tagAntiga;
+                        if (servicoExistente.getTags() != null && !servicoExistente.getTags().isEmpty()) {
+                                tagAntiga = servicoExistente.getTags().get(0);
+                        } else {
+                                tagAntiga = null;
+                        }
+
+                        // Atualiza os dados básicos
+                        servicoExistente.setNome(servicoDTO.getNome());
+                        servicoExistente.setDescricao(servicoDTO.getDescricao());
+                        servicoExistente.setPreco(servicoDTO.getPreco());
+                        servicoExistente.setDuracaoMinutos(servicoDTO.getDuracaoMinutos());
+
+                        // Adiciona as tags do DTO em uma lista para o serviço
+                        List<Tags> tagsAtualizadas = new ArrayList<>();
+                        final Tags tagNova;
+                        if (servicoDTO.getTags() != null && !servicoDTO.getTags().isEmpty()) {
+                                // Considera apenas a primeira tag como "nova" para lógica de atualização
+                                tagNova = tagService.buscarPorId(servicoDTO.getTags().get(0).getId()).orElse(null);
+                                // Adiciona todas as tags do DTO ao serviço
+                                servicoDTO.getTags().forEach(tagDTO -> {
+                                        tagService.buscarPorId(tagDTO.getId()).ifPresent(tagsAtualizadas::add);
+                                });
+                        } else {
+                                tagNova = null;
+                        }
+                        servicoExistente.setTags(tagsAtualizadas);
+
+                        // Persiste as alterações
+                        Servico servicoAtualizado = servicoService.atualizarServico(idServico, servicoExistente);
+
+                        // Atualiza as tags do prestador
+                        Prestador prestador = servicoAtualizado.getPrestador();
+                        if (prestador != null) {
+                                // Remove a tag antiga do prestador se nenhum outro serviço dele usar essa tag
+                                if (tagAntiga != null && (tagNova == null || !tagAntiga.getId().equals(tagNova.getId()))) {
+                                        boolean algumOutroServicoUsaTagAntiga = prestador.getServicos().stream()
+                                                .filter(s -> !s.getId().equals(servicoAtualizado.getId()))
+                                                .anyMatch(s -> s.getTags() != null && s.getTags().stream()
+                                                        .anyMatch(t -> t.getId().equals(tagAntiga.getId())));
+                                        if (!algumOutroServicoUsaTagAntiga) {
+                                                if (prestador.getTags() != null) {
+                                                        prestador.getTags().removeIf(t -> t.getId().equals(tagAntiga.getId()));
+                                                }
+                                        }
+                                }
+                                // Adiciona a tag nova ao prestador se ainda não estiver presente
+                                if (tagNova != null) {
+                                        boolean jaPossui = prestador.getTags() != null &&
+                                                prestador.getTags().stream().anyMatch(t -> t.getId().equals(tagNova.getId()));
+                                        if (!jaPossui) {
+                                                if (prestador.getTags() == null) {
+                                                        prestador.setTags(new ArrayList<>());
+                                                }
+                                                prestador.getTags().add(tagNova);
+                                        }
+                                }
+                                prestadorRepository.save(prestador);
+                        }
+
+                        // Converte para DTO e retorna
+                        ServicoDTO resposta = ServicoDTO.fromEntity(servicoAtualizado);
+                        return ResponseEntity.ok(resposta);
+                }
+        }

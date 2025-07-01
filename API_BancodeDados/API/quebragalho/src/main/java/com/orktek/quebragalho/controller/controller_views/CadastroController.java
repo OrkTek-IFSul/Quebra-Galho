@@ -10,9 +10,11 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.orktek.quebragalho.dto.PrestadorDTO.CriarPrestadorDTO;
+import com.orktek.quebragalho.dto.PrestadorDTO.CriarPrestadorUsuarioExistenteDTO;
 import com.orktek.quebragalho.dto.PrestadorDTO.PrestadorGenericoDTO;
 import com.orktek.quebragalho.dto.UsuarioDTO.CriarUsuarioDTO;
 import com.orktek.quebragalho.dto.UsuarioDTO.UsuarioGenericoDTO;
+import com.orktek.quebragalho.model.Usuario;
 import com.orktek.quebragalho.service.PrestadorService;
 import com.orktek.quebragalho.service.UsuarioService;
 
@@ -75,6 +77,46 @@ public class CadastroController {
 
                 // 2. Processar como antes
                 UsuarioGenericoDTO usuarioCadastrado = usuarioService.criarUsuario(criarPrestadorDTO.getUsuario());
+                PrestadorGenericoDTO prestadorCadastrado = prestadorService.criarPrestador(usuarioCadastrado,
+                                criarPrestadorDTO.getDescricao());
+                prestadorService.enviarImagemDocumento(prestadorCadastrado.getId(), imagemDocumento);
+
+                return ResponseEntity.status(HttpStatus.CREATED).body(prestadorCadastrado);
+        }
+
+        @Operation(summary = "Cadastrar prestador", description = "Cadastra um novo prestador")
+        @PostMapping(value = "/prestador/{idUsuario}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "201", description = "Prestador cadastrado com sucesso"),
+                        @ApiResponse(responseCode = "409", description = "Email ou Documento já cadastrado", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+        })
+        public ResponseEntity<PrestadorGenericoDTO> criarPrestadorUsuarioExistente(
+
+                        @Parameter(description = "id do Usuario que vai virar prestador") @PathVariable Long idUsuario,
+                        @Parameter(description = "Dados do prestador", content = @Content(mediaType = "application/json", schema = @Schema(implementation = CriarPrestadorUsuarioExistenteDTO.class))) @RequestPart("prestadorDTO") String prestadorDTOJson,
+
+                        @Parameter(description = "Arquivo do documento (CPF/CNPJ)") @RequestPart("imagemDocumento") MultipartFile imagemDocumento) {
+
+                // 1. Converter JSON para DTO manualmente
+                ObjectMapper objectMapper = new ObjectMapper();
+                CriarPrestadorUsuarioExistenteDTO criarPrestadorDTO;
+                try {
+                        criarPrestadorDTO = objectMapper.readValue(prestadorDTOJson,
+                                        CriarPrestadorUsuarioExistenteDTO.class);
+                } catch (JsonProcessingException e) {
+                        return ResponseEntity.badRequest().build();
+                }
+
+                Usuario usuario = usuarioService.buscarPorId(idUsuario)
+                                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+                if(usuario.getPrestador() != null) {
+                        return ResponseEntity.status(HttpStatus.CONFLICT).body(null); // Retorna 409 se já for prestador
+                }
+
+                // 2. Processar como antes
+                UsuarioGenericoDTO usuarioCadastrado = UsuarioGenericoDTO.fromEntity(usuario);
+                
                 PrestadorGenericoDTO prestadorCadastrado = prestadorService.criarPrestador(usuarioCadastrado,
                                 criarPrestadorDTO.getDescricao());
                 prestadorService.enviarImagemDocumento(prestadorCadastrado.getId(), imagemDocumento);

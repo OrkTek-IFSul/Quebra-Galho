@@ -41,9 +41,12 @@ public class PrestadorPerfilDTO {
         dto.setId(prestador.getId());
         dto.setDescricao(prestador.getDescricao());
         dto.setUsuario(UsuarioGenericoDTO.fromEntity(prestador.getUsuario()));
-        dto.setServicos(prestador.getServicos().stream()
-                .map(ServicoSimplesDTO::fromEntity)
-                .toList());
+        // Filtra e envia apenas os serviços ativos
+        List<ServicoSimplesDTO> servicosAtivos = prestador.getServicos().stream()
+            .filter(servico -> Boolean.TRUE.equals(servico.getAtivo()))
+            .map(ServicoSimplesDTO::fromEntity)
+            .toList();
+        dto.setServicos(servicosAtivos);
         dto.setTags(prestador.getTags().stream()
                 .map(TagDTO::fromEntity)
                 .toList());
